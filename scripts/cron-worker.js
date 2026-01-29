@@ -67,7 +67,7 @@ async function runTask() {
             try {
                 console.log('Triggering Bac Nho calculation...');
                 const { exec } = require('child_process');
-                exec('npm run calculate-bac-nho', (error, stdout, stderr) => {
+                exec('npm run calculate-bac-nho', { env: { ...process.env, NODE_OPTIONS: '--max-old-space-size=6144' } }, (error, stdout, stderr) => {
                     if (error) {
                         console.error(`Calculation error: ${error.message}`);
                         return;
@@ -111,7 +111,7 @@ cron.schedule('40 18 * * *', () => {
 function runCalculation(days) {
     const { exec } = require('child_process');
     console.log(`[${new Date().toISOString()}] Triggering ${days} Days Analysis...`);
-    exec(`npx tsx scripts/calculate-bac-nho.ts ${days}`, (error, stdout, stderr) => {
+    exec(`npx tsx scripts/calculate-bac-nho.ts ${days}`, { env: { ...process.env, NODE_OPTIONS: '--max-old-space-size=6144' } }, (error, stdout, stderr) => {
         if (error) {
             console.error(`Calculation ${days} error: ${error.message}`);
             return;
