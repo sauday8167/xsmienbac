@@ -1,0 +1,224 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* Base Styles */
+body {
+  @apply bg-gray-50 text-lottery-gray-900;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Enhanced Card Styles */
+.card {
+  @apply bg-white rounded-xl shadow-lg p-6 hover:shadow-2xl transition-all duration-300 border border-gray-100;
+}
+
+.card-header {
+  @apply text-xl font-bold text-lottery-red-600 mb-4 pb-2 border-b-2 border-lottery-red-200;
+}
+
+/* Lottery Result Table Styles */
+.lottery-table {
+  @apply w-full border-collapse shadow-xl rounded-xl overflow-hidden bg-white;
+}
+
+.lottery-table th {
+  @apply bg-gradient-to-r from-lottery-red-600 to-lottery-red-700 text-white font-bold py-4 px-4 text-left;
+}
+
+.lottery-table td {
+  @apply bg-white border-b border-lottery-gray-100 py-4 px-4;
+}
+
+.lottery-table tr:hover td {
+  @apply bg-lottery-red-50 transition-colors duration-200;
+}
+
+/* Prize Number Styling */
+.prize-number {
+  @apply inline-block bg-gradient-to-br from-lottery-red-50 to-lottery-red-100 text-lottery-red-700 font-bold px-3 py-2 rounded-lg mr-2 mb-2 shadow-sm hover:shadow-md transition-all;
+  font-size: 1.125rem;
+  min-width: 60px;
+  text-align: center;
+}
+
+.prize-number.special {
+  @apply bg-gradient-to-br from-lottery-red-600 to-lottery-red-700 text-white text-2xl px-5 py-3 shadow-lg;
+  min-width: 100px;
+}
+
+.prize-number.first {
+  @apply bg-gradient-to-br from-lottery-gold-500 to-lottery-gold-600 text-white text-xl px-4 py-3 shadow-lg;
+  min-width: 90px;
+}
+
+/* Button Styles */
+.btn {
+  @apply px-6 py-3 rounded-lg font-semibold transition-all duration-300 shadow-md hover:shadow-xl hover:-translate-y-0.5;
+}
+
+.btn-primary {
+  @apply bg-gradient-to-r from-lottery-red-600 to-lottery-red-700 text-white hover:from-lottery-red-700 hover:to-lottery-red-800;
+}
+
+.btn-secondary {
+  @apply bg-gradient-to-r from-lottery-gray-600 to-lottery-gray-700 text-white hover:from-lottery-gray-700 hover:to-lottery-gray-800;
+}
+
+.btn-outline {
+  @apply border-2 border-lottery-red-600 text-lottery-red-600 hover:bg-lottery-red-600 hover:text-white;
+}
+
+/* Input Styles */
+.input {
+  @apply w-full px-4 py-3 border-2 border-lottery-gray-200 rounded-lg focus:border-lottery-red-500 focus:ring-2 focus:ring-lottery-red-200 focus:outline-none transition-all shadow-sm;
+}
+
+/* Header/Navigation */
+.nav-link {
+  @apply px-4 py-2 text-white hover:bg-lottery-red-700 rounded-md transition-all duration-200 hover:shadow-md;
+}
+
+.nav-link.active {
+  @apply bg-lottery-red-700 font-semibold shadow-md;
+}
+
+/* Statistics Table */
+.stats-table {
+  @apply w-full text-sm;
+}
+
+.stats-table th {
+  @apply bg-gradient-to-r from-lottery-gray-700 to-lottery-gray-800 text-white py-3 px-3 text-center;
+}
+
+.stats-table td {
+  @apply bg-white border border-lottery-gray-100 py-3 px-3 text-center hover:bg-lottery-gray-50 transition-colors;
+}
+
+.stats-number {
+  @apply font-bold text-lottery-red-600;
+}
+
+.stats-count {
+  @apply text-lottery-gray-600 text-xs;
+}
+
+/* Utility Classes for line clamping */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+/* Animation for rolling numbers */
+@keyframes numberRoll {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+
+  50% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.rolling-number {
+  animation: numberRoll 0.5s ease-out;
+}
+
+/* Smooth scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Print Styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    @apply bg-white;
+  }
+
+  .lottery-table {
+    @apply shadow-none;
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .lottery-table {
+    @apply text-sm;
+  }
+
+  .lottery-table th,
+  .lottery-table td {
+    @apply py-2 px-2;
+  }
+
+  .prize-number {
+    @apply text-sm px-2 py-1;
+    min-width: 50px;
+  }
+
+  .prize-number.special {
+    @apply text-xl px-3 py-2;
+    min-width: 80px;
+  }
+}
+
+/* Loading Spinner */
+.spinner {
+  @apply border-4 border-lottery-gray-200 border-t-lottery-red-600 rounded-full w-12 h-12 animate-spin;
+}
+
+.spinner-white {
+  @apply border-2 border-white/20 border-t-white rounded-full w-5 h-5 animate-spin;
+}
+
+/* Badge */
+.badge {
+  @apply inline-block px-3 py-1 text-xs font-semibold rounded-full shadow-sm;
+}
+
+.badge-news {
+  @apply bg-blue-100 text-blue-800;
+}
+
+.badge-soi-cau {
+  @apply bg-purple-100 text-purple-800;
+}
+
+.badge-tips {
+  @apply bg-green-100 text-green-800;
+}
+
+.badge-analysis {
+  @apply bg-orange-100 text-orange-800;
+}

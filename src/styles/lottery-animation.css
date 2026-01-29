@@ -1,0 +1,105 @@
+/* Lottery Animation Styles - Red/White "Scientific" Theme */
+
+/* Loto Ball - usage: .loto-ball */
+.loto-ball {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem; /* w-10 */
+  height: 2.5rem; /* h-10 */
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: 1.25rem; /* text-xl */
+  line-height: 1;
+  box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0,0,0,0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Red Ball (for Special Prize or Highlights) */
+.loto-ball.red {
+  background: linear-gradient(145deg, #dc2626, #b91c1c);
+  color: white;
+  border: 2px solid #ef4444;
+}
+
+/* Base Ball (Dark Gray/Black text on White/Light Gray) */
+.loto-ball.base {
+  background-color: #f3f4f6;
+  color: #1f2937;
+  border: 1px solid #e5e7eb;
+}
+
+/* Odd/Even styling for variety if needed */
+.loto-ball.odd { background-color: #ffffff; }
+.loto-ball.even { background-color: #f9fafb; }
+
+/* Spinning Drum Effect - Simulates the blur of a fast spinning wheel */
+.spinning-drum {
+  color: transparent;
+  text-shadow: 0 0 10px rgba(220, 38, 38, 0.7);
+  background: linear-gradient(180deg, 
+    transparent 0%, 
+    rgba(220, 38, 38, 0.1) 20%, 
+    rgba(220, 38, 38, 0.1) 80%, 
+    transparent 100%
+  );
+  animation: drum-spin 0.1s infinite linear;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Add a pseudo-element to simulate moving stripes/numbers */
+.spinning-drum::after {
+  content: '8392105746'; /* Stream of numbers */
+  position: absolute;
+  top: -200%;
+  left: 0;
+  width: 100%;
+  font-size: 80%;
+  line-height: 20px;
+  color: #ef4444;
+  opacity: 0.5;
+  filter: blur(1px);
+  animation: drum-scroll 0.5s infinite linear;
+}
+
+@keyframes drum-spin {
+  0% { transform: scaleY(1); }
+  50% { transform: scaleY(1.05); }
+  100% { transform: scaleY(1); }
+}
+
+@keyframes drum-scroll {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(50%); }
+}
+
+/* Pop In Animation for Final Result */
+@keyframes pop-in {
+  0% { transform: scale(0.5); opacity: 0; }
+  70% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+.animate-pop-in {
+  animation: pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* Live Badge Pulse */
+.live-pulse {
+  position: relative;
+}
+.live-pulse::before {
+  content: '';
+  position: absolute;
+  top: -2px; left: -2px; right: -2px; bottom: -2px;
+  border-radius: inherit;
+  border: 2px solid #dc2626;
+  opacity: 0;
+  animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.9); opacity: 0.7; }
+  100% { transform: scale(1.5); opacity: 0; }
+}

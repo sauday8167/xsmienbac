@@ -1,0 +1,10 @@
+import { OGTemplate } from '@/components/OGTemplate';
+
+export const runtime = 'edge';
+
+export default async function Image() {
+    return OGTemplate({
+        title: 'Xổ Số Miền Bắc 24h',
+        subtitle: 'Kết quả trực tiếp - Thống kê chuyên sâu - Soi cầu chính xác',
+    });
+}

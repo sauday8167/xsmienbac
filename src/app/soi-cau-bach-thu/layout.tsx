@@ -1,0 +1,12 @@
+import type { Metadata } from 'next';
+import { getPageMetadata } from '@/lib/seo-helper';
+
+export const revalidate = 0;
+
+export async function generateMetadata(): Promise<Metadata> {
+    return await getPageMetadata('/soi-cau-bach-thu');
+}
+
+export default function Layout({ children }: { children: React.ReactNode }) {
+    return children;
+}

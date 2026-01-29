@@ -1,0 +1,44 @@
+{
+  "about": {
+    "title": "Về XSMB",
+    "content": "Website cung cấp kết quả xổ số miền Bắc trực tiếp và nhanh chóng. Mọi thông tin thống kê và phân tích chỉ mang tính chất tham khảo cho người chơi."
+  },
+  "socials": {
+    "facebook": "#",
+    "youtube": "#",
+    "telegram": "#",
+    "zalo": "#"
+  },
+  "contact": {
+    "email": "hoangdongvan297@gmail.com",
+    "phone": "",
+    "address": ""
+  },
+  "quickLinks": {
+    "title": "Liên kết nhanh",
+    "links": [
+      {
+        "label": "Trang chủ",
+        "href": "/"
+      },
+      {
+        "label": "Kết quả theo ngày",
+        "href": "/ket-qua-theo-ngay"
+      },
+      {
+        "label": "Thống kê",
+        "href": "/thong-ke"
+      },
+      {
+        "label": "Tin tức / Soi cầu",
+        "href": "/tin-tuc"
+      }
+    ]
+  },
+  "disclaimer": {
+    "title": "Miễn trừ trách nhiệm",
+    "content": "Thông tin trên website chỉ mang tính chất tham khảo, không phải là cơ sở khẳng định kết quả. Chúng tôi không khuyến khích và không chịu trách nhiệm cho việc sử dụng thông tin vào mục đích lô đề bất hợp pháp. Vui lòng chơi xổ số kiến thiết ích nước lợi nhà.",
+    "highlight": "Chơi có trách nhiệm - Không sa đà vào các trò chơi may rủi!"
+  },
+  "copyright": "© {year} XSMB - Xổ Số Miền Bắc. Bản quyền thuộc về XSMB."
+}
