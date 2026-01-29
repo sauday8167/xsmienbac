@@ -92,11 +92,14 @@ export async function generateMetadata(): Promise<Metadata> {
                 },
             ],
         },
-        icons: brandingConfig.favicon ? {
-            icon: brandingConfig.favicon,
-            shortcut: brandingConfig.favicon,
-            apple: brandingConfig.favicon,
-        } : undefined,
+        icons: {
+            icon: [
+                { url: '/favicon.png', type: 'image/png' },
+                { url: brandingConfig.favicon || '/favicon.png' }, // Fallback to uploaded one if needed, but prefer stable
+            ],
+            shortcut: '/favicon.png',
+            apple: '/favicon.png',
+        },
     };
 }
 
