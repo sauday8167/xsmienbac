@@ -17,30 +17,20 @@ async function setup() {
         driver: sqlite3.Database
     });
 
-    console.log('Connected. Creating table if not exists...');
+    const schemaPath = path.join(process.cwd(), 'database', 'schema.sqlite.sql');
+    if (!fs.existsSync(schemaPath)) {
+        console.error('Schema file not found at', schemaPath);
+        process.exit(1);
+    }
+    const schema = fs.readFileSync(schemaPath, 'utf8');
 
-    // Matches mysql xsmb_results structure roughly
-    await db.exec(`
-        CREATE TABLE IF NOT EXISTS xsmb_results (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            draw_date DATE UNIQUE NOT NULL,
-            special_prize TEXT,
-            prize_1 TEXT,
-            prize_2 TEXT, 
-            prize_3 TEXT,
-            prize_4 TEXT,
-            prize_5 TEXT,
-            prize_6 TEXT,
-            prize_7 TEXT,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        );
-    `);
+    console.log('Connected. Applying schema...');
 
-    // Add index
-    await db.exec(`CREATE INDEX IF NOT EXISTS idx_draw_date ON xsmb_results(draw_date)`);
+    // Split by semicolon to run multiple statements if exec doesn't match compatible
+    // But sqlite.exec usually handles multiple statements. Let's try direct exec first.
+    await db.exec(schema);
 
-    console.log('Table xsmb_results ready.');
+    console.log('Database schema applied successfully.');
     await db.close();
 }
 
