@@ -1,8 +1,13 @@
 import { NextResponse } from 'next/server';
-import { findBridges, Bridge } from '@/lib/soi-cau-bach-thu';
+import { findBridges, findBridges3D, findBridges4D, Bridge } from '@/lib/soi-cau-bach-thu';
 import { queryOne } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
+
+// Simple in-memory cache
+// Key format: `${date}_${amplitude}_${type}`
+const cache = new Map<string, { timestamp: number, data: any }>();
+const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 
 export async function GET(request: Request) {
     try {
@@ -24,8 +29,32 @@ export async function GET(request: Request) {
             return NextResponse.json({ success: false, error: 'Biên độ phải từ 1 đến 20' }, { status: 400 });
         }
 
+        const type = (searchParams.get('type') || 'loto') as 'loto' | 'special' | 'loto3d' | 'loto4d';
+        if (type !== 'loto' && type !== 'special' && type !== 'loto3d' && type !== 'loto4d') {
+            return NextResponse.json({ success: false, error: 'Invalid type' }, { status: 400 });
+        }
+
+        // Check Cache
+        const cacheKey = `${date}_${amplitude}_${type}`;
+        const cached = cache.get(cacheKey);
+        if (cached && (Date.now() - cached.timestamp < CACHE_TTL_MS)) {
+            // Return cached data
+            return NextResponse.json({
+                success: true,
+                data: cached.data,
+                _source: 'cache'
+            });
+        }
+
         // Find bridges
-        const bridges = await findBridges(date!, amplitude);
+        let bridges;
+        if (type === 'loto3d') {
+            bridges = await findBridges3D(date!, amplitude);
+        } else if (type === 'loto4d') {
+            bridges = await findBridges4D(date!, amplitude);
+        } else {
+            bridges = await findBridges(date!, amplitude, type);
+        }
 
         // Aggregate stats
         const frequency: Record<string, number> = {};
@@ -37,15 +66,24 @@ export async function GET(request: Request) {
             .map(([number, count]) => ({ number, count }))
             .sort((a, b) => b.count - a.count);
 
+        const responseData = {
+            date,
+            amplitude,
+            totalBridges: bridges.length,
+            bridges,
+            aggregated
+        };
+
+        // Save to Cache
+        cache.set(cacheKey, {
+            timestamp: Date.now(),
+            data: responseData
+        });
+
         return NextResponse.json({
             success: true,
-            data: {
-                date,
-                amplitude,
-                totalBridges: bridges.length,
-                bridges,
-                aggregated
-            }
+            data: responseData,
+            _source: 'db'
         });
 
     } catch (error: any) {

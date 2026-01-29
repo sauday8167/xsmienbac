@@ -290,6 +290,16 @@ export default function PredictionPage() {
                     </div>
                 </div>
             </div>
+            {/* SEO Content */}
+            <div className="mt-10 p-6 bg-gray-50 rounded-xl border border-gray-100 text-sm text-gray-700 leading-relaxed text-justify shadow-sm">
+                <h2 className="text-lg font-bold text-gray-900 mb-3">Giới thiệu về Dự Đoán Xổ Số</h2>
+                <p>
+                    Chuyên mục <strong>Dự Đoán Xổ Số</strong> là điểm đến tin cậy của cộng đồng người chơi đam mê những con số.
+                    Hàng ngày, đội ngũ chuyên gia giàu kinh nghiệm của chúng tôi tổng hợp, phân tích và đưa ra những nhận định sắc bén về cầu lô đẹp, bạch thủ, song thủ, và dàn đề có khả năng nổ cao.
+                    Không chỉ dừng lại ở ý kiến cá nhân, chuyên mục còn là nơi hội tụ trí tuệ của cộng đồng, nơi các cao thủ chia sẻ cầu kèo, kinh nghiệm xương máu.
+                    Hãy tham khảo các bài viết soi cầu chi tiết, được cập nhật liên tục vào khung giờ vàng buổi sáng để có thêm dữ liệu quan trọng cho quyết định chốt số của bạn.
+                </p>
+            </div>
         </div>
     );
 }

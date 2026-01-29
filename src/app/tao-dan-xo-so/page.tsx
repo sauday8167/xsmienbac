@@ -456,6 +456,16 @@ export default function TaoDanXoSoPage() {
 
                 <ResultBox title={`Kết Quả Xiên ${xienType}`} data={xienResult} source={`Xiên ${xienType}`} joinStr="; " />
             </section>
+            {/* SEO Content */}
+            <div className="mt-10 p-6 bg-gray-50 rounded-xl border border-gray-100 text-sm text-gray-700 leading-relaxed text-justify shadow-sm">
+                <h2 className="text-lg font-bold text-gray-900 mb-3">Giới thiệu về Tạo Dàn Xổ Số</h2>
+                <p>
+                    Công cụ <strong>Tạo Dàn Xổ Số</strong> (hay còn gọi là Tạo Mức Số / Lọc Dàn) là trợ thủ đắc lực không thể thiếu cho những tay chơi xổ số chuyên nghiệp.
+                    Được thiết kế để tối ưu hóa thời gian, công cụ này cho phép bạn tạo nhanh các dàn lô đề 2D, 3D, 4D phức tạp chỉ với vài cú click chuột.
+                    Bạn có thể dễ dàng lọc số theo tổng, chạm, đầu, đuôi, tìm số trùng, ghép dàn hoặc loại bỏ các bộ số không mong muốn.
+                    Với khả năng xử lý hàng ngàn con số trong tích tắc, công cụ giúp bạn kiểm soát hoàn toàn chiến thuật chơi dàn, tiết kiệm công sức tính toán thủ công và giảm thiểu sai sót không đáng có khi vào tiền.
+                </p>
+            </div>
         </div>
     );
 }

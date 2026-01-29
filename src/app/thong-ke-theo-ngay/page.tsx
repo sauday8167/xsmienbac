@@ -224,6 +224,16 @@ export default function LotoByDayOfMonthPage() {
             ) : (
                 <div className="text-center py-12 text-gray-500">Không có dữ liệu</div>
             )}
+            {/* SEO Content */}
+            <div className="mt-10 p-6 bg-gray-50 rounded-xl border border-gray-100 text-sm text-gray-700 leading-relaxed text-justify shadow-sm">
+                <h2 className="text-lg font-bold text-gray-900 mb-3">Giới thiệu về Thống Kê Theo Ngày</h2>
+                <p>
+                    Lịch sử luôn có xu hướng lặp lại, và xổ số cũng không ngoại lệ. Công cụ <strong>Thống Kê Theo Ngày</strong> cho phép bạn "du hành ngược thời gian" để xem kết quả xổ số của chính ngày này trong các năm trước.
+                    Ví dụ: Ngày hôm nay của 5 năm qua thường về những con số nào? Liệu có sự trùng hợp kỳ lạ nào giữa các năm hay không?
+                    Dữ liệu thống kê theo ngày tháng là nguồn tư liệu quý giá để soi cầu ngày (cầu nhật), giúp bạn tìm ra những con số có duyên với mốc thời gian hiện tại.
+                    Một phương pháp soi cầu tâm linh kết hợp thống kê thú vị mà bạn không nên bỏ qua.
+                </p>
+            </div>
         </div>
     );
 }

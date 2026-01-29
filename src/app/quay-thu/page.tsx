@@ -160,6 +160,17 @@ export default function RandomDrawPage() {
                 Lưu ý: Kết quả quay thử chỉ mang tính chất tham khảo, giải trí và không có giá trị lĩnh thưởng.
                 Chúc các bạn may mắn!
             </div>
+            {/* SEO Content */}
+            <div className="mt-10 p-6 bg-gray-50 rounded-xl border border-gray-100 text-sm text-gray-700 leading-relaxed text-justify shadow-sm">
+                <h2 className="text-lg font-bold text-gray-900 mb-3">Giới thiệu về Quay Thử Xổ Số</h2>
+                <p>
+                    Tính năng <strong>Quay Thử Xổ Số</strong> là công cụ mô phỏng quá trình quay thưởng thực tế, được vận hành bởi thuật toán xác suất thống kê phức tạp dựa trên kho dữ liệu kết quả nhiều năm qua.
+                    Nhiều người chơi sử dụng quay thử như một nghi thức lấy may (lấy hên) trước giờ G hoặc để tham khảo các bộ số ngẫu nhiên khi đang bí số.
+                    Hệ thống sẽ quay lần lượt từng giải từ giải Nhất đến giải Đặc biệt y như thật.
+                    Tuy nhiên, xin lưu ý rằng kết quả quay thử chỉ mang tính chất tham khảo giải trí, giúp bạn có thêm niềm vui và sự tự tin.
+                    Hãy kết hợp với các phương pháp soi cầu khác để đưa ra quyết định chính xác nhất.
+                </p>
+            </div>
         </div>
     );
 }

@@ -221,6 +221,16 @@ export default function LotoByWeekdayPage() {
             ) : (
                 <div className="text-center py-12 text-gray-500">Không có dữ liệu</div>
             )}
+            {/* SEO Content */}
+            <div className="mt-10 p-6 bg-gray-50 rounded-xl border border-gray-100 text-sm text-gray-700 leading-relaxed text-justify shadow-sm">
+                <h2 className="text-lg font-bold text-gray-900 mb-3">Giới thiệu về Thống Kê Theo Thứ</h2>
+                <p>
+                    Bạn có biết mỗi ngày trong tuần đều có những quy luật ra số riêng biệt? <strong>Thống Kê Theo Thứ</strong> giúp bạn khám phá bí mật đó.
+                    Công cụ này tổng hợp kết quả xổ số của tất cả các ngày Thứ 2, Thứ 3,... đến Chủ Nhật trong nhiều năm trở lại đây.
+                    Qua đó, bạn sẽ thấy được những cặp số nào hay về vào ngày đầu tuần, con lô nào là "vua" của ngày cuối tuần.
+                    Việc nắm bắt nhịp sinh học của các con số theo ngày trong tuần sẽ giúp bạn có thêm một góc nhìn độc đáo, bổ sung cho các phương pháp soi cầu truyền thống để tăng cơ hội chiến thắng.
+                </p>
+            </div>
         </div>
     );
 }

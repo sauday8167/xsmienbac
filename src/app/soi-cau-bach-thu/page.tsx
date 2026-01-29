@@ -6,6 +6,8 @@ interface BridgePath {
     date: string;
     val1: string;
     val2: string;
+    val3?: string;
+    val4?: string;
     result: string;
     targetDate: string;
     isHit: boolean;
@@ -14,6 +16,8 @@ interface BridgePath {
 interface Bridge {
     index1: number;
     index2: number;
+    index3?: number;
+    index4?: number;
     predictedNumber: string;
     amplitude: number;
     bridgepath: BridgePath[];
@@ -34,20 +38,25 @@ interface ApiResponse {
 
 export default function SoiCauBachThuPage() {
     const [amplitude, setAmplitude] = useState<number>(3);
+    const [activeTab, setActiveTab] = useState<'loto' | 'special' | 'loto3d' | 'loto4d'>('loto');
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState<ApiResponse | null>(null);
     const [selectedBridge, setSelectedBridge] = useState<Bridge | null>(null);
 
+    const minAmplitude = (activeTab === 'loto3d' || activeTab === 'loto4d') ? 2 : 1;
+
     useEffect(() => {
-        // Initial fetch
+        if (amplitude < minAmplitude) {
+            setAmplitude(minAmplitude);
+        }
         handleAnalyze();
-    }, []);
+    }, [activeTab]); // Re-fetch when tab changes
 
     const handleAnalyze = async () => {
         setLoading(true);
         setSelectedBridge(null);
         try {
-            const res = await fetch(`/api/soi-cau-bach-thu?amplitude=${amplitude}`);
+            const res = await fetch(`/api/soi-cau-bach-thu?amplitude=${amplitude}&type=${activeTab}`);
             const result = await res.json();
             if (result.success) {
                 setData(result.data);
@@ -63,15 +72,42 @@ export default function SoiCauBachThuPage() {
         <div className="max-w-7xl mx-auto space-y-8 p-4">
             <div className="text-center">
                 <h1 className="text-4xl font-bold text-lottery-gray-800 mb-2">
-                    Soi Cầu Loto Bạch Thủ
+                    {activeTab === 'loto' ? 'Soi Cầu Loto Bạch Thủ' :
+                        activeTab === 'special' ? 'Soi Cầu Bạch Thủ Đặc Biệt' :
+                            activeTab === 'loto3d' ? 'Soi Cầu Loto 3D (3 Càng)' :
+                                'Soi Cầu Loto 4D (4 Càng)'}
                 </h1>
                 <div className="w-24 h-1 bg-lottery-red-600 mx-auto rounded-full mt-4"></div>
                 <p className="mt-4 text-gray-600 max-w-2xl mx-auto">
-                    Hệ thống tự động tìm kiếm các vị trí ghép cầu có chu kỳ ổn định từ dữ liệu lịch sử.
+                    {activeTab === 'loto' ? 'Hệ thống tự động tìm kiếm các vị trí ghép cầu có chu kỳ ổn định từ dữ liệu lịch sử.' :
+                        activeTab === 'special' ? 'Hệ thống tìm kiếm các vị trí ghép cầu ăn thẳng Giải Đặc Biệt (2 số cuối) từ dữ liệu lịch sử.' :
+                            activeTab === 'loto3d' ? 'Hệ thống tìm kiếm 3 vị trí ghép thành bộ 3 số (3 càng) ăn các giải từ ĐB đến Giải 6.' :
+                                'Hệ thống tìm kiếm 4 vị trí ghép thành bộ 4 số (4 càng) ăn các giải từ ĐB đến Giải 5.'}
                 </p>
 
+                {/* Tabs */}
+                <div className="flex justify-center mt-6 space-x-4 flex-wrap gap-2">
+                    {[
+                        { id: 'loto', label: 'Bạch Thủ Loto' },
+                        { id: 'special', label: 'Bạch Thủ Đặc Biệt' },
+                        { id: 'loto3d', label: 'Loto 3D' },
+                        { id: 'loto4d', label: 'Loto 4D' }
+                    ].map(tab => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id as any)}
+                            className={`px-6 py-2 rounded-full font-bold transition-all ${activeTab === tab.id
+                                ? 'bg-lottery-red-600 text-white shadow-lg transform scale-105'
+                                : 'bg-white text-gray-600 border hover:bg-gray-50'
+                                }`}
+                        >
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
+
                 {/* Warning */}
-                <div className="mt-4 p-3 bg-yellow-50 text-yellow-800 text-sm border border-yellow-200 rounded-lg inline-block">
+                <div className="mt-6 p-3 bg-yellow-50 text-yellow-800 text-sm border border-yellow-200 rounded-lg inline-block">
                     ⚠️ <strong>Lưu ý:</strong> Kết quả chỉ mang tính chất tham khảo thống kê. Không có giá trị cam kết trúng thưởng.
                 </div>
             </div>
@@ -85,14 +121,14 @@ export default function SoiCauBachThuPage() {
                         </label>
                         <input
                             type="range"
-                            min="3"
+                            min={minAmplitude}
                             max="10"
                             value={amplitude}
                             onChange={(e) => setAmplitude(Number(e.target.value))}
                             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-lottery-red-600"
                         />
                         <div className="flex justify-between text-xs text-gray-500 mt-1">
-                            <span>3 ngày</span>
+                            <span>{minAmplitude} ngày</span>
                             <span>10 ngày</span>
                         </div>
                     </div>
@@ -104,8 +140,8 @@ export default function SoiCauBachThuPage() {
                     >
                         {loading ? 'Đang Phân Tích...' : '🔍 Soi Cầu Ngay'}
                     </button>
-                </div>
-            </div>
+                </div >
+            </div >
 
             {data && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -113,7 +149,7 @@ export default function SoiCauBachThuPage() {
                     <div className="lg:col-span-1 space-y-6">
                         <div className="card bg-white shadow border border-gray-200 p-0 overflow-hidden">
                             <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 text-white">
-                                <h3 className="font-bold text-lg">🔥 Top Bạch Thủ Đẹp Nhất</h3>
+                                <h3 className="font-bold text-lg">🔥 Top {activeTab === 'loto4d' ? '4D' : activeTab === 'loto3d' ? '3D' : activeTab === 'special' ? 'ĐB' : 'Loto'} Đẹp Nhất</h3>
                                 <p className="text-blue-100 text-xs">Sắp xếp theo số lượng cầu</p>
                             </div>
                             <div className="p-4 max-h-[500px] overflow-y-auto">
@@ -141,6 +177,13 @@ export default function SoiCauBachThuPage() {
                                         </div>
                                     </div>
                                 ))}
+                                {data.aggregated.length === 0 && (
+                                    <div className="text-center py-8 text-gray-500 italic">
+                                        Không tìm thấy cầu nào với biên độ {amplitude} ngày.
+                                        <br />
+                                        Hãy thử giảm biên độ xuống.
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -156,13 +199,15 @@ export default function SoiCauBachThuPage() {
                                     ✕
                                 </button>
                                 <h3 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2">
-                                    Chi tiết Cầu Bạch Thủ: <span className="text-lottery-red-600 text-3xl mx-2">{selectedBridge.predictedNumber}</span>
+                                    Chi tiết Cầu {activeTab === 'loto4d' ? '4D' : activeTab === 'loto3d' ? '3D' : activeTab === 'special' ? 'Đặc Biệt' : 'Bạch Thủ'}:
+                                    <span className="text-lottery-red-600 text-3xl mx-2">{selectedBridge.predictedNumber}</span>
                                 </h3>
 
                                 <div className="space-y-6">
                                     <div className="bg-blue-50 p-4 rounded-lg text-sm text-blue-800 border border-blue-100">
-                                        Vị trí ghép cầu: <strong>#{selectedBridge.index1}</strong> và <strong>#{selectedBridge.index2}</strong>
-                                        {/* Ideally we would map these indices to "Giải G3.1 số thứ 2" etc, but that's complex mapping. */}
+                                        Vị trí ghép cầu: <strong>#{selectedBridge.index1}</strong> - <strong>#{selectedBridge.index2}</strong>
+                                        {activeTab === 'loto3d' && <span> - <strong>#{selectedBridge.index3}</strong></span>}
+                                        {activeTab === 'loto4d' && <span> - <strong>#{selectedBridge.index3}</strong> - <strong>#{selectedBridge.index4}</strong></span>}
                                     </div>
 
                                     <div className="relative border-l-2 border-gray-200 ml-4 space-y-8 py-4">
@@ -174,16 +219,28 @@ export default function SoiCauBachThuPage() {
                                                     Ngày lấy số: {new Date(step.date).toLocaleDateString('vi-VN')}
                                                 </div>
                                                 <div className="bg-gray-50 p-3 rounded border border-gray-200 inline-block">
-                                                    <div className="flex items-center gap-2">
-                                                        <span>Vị trí 1: <strong className="text-red-600 text-lg">{step.val1}</strong></span>
+                                                    <div className="flex items-center gap-2 flex-wrap">
+                                                        <span>VT1: <strong className="text-red-600 text-lg">{step.val1}</strong></span>
                                                         <span className="text-gray-400">+</span>
-                                                        <span>Vị trí 2: <strong className="text-red-600 text-lg">{step.val2}</strong></span>
+                                                        <span>VT2: <strong className="text-red-600 text-lg">{step.val2}</strong></span>
+                                                        {step.val3 !== undefined && (
+                                                            <>
+                                                                <span className="text-gray-400">+</span>
+                                                                <span>VT3: <strong className="text-red-600 text-lg">{step.val3}</strong></span>
+                                                            </>
+                                                        )}
+                                                        {step.val4 !== undefined && (
+                                                            <>
+                                                                <span className="text-gray-400">+</span>
+                                                                <span>VT4: <strong className="text-red-600 text-lg">{step.val4}</strong></span>
+                                                            </>
+                                                        )}
                                                         <span>→</span>
                                                         <span>Ra số: <strong className="text-blue-600 text-lg">{step.result}</strong></span>
                                                     </div>
                                                 </div>
                                                 <div className="mt-2 text-sm">
-                                                    ⬇ Xuất hiện tại ngày <strong>{new Date(step.targetDate).toLocaleDateString('vi-VN')}</strong>
+                                                    ⬇ Xuất hiện tại {activeTab === 'special' ? 'GIẢI ĐẶC BIỆT' : ''} ngày <strong>{new Date(step.targetDate).toLocaleDateString('vi-VN')}</strong>
                                                 </div>
                                             </div>
                                         ))}
@@ -196,7 +253,7 @@ export default function SoiCauBachThuPage() {
                                             </div>
                                             <div className="bg-red-50 p-4 rounded border border-red-200 inline-block">
                                                 <div className="text-center">
-                                                    <div className="text-gray-600 text-sm mb-1">Cặp số dự đoán</div>
+                                                    <div className="text-gray-600 text-sm mb-1">Bộ số dự đoán</div>
                                                     <div className="text-4xl font-black text-lottery-red-600 tracking-wider">
                                                         {selectedBridge.predictedNumber}
                                                     </div>
@@ -214,7 +271,18 @@ export default function SoiCauBachThuPage() {
                         )}
                     </div>
                 </div>
-            )}
+            )
+            }
+            {/* SEO Content */}
+            <div className="mt-10 p-6 bg-gray-50 rounded-xl border border-gray-100 text-sm text-gray-700 leading-relaxed text-justify shadow-sm">
+                <h2 className="text-lg font-bold text-gray-900 mb-3">Giới thiệu về Soi Cầu Bạch Thủ</h2>
+                <p>
+                    Công cụ <strong>Soi Cầu Bạch Thủ</strong> được thiết kế dành riêng cho những người chơi yêu thích lối đánh 'nhất tiễn hạ song điêu' – một ăn cả, ngã về không.
+                    Hệ thống tự động quét hàng triệu biến thể cầu chạy trong quá khứ để tìm ra các vị trí ghép cầu ổn định nhất (cầu chạy đều 3-5 ngày).
+                    Bạn có thể tùy chỉnh biên độ ngày, xem chi tiết đường đi của cầu trên bảng kết quả để kiểm chứng độ tin cậy.
+                    Dù là cầu bạch thủ lô, cầu giải đặc biệt hay cầu 3 càng, 4 càng, công cụ này sẽ giúp bạn sàng lọc ra những con số tinh túy nhất, giảm thiểu rủi ro và tối ưu hóa nguồn vốn đầu tư.
+                </p>
+            </div>
         </div>
     );
 }

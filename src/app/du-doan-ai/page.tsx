@@ -282,6 +282,16 @@ export default function AIPredictionPage() {
                     </div>
                 </div>
             </div>
+            {/* SEO Content */}
+            <div className="mt-10 p-6 bg-gray-50 rounded-xl border border-gray-100 text-sm text-gray-700 leading-relaxed text-justify shadow-sm">
+                <h2 className="text-lg font-bold text-gray-900 mb-3">Giới thiệu về Dự Đoán AI</h2>
+                <p>
+                    Bước vào kỷ nguyên số với <strong>Dự Đoán AI</strong> – ứng dụng tiên phong trong việc sử dụng Trí Tuệ Nhân Tạo (Artificial Intelligence) và Học Máy (Machine Learning) để phân tích xổ số.
+                    Hệ thống AI của chúng tôi không biết "mệt mỏi", liên tục học hỏi từ hàng triệu bản ghi kết quả trong quá khứ để tìm ra các mô hình số học phức tạp mà mắt thường không thể nhìn thấy.
+                    Dự đoán AI mang đến những nhận định khách quan, loại bỏ hoàn toàn yếu tố cảm xúc lan man.
+                    Đây là nguồn tham khảo chất lượng cao, "khoa học" và hiện đại, giúp bạn có thêm một góc nhìn độc đáo và đáng tin cậy bên cạnh các kinh nghiệm soi cầu truyền thống.
+                </p>
+            </div>
         </div>
     );
 }

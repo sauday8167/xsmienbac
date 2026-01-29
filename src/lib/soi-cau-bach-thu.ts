@@ -1,20 +1,201 @@
 import { LotteryResultRaw, extractAllLotoNumbers } from './lottery-helpers';
 import { query } from './db';
 
-// A "Bridge" connects two positions (index1, index2) over n days to predict a number
+export interface BridgePath {
+    date: string;
+    val1: string;
+    val2: string;
+    val3?: string;
+    val4?: string;
+    result: string;
+    targetDate: string;
+    isHit: boolean;
+}
+
 export interface Bridge {
     index1: number;
     index2: number;
-    predictedNumber: string; // The number formed by the positions for the NEXT day
-    amplitude: number; // Length of the bridge (days)
-    bridgepath: {
-        date: string;
-        val1: string; // Digit at index1
-        val2: string; // Digit at index2
-        result: string; // The formed number (val1 + val2)
-        targetDate: string; // The day this number appeared in results
-        isHit: boolean;
-    }[];
+    index3?: number;
+    index4?: number;
+    predictedNumber: string;
+    amplitude: number;
+    bridgepath: BridgePath[];
+}
+
+// ... existing flattenResult3D ...
+
+// Extract last 4 digits from Special -> G5 (exclude G6, G7 as they are usually shorter or excluded)
+// G6 are 3 digits, G7 are 2 digits.
+export function extract4DNumbers(result: LotteryResultRaw): Set<string> {
+    const numbers = new Set<string>();
+    const addNumber = (val: any) => {
+        if (!val) return;
+        const str = String(val).trim();
+        if (str.length >= 4) {
+            numbers.add(str.slice(-4));
+        } else {
+            // If less than 4 digits (unlikely for Spec->G5 but possible), pad it
+            numbers.add(str.padStart(4, '0'));
+        }
+    };
+
+    addNumber(result.special_prize);
+    addNumber(result.prize_1);
+    [result.prize_2, result.prize_3, result.prize_4, result.prize_5].forEach(json => {
+        try {
+            const arr = JSON.parse(json);
+            if (Array.isArray(arr)) arr.forEach(n => addNumber(n));
+        } catch { }
+    });
+    return numbers;
+}
+
+// ... existing findBridges and others ...
+
+export async function findBridges4D(endDate: string, amplitude: number = 3): Promise<Bridge[]> {
+    const limit = amplitude + 5;
+    const sql = `
+        SELECT * FROM xsmb_results 
+        WHERE draw_date <= ? 
+        ORDER BY draw_date DESC 
+        LIMIT ?
+    `;
+
+    const results = await query<LotteryResultRaw[]>(sql, [endDate, limit]);
+
+    if (results.length < amplitude + 1) {
+        return [];
+    }
+
+    // Flatten source (Spec -> G6)
+    const flattenedResults = results.map(r => ({
+        date: r.draw_date,
+        raw: r,
+        flat: flattenResult3D(r),
+        loto4DNumbers: extract4DNumbers(r)
+    }));
+
+    // Safety check: if flat string is too long, 4 loops will kill CPU.
+    // 100^4 = 100,000,000 iterations.
+    // In JS/V8, simple loop is fast, but 100M is ~100-300ms if empty, but with logic inside it's seconds.
+    // We will try. If it times out, we need to optimize.
+
+    const LEN = flattenedResults[0].flat.length;
+    const bridges: Bridge[] = [];
+
+    // Limit execution time? Or ensure loop is tight.
+    // Optimization: We could pre-calculate indices that match.
+    // But for now, brute force.
+
+    for (let i = 0; i < LEN; i++) {
+        for (let j = 0; j < LEN; j++) {
+            for (let k = 0; k < LEN; k++) {
+                // Optimization: Check if i,j,k can even form a valid prefix for *any* 4D number in target?
+                // Probably too complex to optimize prematurely.
+
+                for (let l = 0; l < LEN; l++) {
+
+                    let isBridge = true;
+                    const path: BridgePath[] = [];
+
+                    for (let d = 0; d < amplitude; d++) {
+                        const targetIdx = d;
+                        const sourceIdx = d + 1;
+                        const source = flattenedResults[sourceIdx];
+                        const target = flattenedResults[targetIdx];
+
+                        if (i >= source.flat.length || j >= source.flat.length || k >= source.flat.length || l >= source.flat.length) {
+                            isBridge = false;
+                            break;
+                        }
+
+                        const val1 = source.flat[i];
+                        const val2 = source.flat[j];
+                        const val3 = source.flat[k];
+                        const val4 = source.flat[l];
+                        const formedNumber = val1 + val2 + val3 + val4;
+
+                        if (!target.loto4DNumbers.has(formedNumber)) {
+                            isBridge = false;
+                            break;
+                        }
+
+                        path.push({
+                            date: source.date,
+                            val1,
+                            val2,
+                            val3,
+                            val4,
+                            result: formedNumber,
+                            targetDate: target.date,
+                            isHit: true
+                        });
+                    }
+
+                    if (isBridge) {
+                        const today = flattenedResults[0];
+                        const predicted = today.flat[i] + today.flat[j] + today.flat[k] + today.flat[l];
+                        bridges.push({
+                            index1: i,
+                            index2: j,
+                            index3: k,
+                            index4: l,
+                            predictedNumber: predicted,
+                            amplitude,
+                            bridgepath: path.reverse()
+                        });
+                    }
+                }
+            }
+        }
+    }
+    return bridges;
+}
+
+// Flatten Special -> G6 (Exclude G7) for Loto 3D source
+export function flattenResult3D(result: LotteryResultRaw): string {
+    let sequence = '';
+    sequence += String(result.special_prize || '').trim();
+    sequence += String(result.prize_1 || '').trim();
+    const parsePrize = (json: string) => {
+        try {
+            const arr = JSON.parse(json);
+            if (Array.isArray(arr)) {
+                return arr.map(s => String(s).trim()).join('');
+            }
+        } catch (e) { /* ignore */ }
+        return '';
+    };
+    sequence += parsePrize(result.prize_2);
+    sequence += parsePrize(result.prize_3);
+    sequence += parsePrize(result.prize_4);
+    sequence += parsePrize(result.prize_5);
+    sequence += parsePrize(result.prize_6);
+    return sequence;
+}
+
+// Extract last 3 digits from Special -> G6
+export function extract3DNumbers(result: LotteryResultRaw): Set<string> {
+    const numbers = new Set<string>();
+    const addNumber = (val: any) => {
+        if (!val) return;
+        const str = String(val).trim();
+        if (str.length >= 3) {
+            numbers.add(str.slice(-3));
+        } else {
+            numbers.add(str.padStart(3, '0'));
+        }
+    };
+
+    addNumber(result.special_prize);
+    addNumber(result.prize_1);
+    [result.prize_2, result.prize_3, result.prize_4, result.prize_5, result.prize_6].forEach(json => {
+        try {
+            const arr = JSON.parse(json);
+            if (Array.isArray(arr)) arr.forEach(n => addNumber(n));
+        } catch { }
+    });
+    return numbers;
 }
 
 // Helper to flatten the result object into a sequence of 107 digits
@@ -55,19 +236,7 @@ export function flattenResult(result: LotteryResultRaw): string {
     return sequence;
 }
 
-/**
- * Find bridges ending at 'targetDate' (exclusive, i.e., using data up to targetDate to predict targetDate+1, 
- * or more commonly: using data up to TODAY to predict TOMORROW).
- * 
- * However, "Soi Cau" usually means:
- * We want to find bridges that HAVE been correct for the last N days.
- * If today is T, we check if bridge existed from T-N to T.
- * If yes, we use T's values to predict T+1.
- * 
- * @param endDate The last date of available results to consider (e.g., Today's result).
- * @param amplitude Number of consecutive days the bridge must be correct.
- */
-export async function findBridges(endDate: string, amplitude: number = 3): Promise<Bridge[]> {
+export async function findBridges(endDate: string, amplitude: number = 3, targetType: 'loto' | 'special' = 'loto'): Promise<Bridge[]> {
     // We need data for (amplitude + 1) days:
     // To check a bridge of length 3:
     // Day T (End): Form digits. Point to T+1 (Hypothetical).
@@ -97,10 +266,6 @@ export async function findBridges(endDate: string, amplitude: number = 3): Promi
     const TOTAL_POS = 107;
     const bridges: Bridge[] = [];
 
-    // Valid positions check:
-    // Some days might have missing digits if data is malformed, so we must be careful.
-    // But assuming standard XSMB, it should be consistent.
-
     const flattenedResults = results.map(r => ({
         date: r.draw_date,
         raw: r,
@@ -111,16 +276,8 @@ export async function findBridges(endDate: string, amplitude: number = 3): Promi
     // Iterate all pairs
     for (let i = 0; i < TOTAL_POS; i++) {
         for (let j = 0; j < TOTAL_POS; j++) {
-            // Check consistency backwards
-            // We want bridge to hold from k=1 to amplitude
-            // Let's index:
-            // Check 1: Source (T-1) -> Target (T)
-            // Check 2: Source (T-2) -> Target (T-1)
-            // ...
-            // Check N: Source (T-n) -> Target (T-n+1)
-
             let isBridge = true;
-            const path = [];
+            const path: BridgePath[] = [];
 
             for (let k = 0; k < amplitude; k++) {
                 const targetIdx = k;      // results[0] is T
@@ -144,13 +301,26 @@ export async function findBridges(endDate: string, amplitude: number = 3): Promi
                 const val2 = source.flat[j];
                 const formedNumber = val1 + val2;
 
-                // Check if formedNumber exists in target's loto results
-                // "Bach Thu" usually implies strict ordering, but sometimes people treat 
-                // "Cau Lo" as inclusive of reverse. "Soi Cau Bach Thu" implies finding ONE number.
-                // So strict `val1 + val2` is correct mapping.
-                if (!target.lotoNumbers.has(formedNumber)) {
-                    isBridge = false;
-                    break;
+                // Check if formedNumber exists in target's results
+                if (targetType === 'special') {
+                    // Start strict check for Special Prize (Last 2 digits)
+                    let specialTwoDigits = 'XX';
+                    if (target.raw.special_prize) {
+                        const s = String(target.raw.special_prize).trim();
+                        if (s.length >= 2) specialTwoDigits = s.slice(-2);
+                        else specialTwoDigits = s.padStart(2, '0');
+                    }
+
+                    if (formedNumber !== specialTwoDigits) {
+                        isBridge = false;
+                        break;
+                    }
+                } else {
+                    // Standard Loto Mode
+                    if (!target.lotoNumbers.has(formedNumber)) {
+                        isBridge = false;
+                        break;
+                    }
                 }
 
                 path.push({
@@ -183,5 +353,97 @@ export async function findBridges(endDate: string, amplitude: number = 3): Promi
         }
     }
 
+    return bridges;
+}
+
+export async function findBridges3D(endDate: string, amplitude: number = 3): Promise<Bridge[]> {
+    const limit = amplitude + 5;
+    const sql = `
+        SELECT * FROM xsmb_results 
+        WHERE draw_date <= ? 
+        ORDER BY draw_date DESC 
+        LIMIT ?
+    `;
+
+    const results = await query<LotteryResultRaw[]>(sql, [endDate, limit]);
+
+    if (results.length < amplitude + 1) {
+        return [];
+    }
+
+    // Flatten source (Spec -> G6)
+    // NOTE: flattenResult3D might produce fewer digits than flattenResult
+    const flattenedResults = results.map(r => ({
+        date: r.draw_date,
+        raw: r,
+        flat: flattenResult3D(r),
+        loto3DNumbers: extract3DNumbers(r)
+    }));
+
+    // Find loops
+    // Optimization: The length of flat string for 3D (Spec->G6)
+    // Spec: 5, G1: 5, G2: 10, G3: 30, G4: 16, G5: 24, G6: 9.
+    // Total approx: 99. Loop 99^3 is ~1M iterations per date... times 'amplitude' is X.
+    // This might be heavy if done naively in JS.
+    // 99^3 = 970,299. It's acceptable for nodejs backend if single request.
+
+    // We need to loop i, j, k
+    const LEN = flattenedResults[0].flat.length;
+    const bridges: Bridge[] = [];
+
+    for (let i = 0; i < LEN; i++) {
+        for (let j = 0; j < LEN; j++) {
+            for (let k = 0; k < LEN; k++) {
+
+                let isBridge = true;
+                const path: BridgePath[] = [];
+
+                for (let d = 0; d < amplitude; d++) {
+                    const targetIdx = d;
+                    const sourceIdx = d + 1;
+                    const source = flattenedResults[sourceIdx];
+                    const target = flattenedResults[targetIdx];
+
+                    if (i >= source.flat.length || j >= source.flat.length || k >= source.flat.length) {
+                        isBridge = false;
+                        break;
+                    }
+
+                    const val1 = source.flat[i];
+                    const val2 = source.flat[j];
+                    const val3 = source.flat[k];
+                    const formedNumber = val1 + val2 + val3;
+
+                    if (!target.loto3DNumbers.has(formedNumber)) {
+                        isBridge = false;
+                        break;
+                    }
+
+                    path.push({
+                        date: source.date,
+                        val1,
+                        val2,
+                        val3,
+                        result: formedNumber,
+                        targetDate: target.date,
+                        isHit: true
+                    });
+                }
+
+                if (isBridge) {
+                    const today = flattenedResults[0];
+                    const predicted = today.flat[i] + today.flat[j] + today.flat[k];
+                    bridges.push({
+                        index1: i,
+                        index2: j,
+                        index3: k,
+                        predictedNumber: predicted,
+                        amplitude,
+                        bridgepath: path.reverse()
+                    });
+                }
+            }
+        }
+    }
     return bridges;
 }

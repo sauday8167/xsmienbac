@@ -119,6 +119,17 @@ export default function SoiCauBacNhoPage() {
                     </div>
                 </div>
             </div>
+
+            {/* SEO Content */}
+            <div className="mt-10 p-6 bg-gray-50 rounded-xl border border-gray-100 text-sm text-gray-700 leading-relaxed text-justify shadow-sm">
+                <h2 className="text-lg font-bold text-gray-900 mb-3">Giới thiệu về Soi Cầu Bạc Nhớ</h2>
+                <p>
+                    Phương pháp <strong>Soi Cầu Bạc Nhớ</strong> là tinh hoa đúc kết từ kinh nghiệm dân gian kết hợp với thuật toán máy tính hiện đại.
+                    Chúng tôi phân tích hàng triệu dữ liệu lịch sử để tìm ra chu kỳ lặp lại của các con số: 'Hôm nay về con này, ngày mai thường ra con gì?'.
+                    Công cụ soi cầu bạc nhớ giúp bạn nắm bắt những quy luật ngầm như bạc nhớ theo giải đặc biệt, bạc nhớ đầu đuôi câm, hay bạc nhớ theo các cặp lô hay đi cùng nhau.
+                    Thay vì đoán mò may rủi, hãy để dữ liệu lịch sử dẫn đường cho bạn. Đây là phương pháp soi cầu khoa học, có độ chính xác cao và được cộng đồng cao thủ tin dùng để chốt số an toàn mỗi ngày.
+                </p>
+            </div>
         </div>
     );
 }
