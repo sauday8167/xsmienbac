@@ -74,7 +74,10 @@ export async function analyzeBacNhoCap3Khung3Ngay(days: number = 100, toDate?: s
     const latestDate = results[results.length - 1].draw_date;
     const oldestDate = results[0].draw_date;
     const patterns = new Map<string, BacNhoCap3Pattern>();
-    const followMap = new Map<string, Map<string, number>>();
+    // Optimization: Use Uint16Array instead of Map<string, number> for follow frequencies.
+    // There are only 100 possible follow numbers (00-99).
+    // 161,700 patterns * 100 * 2 bytes = ~32MB RAM (vs ~1.5GB with Maps)
+    const followMap = new Map<string, Uint16Array>();
 
     for (let i = 0; i < results.length - 1; i++) {
         const dayD = results[i];
@@ -102,17 +105,21 @@ export async function analyzeBacNhoCap3Khung3Ngay(days: number = 100, toDate?: s
                     daysSinceLastHit: null,
                     lastHitDate: null
                 });
-                followMap.set(tripleKey, new Map<string, number>());
+                followMap.set(tripleKey, new Uint16Array(100)); // Index 0-99
             }
 
             const pattern = patterns.get(tripleKey)!;
             pattern.totalTriggerAppearances++;
 
             const hitNumbers: string[] = [];
+            const followTracker = followMap.get(tripleKey)!;
+
             frameNumbers.forEach(followNumber => {
-                const followTracker = followMap.get(tripleKey)!;
-                followTracker.set(followNumber, (followTracker.get(followNumber) || 0) + 1);
-                hitNumbers.push(followNumber);
+                const numIdx = parseInt(followNumber, 10);
+                if (!isNaN(numIdx) && numIdx >= 0 && numIdx < 100) {
+                    followTracker[numIdx]++;
+                    hitNumbers.push(followNumber);
+                }
             });
 
             if (hitNumbers.length > 0) {
@@ -128,20 +135,26 @@ export async function analyzeBacNhoCap3Khung3Ngay(days: number = 100, toDate?: s
     }
 
     const allPatterns: BacNhoCap3Pattern[] = [];
-    patterns.forEach(pattern => {
+    patterns.forEach((pattern, key) => {
         // Pruning for performance
         if (pattern.totalTriggerAppearances < minAppearances) {
             return;
         }
 
-        const tripleKey = tripleToKey(pattern.triggerTriple);
-        const followTracker = followMap.get(tripleKey);
+        const followTracker = followMap.get(key);
         if (followTracker && pattern.totalTriggerAppearances > 0) {
             const followNumbers: BacNhoCap3Pattern['followNumbers'] = [];
-            followTracker.forEach((hitCount, number) => {
-                const correlationRate = (hitCount / pattern.totalTriggerAppearances) * 100;
-                followNumbers.push({ number, hitCount, correlationRate });
-            });
+
+            // Iterate through the array (0-99)
+            for (let num = 0; num < 100; num++) {
+                const hitCount = followTracker[num];
+                if (hitCount > 0) {
+                    const correlationRate = (hitCount / pattern.totalTriggerAppearances) * 100;
+                    const numberStr = num.toString().padStart(2, '0');
+                    followNumbers.push({ number: numberStr, hitCount, correlationRate });
+                }
+            }
+
             followNumbers.sort((a, b) => b.correlationRate - a.correlationRate);
             pattern.followNumbers = followNumbers;
         }
