@@ -15,7 +15,12 @@ export default function EditPostPage({ params }: { params: { id: string } }) {
                 const res = await fetch(`/api/admin/posts/${params.id}`);
                 const data = await res.json();
                 if (data.success) {
-                    setPost(data.data);
+                    const postData = data.data;
+                    // Map thumbnail_url to thumbnail for PostForm
+                    if (postData.thumbnail_url && !postData.thumbnail) {
+                        postData.thumbnail = postData.thumbnail_url;
+                    }
+                    setPost(postData);
                 } else {
                     alert(data.error);
                     router.push('/admin/posts');

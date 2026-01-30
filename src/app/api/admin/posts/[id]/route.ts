@@ -37,7 +37,7 @@ export async function PUT(
     try {
         const id = params.id;
         const body = await request.json();
-        const { title, slug, excerpt, content, category, thumbnail, meta_title, meta_description } = body;
+        const { title, slug, excerpt, content, category, thumbnail, meta_title, meta_description, status } = body;
 
         // Validation
         if (!title || !slug || !content) {
@@ -50,9 +50,9 @@ export async function PUT(
         await query(
             `UPDATE posts SET 
             title = ?, slug = ?, excerpt = ?, content = ?, category = ?, 
-            thumbnail_url = ?, meta_title = ?, meta_description = ?, updated_at = datetime('now')
+            thumbnail_url = ?, meta_title = ?, meta_description = ?, status = ?, updated_at = datetime('now')
             WHERE id = ?`,
-            [title, slug, excerpt, content, category, thumbnail, meta_title, meta_description, id]
+            [title, slug, excerpt, content, category, thumbnail, meta_title, meta_description, status || 'draft', id]
         );
 
         return NextResponse.json<ApiResponse>({

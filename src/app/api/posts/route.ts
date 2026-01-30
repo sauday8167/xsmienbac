@@ -67,7 +67,7 @@ export async function GET(request: Request) {
         const offset = parseInt(searchParams.get('offset') || '0');
 
         try {
-            let sql = 'SELECT * FROM posts WHERE status = ?';
+            let sql = 'SELECT *, thumbnail_url as thumbnail FROM posts WHERE status = ?';
             const params: any[] = ['published'];
 
             if (category) {

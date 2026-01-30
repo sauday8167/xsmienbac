@@ -21,7 +21,7 @@ export default function NewsPage() {
                 ? '/api/posts?limit=20'
                 : `/api/posts?category=${category}&limit=20`;
 
-            const response = await fetch(url);
+            const response = await fetch(url, { cache: 'no-store' });
             const data = await response.json();
 
             if (data.success && data.data) {

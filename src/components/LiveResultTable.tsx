@@ -32,7 +32,7 @@ const padArray = (arr: string[] | null, length: number) => {
     return newArr;
 };
 
-// Define strict draw order
+// Define strict draw order: Prize 1 -> ... -> Prize 7 -> Special Prize
 const PRIZE_ORDER: (keyof LotteryResult)[] = [
     'prize_1',
     'prize_2',
@@ -54,42 +54,32 @@ export default function LiveResultTable({
 
     // Helper to determine status based on Waterfall logic
     const getForceStatus = (key: keyof LotteryResult, index: number = 0): 'waiting' | 'rolling' | 'done' | undefined => {
-        if (!isLive) return undefined; // Default behavior if not live
+        if (!isLive) return undefined;
 
-        // Find the "Frontier" (First empty slot in the entire sequence)
         let foundFrontier = false;
         let isCurrentSlot = false;
         let isPastFrontier = false;
 
-        // Traverse the entire structure to find where we are
         for (const k of PRIZE_ORDER) {
             const val = result[k];
+            // Determine expected length for this prize key
             const length = k === 'special_prize' || k === 'prize_1' ? 1
-                : k === 'prize_2' || k === 'prize_7' ? (k === 'prize_7' ? 4 : 2) // Prize 7 has 4 slots usually? Wait, let's allow dynamic check or standard
+                : k === 'prize_2' || k === 'prize_7' ? (k === 'prize_7' ? 4 : 2)
                     : k === 'prize_3' || k === 'prize_5' ? 6
-                        : k === 'prize_4' ? 4
-                            : 3; // Prize 6
+                        : k === 'prize_4' ? 4 // Prize 4 has 4 slots
+                            : 3; // Prize 6 has 3 slots
 
-            // We only care about iterating enough items. padArray handles the visual count, 
-            // but here we just need to know if *this* specific slot (k, index) is the frontier.
-
-            // Simple loop for standard counts
-            const count = length;
-
-            for (let i = 0; i < count; i++) {
-                // Check if this slot has a value in the result object
+            for (let i = 0; i < length; i++) {
                 const hasValue = Array.isArray(val) ? !!val[i] : (i === 0 ? !!val : false);
 
                 if (!foundFrontier) {
                     if (!hasValue) {
                         foundFrontier = true;
-                        // This is the first empty slot -> This is the Rolling one
                         if (k === key && i === index) {
                             isCurrentSlot = true;
                         }
                     }
                 } else {
-                    // We already found the frontier, so this slot is "Waiting"
                     if (k === key && i === index) {
                         isPastFrontier = true;
                     }
@@ -99,29 +89,19 @@ export default function LiveResultTable({
 
         if (isCurrentSlot) return 'rolling';
         if (isPastFrontier) return 'waiting';
-
-        // If we are here, it means we are BEFORE the frontier (so we have a value), 
-        // OR we are the frontier itself (handled above), OR we are somehow lost.
-        // Actually, if we have a value, SpinningNumber handles it as 'done' automatically.
-        // So strict return 'rolling' or 'waiting' is enough.
-        return undefined;
+        return undefined; // Already filled
     };
 
-    // Render helper
     const renderNum = (key: keyof LotteryResult, index: number, digitCount: number, className: string, isRed = false) => {
         const valRaw = result[key];
         const val = Array.isArray(valRaw) ? valRaw[index] : (valRaw as string);
-
-        // Pad strictly? 
-        // The display maps use padArray, so here we assume we are inside that map loop or singular call.
-        // We pass the SAFE value (empty string if undefined).
         const safeVal = val || '';
 
         return (
             <SpinningNumber
                 key={`${key}-${index}`}
                 finalValue={safeVal}
-                isRevealed={!!safeVal} // If it has value, it's revealed/done
+                isRevealed={!!safeVal}
                 forceStatus={getForceStatus(key, index)}
                 digitCount={digitCount}
                 variant="text"
@@ -132,7 +112,7 @@ export default function LiveResultTable({
     };
 
     return (
-        <div className="max-w-3xl mx-auto mb-8 font-sans">
+        <div className="max-w-4xl mx-auto mb-8 font-sans">
             {/* Live Badge */}
             {isLive && (
                 <div className="mb-2 text-center animate-pulse">
@@ -142,10 +122,10 @@ export default function LiveResultTable({
                 </div>
             )}
 
-            <div className="border border-red-700 rounded-t-lg overflow-hidden shadow-sm">
+            <div className="bg-white rounded-xl overflow-hidden shadow-lg border border-gray-300">
                 {/* Header */}
-                <div className="bg-[#b91c1c] text-white text-center py-3">
-                    <h2 className="text-xl md:text-2xl font-bold uppercase">
+                <div className="bg-[#b91c1c] text-white text-center py-4 border-b border-gray-300">
+                    <h2 className="text-xl md:text-2xl font-bold uppercase tracking-wide">
                         Xổ Số Miền Bắc
                     </h2>
                     <p className="text-red-100 text-sm mt-1">
@@ -154,119 +134,116 @@ export default function LiveResultTable({
                 </div>
 
                 {/* Main Result Table */}
-                <div className="bg-white">
-                    <table className="w-full text-center border-collapse border-b border-gray-300">
-                        <tbody>
-                            {/* Special Prize - Moved to Bottom in Render? No, XSMB usually shows DB at top (or bottom?). 
-                                Wait, standard sites show DB at top or bottom? 
-                                TrialBoard shows DB at top. 
-                                Let's keep DB at TOP visually as per previous Live layout, 
-                                BUT the LOGIC (PRIZE_ORDER) treats it as LAST drawn.
-                                This is fine: The UI shows it at top, but 'getForceStatus' thinks it is the last to receive data.
-                                Correct. 
-                            */}
+                <table className="w-full text-center border-collapse">
+                    <tbody>
+                        {/* Special Prize */}
+                        <tr className="bg-red-50/30 border-b border-gray-200">
+                            <td className="w-16 md:w-32 py-2 md:py-4 font-bold text-gray-700 bg-gray-50 border-r border-gray-200 text-sm md:text-base">
+                                <span className="md:hidden">ĐB</span>
+                                <span className="hidden md:inline">Đặc biệt</span>
+                            </td>
+                            <td className="py-2 md:py-4">
+                                <div className="flex justify-center">
+                                    {renderNum('special_prize', 0, 5, "text-3xl md:text-4xl font-bold text-red-600 tracking-wider", true)}
+                                </div>
+                            </td>
+                        </tr>
 
-                            {/* Special Prize */}
-                            <tr className="border-b border-gray-200">
-                                <td className="w-24 md:w-32 py-3 md:py-4 font-bold text-gray-700 bg-gray-50 border-r border-gray-200 text-sm md:text-base">
-                                    Đặc biệt
-                                </td>
-                                <td className="py-3 md:py-4">
-                                    <div className="flex justify-center">
-                                        {renderNum('special_prize', 0, 5, "text-3xl md:text-4xl font-bold text-red-600 tracking-wider", true)}
-                                    </div>
-                                </td>
-                            </tr>
+                        {/* Prize 1 */}
+                        <tr className="border-b border-gray-200">
+                            <td className="py-2 md:py-3 font-bold text-gray-700 bg-gray-50 border-r border-gray-200 text-sm md:text-base">
+                                <span className="md:hidden">G.1</span>
+                                <span className="hidden md:inline">Giải nhất</span>
+                            </td>
+                            <td className="py-2 md:py-3">
+                                <div className="flex justify-center">
+                                    {renderNum('prize_1', 0, 5, "text-xl md:text-2xl font-bold text-gray-900 tracking-wide")}
+                                </div>
+                            </td>
+                        </tr>
 
-                            {/* Prize 1 */}
-                            <tr className="border-b border-gray-200">
-                                <td className="py-3 font-bold text-gray-700 bg-gray-50 border-r border-gray-200 text-sm md:text-base">
-                                    Giải nhất
-                                </td>
-                                <td className="py-3">
-                                    <div className="flex justify-center">
-                                        {renderNum('prize_1', 0, 5, "text-xl md:text-2xl font-bold text-gray-900 tracking-wide")}
-                                    </div>
-                                </td>
-                            </tr>
+                        {/* Prize 2 */}
+                        <tr className="bg-red-50/30 border-b border-gray-200">
+                            <td className="py-2 md:py-3 font-bold text-gray-700 bg-gray-50 border-r border-gray-200 text-sm md:text-base">
+                                <span className="md:hidden">G.2</span>
+                                <span className="hidden md:inline">Giải nhì</span>
+                            </td>
+                            <td className="py-2 md:py-3">
+                                <div className="flex flex-wrap justify-around md:justify-center md:gap-16">
+                                    {padArray(result.prize_2, 2).map((_, i) => renderNum('prize_2', i, 5, "text-xl md:text-2xl font-bold text-gray-900 tracking-wide"))}
+                                </div>
+                            </td>
+                        </tr>
 
-                            {/* Prize 2 */}
-                            <tr className="border-b border-gray-200">
-                                <td className="py-3 font-bold text-gray-700 bg-gray-50 border-r border-gray-200 text-sm md:text-base">
-                                    Giải nhì
-                                </td>
-                                <td className="py-3">
-                                    <div className="flex justify-center gap-8 md:gap-16">
-                                        {padArray(result.prize_2, 2).map((_, i) => renderNum('prize_2', i, 5, "text-xl md:text-2xl font-bold text-gray-900 tracking-wide"))}
-                                    </div>
-                                </td>
-                            </tr>
+                        {/* Prize 3 */}
+                        <tr className="border-b border-gray-200">
+                            <td className="py-2 md:py-3 font-bold text-gray-700 bg-gray-50 border-r border-gray-200 text-sm md:text-base">
+                                <span className="md:hidden">G.3</span>
+                                <span className="hidden md:inline">Giải ba</span>
+                            </td>
+                            <td className="py-2 md:py-3">
+                                <div className="grid grid-cols-3 gap-y-1 gap-x-1 md:gap-y-2 md:gap-x-12 max-w-2xl mx-auto items-center justify-items-center">
+                                    {padArray(result.prize_3, 6).map((_, i) => renderNum('prize_3', i, 5, "text-lg md:text-xl font-bold text-gray-900 tracking-wide"))}
+                                </div>
+                            </td>
+                        </tr>
 
-                            {/* Prize 3 */}
-                            <tr className="border-b border-gray-200">
-                                <td className="py-3 font-bold text-gray-700 bg-gray-50 border-r border-gray-200 text-sm md:text-base">
-                                    Giải ba
-                                </td>
-                                <td className="py-3">
-                                    <div className="grid grid-cols-3 gap-y-2 gap-x-4 max-w-lg mx-auto justify-items-center">
-                                        {padArray(result.prize_3, 6).map((_, i) => renderNum('prize_3', i, 5, "text-lg md:text-xl font-bold text-gray-900 tracking-wide"))}
-                                    </div>
-                                </td>
-                            </tr>
+                        {/* Prize 4 */}
+                        <tr className="bg-red-50/30 border-b border-gray-200">
+                            <td className="py-2 md:py-3 font-bold text-gray-700 bg-gray-50 border-r border-gray-200 text-sm md:text-base">
+                                <span className="md:hidden">G.4</span>
+                                <span className="hidden md:inline">Giải tư</span>
+                            </td>
+                            <td className="py-2 md:py-3">
+                                <div className="flex flex-wrap justify-center gap-4 md:gap-8">
+                                    {padArray(result.prize_4, 4).map((_, i) => renderNum('prize_4', i, 4, "text-lg md:text-xl font-bold text-gray-900 tracking-wide"))}
+                                </div>
+                            </td>
+                        </tr>
 
-                            {/* Prize 4 */}
-                            <tr className="border-b border-gray-200">
-                                <td className="py-3 font-bold text-gray-700 bg-gray-50 border-r border-gray-200 text-sm md:text-base">
-                                    Giải tư
-                                </td>
-                                <td className="py-3">
-                                    <div className="flex flex-wrap justify-center gap-4 md:gap-8">
-                                        {padArray(result.prize_4, 4).map((_, i) => renderNum('prize_4', i, 4, "text-lg md:text-xl font-bold text-gray-900 tracking-wide"))}
-                                    </div>
-                                </td>
-                            </tr>
+                        {/* Prize 5 */}
+                        <tr className="border-b border-gray-200">
+                            <td className="py-2 md:py-3 font-bold text-gray-700 bg-gray-50 border-r border-gray-200 text-sm md:text-base">
+                                <span className="md:hidden">G.5</span>
+                                <span className="hidden md:inline">Giải năm</span>
+                            </td>
+                            <td className="py-2 md:py-3">
+                                <div className="grid grid-cols-3 gap-y-1 gap-x-2 md:gap-y-2 md:gap-x-16 max-w-lg mx-auto justify-items-center">
+                                    {padArray(result.prize_5, 6).map((_, i) => renderNum('prize_5', i, 4, "text-lg md:text-xl font-bold text-gray-900 tracking-wide"))}
+                                </div>
+                            </td>
+                        </tr>
 
-                            {/* Prize 5 */}
-                            <tr className="border-b border-gray-200">
-                                <td className="py-3 font-bold text-gray-700 bg-gray-50 border-r border-gray-200 text-sm md:text-base">
-                                    Giải năm
-                                </td>
-                                <td className="py-3">
-                                    <div className="grid grid-cols-3 gap-y-2 gap-x-4 max-w-lg mx-auto justify-items-center">
-                                        {padArray(result.prize_5, 6).map((_, i) => renderNum('prize_5', i, 4, "text-lg md:text-xl font-bold text-gray-900 tracking-wide"))}
-                                    </div>
-                                </td>
-                            </tr>
+                        {/* Prize 6 */}
+                        <tr className="bg-red-50/30 border-b border-gray-200">
+                            <td className="py-2 md:py-3 font-bold text-gray-700 bg-gray-50 border-r border-gray-200 text-sm md:text-base">
+                                <span className="md:hidden">G.6</span>
+                                <span className="hidden md:inline">Giải sáu</span>
+                            </td>
+                            <td className="py-2 md:py-3">
+                                <div className="flex justify-around md:justify-center md:gap-24">
+                                    {padArray(result.prize_6, 3).map((_, i) => renderNum('prize_6', i, 3, "text-lg md:text-xl font-bold text-gray-900 tracking-wide"))}
+                                </div>
+                            </td>
+                        </tr>
 
-                            {/* Prize 6 */}
-                            <tr className="border-b border-gray-200">
-                                <td className="py-3 font-bold text-gray-700 bg-gray-50 border-r border-gray-200 text-sm md:text-base">
-                                    Giải sáu
-                                </td>
-                                <td className="py-3">
-                                    <div className="flex justify-center gap-8 md:gap-16">
-                                        {padArray(result.prize_6, 3).map((_, i) => renderNum('prize_6', i, 3, "text-lg md:text-xl font-bold text-gray-900 tracking-wide"))}
-                                    </div>
-                                </td>
-                            </tr>
-
-                            {/* Prize 7 */}
-                            <tr>
-                                <td className="py-3 font-bold text-gray-700 bg-gray-50 border-r border-gray-200 text-sm md:text-base">
-                                    Giải bảy
-                                </td>
-                                <td className="py-3">
-                                    <div className="flex justify-center gap-8 md:gap-16">
-                                        {padArray(result.prize_7, 4).map((_, i) => renderNum('prize_7', i, 2, "text-xl md:text-2xl font-bold text-red-600 tracking-wide", true))}
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                        {/* Prize 7 */}
+                        <tr>
+                            <td className="py-2 md:py-3 font-bold text-gray-700 bg-gray-50 border-r border-gray-200 text-sm md:text-base">
+                                <span className="md:hidden">G.7</span>
+                                <span className="hidden md:inline">Giải bảy</span>
+                            </td>
+                            <td className="py-2 md:py-3">
+                                <div className="flex justify-around md:justify-center md:gap-24">
+                                    {padArray(result.prize_7, 4).map((_, i) => renderNum('prize_7', i, 2, "text-xl md:text-2xl font-bold text-red-600 tracking-wide", true))}
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
 
-            {/* Head/Tail Analysis - Always visible for live updates */}
+            {/* Head/Tail Analysis */}
             <div className="mt-6">
                 <LotoHeadTailTable result={result as any} />
             </div>
