@@ -34,16 +34,17 @@ interface ApiResponse {
     totalBridges: number;
     bridges: Bridge[];
     aggregated: AggregatedStat[];
+    touchStats?: { digit: string; count: number }[];
 }
 
 export default function SoiCauBachThuPage() {
     const [amplitude, setAmplitude] = useState<number>(3);
-    const [activeTab, setActiveTab] = useState<'loto' | 'special' | 'loto3d' | 'loto4d'>('loto');
+    const [activeTab, setActiveTab] = useState<'loto' | 'special' | 'loto3d' | 'loto4d' | 'special-touch'>('loto');
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState<ApiResponse | null>(null);
     const [selectedBridge, setSelectedBridge] = useState<Bridge | null>(null);
 
-    const minAmplitude = (activeTab === 'loto3d' || activeTab === 'loto4d') ? 2 : 1;
+    const minAmplitude = (activeTab === 'loto3d' || activeTab === 'loto4d' || activeTab === 'special-touch') ? (activeTab === 'special-touch' ? 4 : 2) : 1;
 
     useEffect(() => {
         if (amplitude < minAmplitude) {
@@ -71,18 +72,20 @@ export default function SoiCauBachThuPage() {
     return (
         <div className="max-w-7xl mx-auto space-y-8 p-4">
             <div className="text-center">
-                <h1 className="text-4xl font-bold text-lottery-gray-800 mb-2">
+                <h1 className="text-xl md:text-3xl font-bold text-lottery-gray-800 mb-2">
                     {activeTab === 'loto' ? 'Soi Cầu Loto Bạch Thủ' :
                         activeTab === 'special' ? 'Soi Cầu Bạch Thủ Đặc Biệt' :
-                            activeTab === 'loto3d' ? 'Soi Cầu Loto 3D (3 Càng)' :
-                                'Soi Cầu Loto 4D (4 Càng)'}
+                            activeTab === 'special-touch' ? 'Soi Cầu Chạm Đặc Biệt' :
+                                activeTab === 'loto3d' ? 'Soi Cầu Loto 3D (3 Càng)' :
+                                    'Soi Cầu Loto 4D (4 Càng)'}
                 </h1>
                 <div className="w-24 h-1 bg-lottery-red-600 mx-auto rounded-full mt-4"></div>
-                <p className="mt-4 text-gray-600 max-w-2xl mx-auto">
+                <p className="mt-4 text-gray-600 max-w-2xl mx-auto text-sm md:text-base">
                     {activeTab === 'loto' ? 'Hệ thống tự động tìm kiếm các vị trí ghép cầu có chu kỳ ổn định từ dữ liệu lịch sử.' :
                         activeTab === 'special' ? 'Hệ thống tìm kiếm các vị trí ghép cầu ăn thẳng Giải Đặc Biệt (2 số cuối) từ dữ liệu lịch sử.' :
-                            activeTab === 'loto3d' ? 'Hệ thống tìm kiếm 3 vị trí ghép thành bộ 3 số (3 càng) ăn các giải từ ĐB đến Giải 6.' :
-                                'Hệ thống tìm kiếm 4 vị trí ghép thành bộ 4 số (4 càng) ăn các giải từ ĐB đến Giải 5.'}
+                            activeTab === 'special-touch' ? 'Hệ thống tìm các vị trí ghép cầu có ít nhất một số trùng với các số của Giải Đặc Biệt (Chạm).' :
+                                activeTab === 'loto3d' ? 'Hệ thống tìm kiếm 3 vị trí ghép thành bộ 3 số (3 càng) ăn các giải từ ĐB đến Giải 6.' :
+                                    'Hệ thống tìm kiếm 4 vị trí ghép thành bộ 4 số (4 càng) ăn các giải từ ĐB đến Giải 5.'}
                 </p>
 
                 {/* Tabs */}
@@ -90,13 +93,14 @@ export default function SoiCauBachThuPage() {
                     {[
                         { id: 'loto', label: 'Bạch Thủ Loto' },
                         { id: 'special', label: 'Bạch Thủ Đặc Biệt' },
+                        { id: 'special-touch', label: 'Chạm Đặc Biệt' },
                         { id: 'loto3d', label: 'Loto 3D' },
                         { id: 'loto4d', label: 'Loto 4D' }
                     ].map(tab => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as any)}
-                            className={`px-6 py-2 rounded-full font-bold transition-all ${activeTab === tab.id
+                            className={`px-4 py-2 rounded-full font-bold transition-all text-sm md:text-base ${activeTab === tab.id
                                 ? 'bg-lottery-red-600 text-white shadow-lg transform scale-105'
                                 : 'bg-white text-gray-600 border hover:bg-gray-50'
                                 }`}
@@ -143,13 +147,35 @@ export default function SoiCauBachThuPage() {
                 </div >
             </div >
 
+            {/* Standard View */}
             {data && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Left Column: Top Predictions */}
+                    {/* ... Existing Standard View ... */}
                     <div className="lg:col-span-1 space-y-6">
+
+                        {/* Touch Stats (Only for Special Touch) */}
+                        {activeTab === 'special-touch' && data.touchStats && data.touchStats.length > 0 && (
+                            <div className="card bg-white shadow border border-gray-200 p-0 overflow-hidden">
+                                <div className="bg-gradient-to-r from-purple-600 to-purple-700 p-4 text-white">
+                                    <h3 className="font-bold text-lg">📊 Thống Kê Chạm</h3>
+                                    <p className="text-purple-100 text-xs">Tần suất xuất hiện các chạm trong cầu</p>
+                                </div>
+                                <div className="p-4">
+                                    <div className="grid grid-cols-5 gap-2">
+                                        {data.touchStats.map((item) => (
+                                            <div key={item.digit} className="flex flex-col items-center p-2 bg-gray-50 rounded border border-gray-100 hover:bg-purple-50 transition-colors">
+                                                <span className="text-xl font-bold text-gray-800">{item.digit}</span>
+                                                <span className="text-xs text-purple-600 font-semibold">{item.count} cầu</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         <div className="card bg-white shadow border border-gray-200 p-0 overflow-hidden">
                             <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 text-white">
-                                <h3 className="font-bold text-lg">🔥 Top {activeTab === 'loto4d' ? '4D' : activeTab === 'loto3d' ? '3D' : activeTab === 'special' ? 'ĐB' : 'Loto'} Đẹp Nhất</h3>
+                                <h3 className="font-bold text-lg">🔥 Top {activeTab === 'loto4d' ? '4D' : activeTab === 'loto3d' ? '3D' : activeTab === 'special' ? 'ĐB' : activeTab === 'special-touch' ? 'Chạm' : 'Loto'} Đẹp Nhất</h3>
                                 <p className="text-blue-100 text-xs">Sắp xếp theo số lượng cầu</p>
                             </div>
                             <div className="p-4 max-h-[500px] overflow-y-auto">
@@ -199,7 +225,7 @@ export default function SoiCauBachThuPage() {
                                     ✕
                                 </button>
                                 <h3 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2">
-                                    Chi tiết Cầu {activeTab === 'loto4d' ? '4D' : activeTab === 'loto3d' ? '3D' : activeTab === 'special' ? 'Đặc Biệt' : 'Bạch Thủ'}:
+                                    Chi tiết Cầu {activeTab === 'loto4d' ? '4D' : activeTab === 'loto3d' ? '3D' : activeTab === 'special' ? 'Đặc Biệt' : activeTab === 'special-touch' ? 'Chạm ĐB' : 'Bạch Thủ'}:
                                     <span className="text-lottery-red-600 text-3xl mx-2">{selectedBridge.predictedNumber}</span>
                                 </h3>
 
@@ -271,8 +297,7 @@ export default function SoiCauBachThuPage() {
                         )}
                     </div>
                 </div>
-            )
-            }
+            )}
             {/* SEO Content */}
             <div className="mt-10 p-6 bg-gray-50 rounded-xl border border-gray-100 text-sm text-gray-700 leading-relaxed text-justify shadow-sm">
                 <h2 className="text-lg font-bold text-gray-900 mb-3">Giới thiệu về Soi Cầu Bạch Thủ</h2>

@@ -9,7 +9,9 @@ export const revalidate = 0;
 function transformResult(raw: LotteryResultRaw): LotteryResult {
     const parseSafe = (val: string) => {
         try {
+            if (!val || val === 'null') return [];
             const parsed = JSON.parse(val);
+            if (parsed === null) return [];
             return Array.isArray(parsed) ? parsed : [String(val)];
         } catch (e) {
             return [String(val)];

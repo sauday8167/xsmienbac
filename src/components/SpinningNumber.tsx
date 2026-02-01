@@ -93,17 +93,8 @@ export function SpinningNumber({
                     }, 80);
                 }
             }
-        } else {
-            if (internalStatus === 'waiting' || internalStatus === 'done') {
-                // If invalid (waiting), we DON'T want to drum/roll automatically if we want static hyphen
-                if (!isInvalidValue) {
-                    setInternalStatus('drum');
-                    intervalRef.current = setInterval(() => {
-                        setDisplayValue(generateRandomString(digitCount));
-                    }, 150);
-                }
-            }
         }
+        // REMOVED: Auto-drum logic for waiting state
 
         return () => {
             if (intervalRef.current) clearInterval(intervalRef.current);
@@ -121,9 +112,20 @@ export function SpinningNumber({
         </div>
     );
 
-    // Explicit idle/waiting state for Text Mode = Hyphen
-    if (!isBall && status === 'waiting') {
-        return <div className={`text-gray-300 font-bold ${className}`}>-</div>;
+    // Explicit idle/waiting state
+    if (status === 'waiting') {
+        // Text mode: Return empty or hyphen? User said "không hiển thị...". Let's return empty space to keep layout.
+        if (!isBall) {
+            return <div className={`text-transparent select-none font-bold ${className}`}>-</div>;
+        }
+        // Ball mode: Return empty placeholder ball
+        return (
+            <div className={`flex ${className}`}>
+                {Array.from({ length: digitCount }).map((_, i) => (
+                    <span key={i} className={`loto-ball bg-gray-50 border border-gray-100`}></span>
+                ))}
+            </div>
+        );
     }
 
     if (status === 'drum') {

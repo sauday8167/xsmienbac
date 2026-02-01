@@ -1,15 +1,17 @@
 import { NextResponse } from 'next/server';
 import { findBridges, findBridges3D, findBridges4D, Bridge } from '@/lib/soi-cau-bach-thu';
+import { findAIPatternsV2, findAIPatterns3D, findAIPatterns4D } from '../../../lib/ai-patterns';
 import { queryOne } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
 // Simple in-memory cache
-// Key format: `${date}_${amplitude}_${type}`
+// Key format: `${ date }_${ amplitude }_${ type } `
 const cache = new Map<string, { timestamp: number, data: any }>();
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 
 export async function GET(request: Request) {
+    console.log("API ROUTE HIT: " + request.url);
     try {
         const { searchParams } = new URL(request.url);
 
@@ -29,15 +31,16 @@ export async function GET(request: Request) {
             return NextResponse.json({ success: false, error: 'Biên độ phải từ 1 đến 20' }, { status: 400 });
         }
 
-        const type = (searchParams.get('type') || 'loto') as 'loto' | 'special' | 'loto3d' | 'loto4d';
-        if (type !== 'loto' && type !== 'special' && type !== 'loto3d' && type !== 'loto4d') {
+        const type = (searchParams.get('type') || 'loto') as 'loto' | 'special' | 'loto3d' | 'loto4d' | 'special-touch' | 'ai-mining' | 'ai-mining-3d' | 'ai-mining-4d';
+        if (type !== 'loto' && type !== 'special' && type !== 'loto3d' && type !== 'loto4d' && type !== 'special-touch' && type !== 'ai-mining' && type !== 'ai-mining-3d' && type !== 'ai-mining-4d') {
             return NextResponse.json({ success: false, error: 'Invalid type' }, { status: 400 });
         }
 
-        // Check Cache
+        // Check Cache (Skip for AI Mining to ensure freshness during dev)
         const cacheKey = `${date}_${amplitude}_${type}`;
         const cached = cache.get(cacheKey);
-        if (cached && (Date.now() - cached.timestamp < CACHE_TTL_MS)) {
+        // Check cache (SKIP for AI mining to ensure dev verification)
+        if (cached && (Date.now() - cached.timestamp < CACHE_TTL_MS) && type !== 'ai-mining' && type !== 'ai-mining-3d' && type !== 'ai-mining-4d') {
             // Return cached data
             return NextResponse.json({
                 success: true,
@@ -47,13 +50,21 @@ export async function GET(request: Request) {
         }
 
         // Find bridges
-        let bridges;
+        let bridges: any[] = []; // Relax type for AI pattern mixing
+        let aiPatterns: any[] = [];
+
         if (type === 'loto3d') {
             bridges = await findBridges3D(date!, amplitude);
         } else if (type === 'loto4d') {
             bridges = await findBridges4D(date!, amplitude);
+        } else if (type === 'ai-mining') {
+            aiPatterns = await findAIPatternsV2(date!);
+        } else if (type === 'ai-mining-3d') {
+            aiPatterns = await findAIPatterns3D(date!);
+        } else if (type === 'ai-mining-4d') {
+            aiPatterns = await findAIPatterns4D(date!);
         } else {
-            bridges = await findBridges(date!, amplitude, type);
+            bridges = await findBridges(date!, amplitude, type as 'loto' | 'special' | 'special-touch');
         }
 
         // Aggregate stats
@@ -66,12 +77,31 @@ export async function GET(request: Request) {
             .map(([number, count]) => ({ number, count }))
             .sort((a, b) => b.count - a.count);
 
+        // Special Stats for Touch Mode
+        let touchStats: { digit: string; count: number }[] = [];
+        if (type === 'special-touch') {
+            const touchFreq: Record<string, number> = {};
+            bridges.forEach(b => {
+                // predictedNumber is typically 2 digits, e.g. "34"
+                const digits = b.predictedNumber.split('');
+                const uniqueDigits = new Set(digits); // Avoid double counting if "33"
+                uniqueDigits.forEach(d => {
+                    touchFreq[d] = (touchFreq[d] || 0) + 1;
+                });
+            });
+            touchStats = Object.entries(touchFreq)
+                .map(([digit, count]) => ({ digit, count }))
+                .sort((a, b) => b.count - a.count);
+        }
+
         const responseData = {
             date,
             amplitude,
-            totalBridges: bridges.length,
+            totalBridges: type === 'ai-mining' ? aiPatterns.length : bridges.length,
             bridges,
-            aggregated
+            aiPatterns,
+            aggregated,
+            touchStats
         };
 
         // Save to Cache
@@ -82,8 +112,7 @@ export async function GET(request: Request) {
 
         return NextResponse.json({
             success: true,
-            data: responseData,
-            _source: 'db'
+            data: responseData
         });
 
     } catch (error: any) {

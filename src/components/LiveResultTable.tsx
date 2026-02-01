@@ -53,7 +53,7 @@ export default function LiveResultTable({
     if (!result) return null;
 
     // Helper to determine status based on Waterfall logic
-    const getForceStatus = (key: keyof LotteryResult, index: number = 0): 'waiting' | 'rolling' | 'done' | undefined => {
+    const getForceStatus = (key: keyof LotteryResult, index: number = 0): 'waiting' | 'rolling' | 'done' | 'drum' | undefined => {
         if (!isLive) return undefined;
 
         let foundFrontier = false;
@@ -87,7 +87,7 @@ export default function LiveResultTable({
             }
         }
 
-        if (isCurrentSlot) return 'rolling';
+        if (isCurrentSlot) return 'drum';
         if (isPastFrontier) return 'waiting';
         return undefined; // Already filled
     };

@@ -24,7 +24,8 @@ export async function GET() {
         const hasSpecialPrize = result?.special_prize && result.special_prize.length === 5;
 
         // Check if in live time window AND special prize not yet revealed
-        const isLiveTime = !hasSpecialPrize && (hour === 18 && minute >= 10 && minute <= 40);
+        // TEST MODE: Force live time if special prize not revealed
+        const isLiveTime = !hasSpecialPrize; // && (hour === 18 && minute >= 10 && minute <= 40);
 
         // Determine current phase
         let phase = 'IDLE';

@@ -3,7 +3,7 @@
 
 const { query, queryOne } = require('../src/lib/db');
 
-const TEST_DATE = '2026-01-19';
+const TEST_DATE = new Date().toISOString().split('T')[0];
 
 // Sample data for simulation (from real lottery results)
 const FULL_RESULT = {
