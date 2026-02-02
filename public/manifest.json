@@ -1,0 +1,23 @@
+{
+    "name": "Xổ Số Miền Bắc 24h",
+    "short_name": "XSMB 24h",
+    "description": "Kết quả xổ số miền Bắc trực tiếp, nhanh chóng và chính xác nhất.",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#dc2626",
+    "icons": [
+        {
+            "src": "/logo-v5.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/logo-v5.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
+}

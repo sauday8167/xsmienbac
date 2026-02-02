@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import TrialBoard from './components/TrialBoard';
 import LotoStats from './components/LotoStats';
+import TopicHub from '@/components/TopicHub';
 
 // Status for each individual number cell
 export type NumberStatus = 'waiting' | 'rolling' | 'done';
@@ -160,6 +161,11 @@ export default function RandomDrawPage() {
                 Lưu ý: Kết quả quay thử chỉ mang tính chất tham khảo, giải trí và không có giá trị lĩnh thưởng.
                 Chúc các bạn may mắn!
             </div>
+            {/* Topic Cluster Hub */}
+            <div className="my-8">
+                <TopicHub title="Các Công Cụ Xổ Số Khác" />
+            </div>
+
             {/* SEO Content */}
             <div className="mt-10 p-6 bg-gray-50 rounded-xl border border-gray-100 text-sm text-gray-700 leading-relaxed text-justify shadow-sm">
                 <h2 className="text-lg font-bold text-gray-900 mb-3">Giới thiệu về Quay Thử Xổ Số</h2>

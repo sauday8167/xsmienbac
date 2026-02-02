@@ -4,13 +4,13 @@
     "content": "Website cung cấp kết quả xổ số miền Bắc trực tiếp và nhanh chóng. Mọi thông tin thống kê và phân tích chỉ mang tính chất tham khảo cho người chơi."
   },
   "socials": {
-    "facebook": "#",
+    "facebook": "https://web.facebook.com/xsmb24h",
     "youtube": "#",
     "telegram": "#",
     "zalo": "#"
   },
   "contact": {
-    "email": "hoangdongvan297@gmail.com",
+    "email": "admin@xsmb24h.com",
     "phone": "",
     "address": ""
   },
@@ -32,6 +32,10 @@
       {
         "label": "Tin tức / Soi cầu",
         "href": "/tin-tuc"
+      },
+      {
+        "label": "Ban Biên Tập & Chuyên Gia",
+        "href": "/gioi-thieu/ban-bien-tap"
       }
     ]
   },

@@ -12,12 +12,21 @@ import { readFile } from 'fs/promises';
 import { join } from 'path';
 
 import { UIProvider } from '@/context/UIContext';
+import { AdSenseProvider } from '@/context/AdSenseContext';
 import MobileDrawer from '@/components/MobileDrawer';
-import CustomCodeInjector from '@/components/CustomCodeInjector'; // Import new component
+import MobileStickyAd from '@/components/MobileStickyAd';
+import CustomCodeInjector from '@/components/CustomCodeInjector';
+import JsonLd from '@/components/seo/JsonLd';
+import { generateOrganizationSchema, generateWebSiteSchema } from '@/lib/schema-generator';
 
 const inter = Inter({ subsets: ['latin', 'vietnamese'] })
 
-export const revalidate = 0;
+export const viewport = {
+    themeColor: '#dc2626',
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 5,
+};
 
 export async function generateMetadata(): Promise<Metadata> {
     const configPath = join(process.cwd(), 'src/data/seo-config.json');
@@ -131,6 +140,8 @@ export default async function RootLayout({
         <html lang="vi">
             {/* ... head ... */}
             <body className={inter.className}>
+                <JsonLd data={generateOrganizationSchema()} />
+                <JsonLd data={generateWebSiteSchema()} />
                 {seoConfig.googleAnalyticsId && (
                     <>
                         <script
@@ -150,33 +161,44 @@ export default async function RootLayout({
                     </>
                 )}
 
+                {/* Google AdSense Script */}
+                <script
+                    async
+                    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-0000000000000000"
+                    crossOrigin="anonymous"
+                />
+
                 <UIProvider>
-                    {customCode.header && (
-                        <CustomCodeInjector id="header-custom-code" html={customCode.header} />
-                    )}
+                    <AdSenseProvider>
+                        {customCode.header && (
+                            <CustomCodeInjector id="header-custom-code" html={customCode.header} />
+                        )}
 
-                    <div className="flex flex-col min-h-screen bg-gray-50 pb-16 md:pb-0">
-                        <Header />
-                        <main className="flex-grow container mx-auto px-2 md:px-4 py-4 md:py-8">
-                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8">
-                                <div className="lg:col-span-8">
-                                    {children}
+                        <div className="flex flex-col min-h-screen bg-gray-50 pb-16 md:pb-0">
+                            <Header />
+                            <main className="flex-grow container mx-auto px-2 md:px-4 py-4 md:py-8">
+                                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8">
+                                    <div className="lg:col-span-8">
+                                        {children}
+                                    </div>
+                                    <div className="lg:col-span-4 mt-8 lg:mt-0">
+                                        <Sidebar />
+                                    </div>
                                 </div>
-                                <div className="lg:col-span-4 mt-8 lg:mt-0">
-                                    <Sidebar />
-                                </div>
-                            </div>
-                        </main>
-                        <Footer />
-                    </div>
+                            </main>
+                            <Footer />
+                        </div>
 
-                    <AdPopup />
-                    <MobileBottomNav />
-                    <MobileDrawer />
 
-                    {customCode.footer && (
-                        <CustomCodeInjector id="footer-custom-code" html={customCode.footer} />
-                    )}
+                        <AdPopup />
+                        <MobileStickyAd />
+                        <MobileBottomNav />
+                        <MobileDrawer />
+
+                        {customCode.footer && (
+                            <CustomCodeInjector id="footer-custom-code" html={customCode.footer} />
+                        )}
+                    </AdSenseProvider>
                 </UIProvider>
             </body>
         </html>

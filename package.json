@@ -14,7 +14,9 @@
     "run-ai": "tsx scripts/run-ai.ts"
   },
   "dependencies": {
+    "@ducanh2912/next-pwa": "^10.2.9",
     "@google/generative-ai": "^0.24.1",
+    "@vercel/og": "^0.8.6",
     "autoprefixer": "^10.4.17",
     "axios": "^1.6.7",
     "bcryptjs": "^2.4.3",

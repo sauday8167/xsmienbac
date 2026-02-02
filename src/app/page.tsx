@@ -4,6 +4,8 @@ import { useEffect, useState, useRef } from 'react';
 import ResultTable from '@/components/ResultTable';
 import LiveResultTable from '@/components/LiveResultTable';
 import StatisticsPanel from '@/components/StatisticsPanel';
+import GoogleAd from '@/components/GoogleAd';
+import FAQSection from '@/components/FAQSection';
 import type { LotteryResult } from '@/types';
 
 export default function HomePage() {
@@ -134,6 +136,11 @@ export default function HomePage() {
             {/* Statistics */}
             <StatisticsPanel />
 
+            {/* Google AdSense - Homepage Middle */}
+            <div className="my-8">
+                <GoogleAd slotId="0987654321" style={{ minHeight: '120px' }} />
+            </div>
+
             {/* Quick Actions */}
             <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <a href="/ket-qua-theo-ngay" className="card group hover:shadow-xl transition-all border-slate-200">
@@ -197,6 +204,31 @@ export default function HomePage() {
                     </div>
                 </div>
             </section>
+
+            {/* FAQ Section */}
+            <div className="my-8">
+                <FAQSection
+                    title="Câu Hỏi Thường Gặp Về Xổ Số Miền Bắc"
+                    items={[
+                        {
+                            question: "Xổ số miền Bắc quay thưởng lúc mấy giờ?",
+                            answer: "XSMB bắt đầu quay thưởng trực tiếp vào lúc <strong>18:15 hàng ngày</strong>. Quá trình quay số diễn ra liên tục từ giải Nhất đến giải Đặc biệt và kết thúc vào khoảng 18:30."
+                        },
+                        {
+                            question: "Cơ cấu giải thưởng XSMB như thế nào?",
+                            answer: "Cơ cấu giải thưởng xổ số miền Bắc bao gồm 27 giải thưởng, trong đó có <strong>3 giải Đặc biệt</strong> (mỗi giải 1 tỷ đồng) và 12 giải phụ Đặc biệt. Tổng giá trị giải thưởng lên đến hàng tỷ đồng mỗi ngày."
+                        },
+                        {
+                            question: "Xem kết quả xổ số tại đây có chính xác không?",
+                            answer: "Tuyệt đối chính xác! Chúng tôi kết nối trực tiếp với trường quay số để cập nhật dữ liệu theo thời gian thực (Live). Kết quả được kiểm duyệt kỹ càng trước khi hiển thị."
+                        },
+                        {
+                            question: "Làm thế nào để nhận giải nếu trúng thưởng?",
+                            answer: "Nếu trúng thưởng, bạn nên bảo quản vé số nguyên vẹn và liên hệ với công ty xổ số kiến thiết hoặc đại lý ủy quyền gần nhất để làm thủ tục lĩnh thưởng trong vòng 30 ngày."
+                        }
+                    ]}
+                />
+            </div>
 
             {/* SEO Content */}
             <div className="mt-10 p-6 bg-gray-50 rounded-xl border border-gray-100 text-sm text-gray-700 leading-relaxed text-justify shadow-sm">

@@ -43,15 +43,24 @@ export default function SoiCauBachThuPage() {
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState<ApiResponse | null>(null);
     const [selectedBridge, setSelectedBridge] = useState<Bridge | null>(null);
+    const [copySuccess, setCopySuccess] = useState(false);
 
-    const minAmplitude = 3; // User requested start from 3 days
+    // Dynamic min amplitude: 1 for Special Prize, 3 for others
+    const minAmplitude = activeTab === 'special' ? 1 : 3;
 
     useEffect(() => {
+        // Enforce min amplitude when switching tabs
         if (amplitude < minAmplitude) {
             setAmplitude(minAmplitude);
+        } else {
+            // Trigger analyze if amplitude is already valid (if it wasn't, the setAmplitude above will trigger re-render -> effect)
+            // Actually, we should just depend on activeTab/amplitude to trigger fetch?
+            // The original code called handleAnalyze() in useEffect[activeTab].
+            // If we setAmplitude, that might not trigger handleAnalyze if handleAnalyze is not in dependency of amplitude.
+            // Let's keep original logic: explicit call.
+            handleAnalyze();
         }
-        handleAnalyze();
-    }, [activeTab]); // Re-fetch when tab changes
+    }, [activeTab]);
 
     // Helper to calculate next day
     const getNextDate = (dateStr: string) => {
@@ -64,7 +73,10 @@ export default function SoiCauBachThuPage() {
         setLoading(true);
         setSelectedBridge(null);
         try {
-            const res = await fetch(`/api/soi-cau-bach-thu?amplitude=${amplitude}&type=${activeTab}`);
+            // Ensure we use the current valid amplitude
+            const effectiveAmplitude = amplitude < minAmplitude ? minAmplitude : amplitude;
+
+            const res = await fetch(`/api/soi-cau-bach-thu?amplitude=${effectiveAmplitude}&type=${activeTab}`);
             const result = await res.json();
             if (result.success) {
                 setData(result.data);
@@ -74,6 +86,15 @@ export default function SoiCauBachThuPage() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleCopy = () => {
+        if (!data || !data.aggregated.length) return;
+        const numbers = data.aggregated.map(item => item.number).join(', ');
+        navigator.clipboard.writeText(numbers).then(() => {
+            setCopySuccess(true);
+            setTimeout(() => setCopySuccess(false), 2000);
+        });
     };
 
     return (
@@ -193,11 +214,28 @@ export default function SoiCauBachThuPage() {
                         )}
 
                         <div className="card bg-white shadow border border-gray-200 p-0 overflow-hidden">
-                            <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 text-white">
-                                <h3 className="font-bold text-lg">
-                                    🔥 Top {activeTab === 'loto4d' ? '4D' : activeTab === 'loto3d' ? '3D' : activeTab === 'special' ? 'ĐB' : activeTab === 'special-touch' ? 'Chạm' : 'Loto'} Đẹp Nhất
-                                </h3>
-                                <p className="text-blue-100 text-xs">Sắp xếp theo số lượng cầu (Biên độ {amplitude} ngày)</p>
+                            <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 text-white flex justify-between items-center group">
+                                <div>
+                                    <h3 className="font-bold text-lg">
+                                        🔥 Top {activeTab === 'loto4d' ? '4D' : activeTab === 'loto3d' ? '3D' : activeTab === 'special' ? 'ĐB' : activeTab === 'special-touch' ? 'Chạm' : 'Loto'} Đẹp Nhất
+                                    </h3>
+                                    <p className="text-blue-100 text-xs">Sắp xếp theo số lượng cầu (Biên độ {amplitude} ngày)</p>
+                                </div>
+                                <button
+                                    onClick={handleCopy}
+                                    className="bg-white/20 hover:bg-white/30 text-white rounded px-3 py-1.5 text-xs font-semibold backdrop-blur-sm transition-all flex items-center gap-1.5 border border-white/20 shadow-sm md:opacity-0 md:group-hover:opacity-100 focus:opacity-100"
+                                    title="Sao chép toàn bộ danh sách"
+                                >
+                                    {copySuccess ? (
+                                        <>
+                                            <span className="text-green-300">✓</span> Đã chép
+                                        </>
+                                    ) : (
+                                        <>
+                                            📋 Copy
+                                        </>
+                                    )}
+                                </button>
                             </div>
                             <div className="p-4 max-h-[500px] overflow-y-auto">
                                 {data.aggregated.map((item, idx) => (

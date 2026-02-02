@@ -8,11 +8,27 @@ import BacNho2NgayTab from './components/BacNho2NgayTab';
 
 type TabType = 'so-don' | 'cap-2' | 'cap-3' | '2-ngay';
 
+import JsonLd from '@/components/seo/JsonLd';
+import { generateManualArticleSchema, generateBreadcrumbSchema } from '@/lib/schema-generator';
+import TopicHub from '@/components/TopicHub';
+
 export default function SoiCauBacNhoPage() {
     const [activeTab, setActiveTab] = useState<TabType>('so-don');
 
+    const breadcrumbs = [
+        { name: 'Trang chủ', item: '/' },
+        { name: 'Soi Cầu Bạc Nhớ', item: '/soi-cau-bac-nho' }
+    ];
+
+    const schemaArgs = {
+        title: 'Soi Cầu Bạc Nhớ - Dự Đoán KQXS Chính Xác',
+        description: 'Phương pháp soi cầu bạc nhớ lô đề miền Bắc chính xác nhất. Phân tích thống kê bạc nhớ theo giải đặc biệt, lô tô ra theo lô tô.'
+    };
+
     return (
         <div className="space-y-6">
+            <JsonLd data={generateManualArticleSchema(schemaArgs.title, schemaArgs.description, '/soi-cau-bac-nho')} />
+            <JsonLd data={generateBreadcrumbSchema(breadcrumbs)} />
             {/* Header */}
             <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="text-center md:text-left">
@@ -118,6 +134,11 @@ export default function SoiCauBacNhoPage() {
                         </ul>
                     </div>
                 </div>
+            </div>
+
+            {/* Topic Cluster Hub */}
+            <div className="my-8">
+                <TopicHub title="Công Cụ Soi Cầu Liên Quan" />
             </div>
 
             {/* SEO Content */}

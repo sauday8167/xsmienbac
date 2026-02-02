@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
@@ -101,7 +102,13 @@ export default async function Footer() {
                                     rel="noopener noreferrer"
                                     className="block rounded-lg overflow-hidden border border-gray-700 hover:border-lottery-gold-500 transition-colors"
                                 >
-                                    <img src={banner.image} alt={banner.title} className="w-full h-auto object-cover" />
+                                    <Image
+                                        src={banner.image}
+                                        alt={banner.title}
+                                        width={300}
+                                        height={150}
+                                        className="w-full h-auto object-cover"
+                                    />
                                 </a>
                             ))}
                         </div>
@@ -178,6 +185,24 @@ export default async function Footer() {
                                 {config.disclaimer.highlight}
                             </span>
                         </p>
+                    </div>
+
+                    {/* Policy Links (New Column or Integrated) */}
+                    <div className="md:col-span-3 lg:col-span-3 border-t border-lottery-gray-700 pt-8 mt-4">
+                        <div className="flex flex-wrap justify-center gap-4 md:gap-8 text-xs text-lottery-gray-400 font-medium uppercase tracking-wider">
+                            <Link href="/mien-tru-trach-nhiem" className="hover:text-white transition-colors">
+                                Miễn Trừ Trách Nhiệm
+                            </Link>
+                            <Link href="/chinh-sach-bao-mat" className="hover:text-white transition-colors">
+                                Chính Sách Bảo Mật
+                            </Link>
+                            <Link href="/dieu-khoan-su-dung" className="hover:text-white transition-colors">
+                                Điều Khoản Sử Dụng
+                            </Link>
+                            <Link href="/lien-he" className="hover:text-white transition-colors">
+                                Liên Hệ
+                            </Link>
+                        </div>
                     </div>
                 </div>
 

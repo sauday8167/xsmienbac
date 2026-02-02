@@ -1,7 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
+import GoogleAd from './GoogleAd';
 
 interface Post {
     id: number;
@@ -134,6 +136,11 @@ export default function Sidebar() {
 
     return (
         <aside className="space-y-4 md:space-y-6">
+            {/* AdSense Unit - Sidebar Top */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <GoogleAd position="sidebar_top" style={{ minHeight: '250px' }} />
+            </div>
+
             {/* Quick Links Widget */}
             <div className="bg-white rounded-lg shadow-md p-4 md:p-6 border-t-4 border-lottery-red-600">
                 <h3 className="text-lg font-bold text-lottery-gray-800 mb-4 flex items-center">
@@ -181,9 +188,11 @@ export default function Sidebar() {
                             rel="noopener noreferrer"
                             className="block rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow"
                         >
-                            <img
+                            <Image
                                 src={banner.image}
                                 alt={banner.title}
+                                width={300}
+                                height={150}
                                 className="w-full h-auto object-cover"
                             />
                         </a>
@@ -286,6 +295,14 @@ export default function Sidebar() {
                         <div className="text-sm opacity-90">Tần suất</div>
                         <div className="text-2xl font-bold">7 ngày/tuần</div>
                     </div>
+                </div>
+            </div>
+
+            {/* Sticky Ad - Sidebar Bottom */}
+            <div className="sticky top-4">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="text-[10px] text-center text-gray-400 py-1 uppercase tracking-wider">Quảng cáo</div>
+                    <GoogleAd position="sidebar_sticky" style={{ minHeight: '600px', display: 'block' }} />
                 </div>
             </div>
         </aside>

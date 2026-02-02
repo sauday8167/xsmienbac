@@ -13,10 +13,31 @@ export async function generateMetadata() {
     };
 }
 
+import JsonLd from '@/components/seo/JsonLd';
+import { generateManualArticleSchema, generateBreadcrumbSchema } from '@/lib/schema-generator';
+import TopicHub from '@/components/TopicHub';
+
 export default function StatisticsPage() {
+    const breadcrumbs = [
+        { name: 'Trang chủ', item: '/' },
+        { name: 'Thống Kê', item: '/thong-ke' }
+    ];
+
+    const schemaArgs = {
+        title: 'Thống Kê Lô Tô Miền Bắc - Phân Tích Tần Suất Chi Tiết',
+        description: 'Công cụ thống kê loto gan, tần suất xuất hiện, đầu đuôi, và phân tích nhịp lô tô chính xác nhất xổ số miền Bắc.'
+    };
+
     return (
         <div className="space-y-8">
+            <JsonLd data={generateManualArticleSchema(schemaArgs.title, schemaArgs.description, '/thong-ke')} />
+            <JsonLd data={generateBreadcrumbSchema(breadcrumbs)} />
             <StatisticsClient />
+            {/* Topic Cluster Hub */}
+            <div className="my-8">
+                <TopicHub title="Các Công Cụ Thống Kê Khác" />
+            </div>
+
             {/* SEO Content */}
             <div className="p-6 bg-gray-50 rounded-xl border border-gray-100 text-sm text-gray-700 leading-relaxed text-justify shadow-sm">
                 <h2 className="text-lg font-bold text-gray-900 mb-3">Giới thiệu về Thống Kê Xổ Số</h2>

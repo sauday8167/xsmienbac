@@ -31,14 +31,6 @@
       "seoDescription": "Phân tích bạc nhớ xổ số miền Bắc dựa trên dữ liệu kết quả đã quay, trình bày thống kê lịch sử mang tính tham khảo."
     },
     {
-      "id": "7",
-      "href": "/tin-tuc",
-      "label": "Tin tức",
-      "description": "Tin tức xổ số",
-      "seoTitle": "Tin Tức Xổ Số Miền Bắc – Cập Nhật Thông Tin Mới Nhất",
-      "seoDescription": "Cập nhật tin tức xổ số miền Bắc, lịch quay, cơ cấu giải thưởng và các thông tin chính thống liên quan đến XSMB."
-    },
-    {
       "id": "8",
       "href": "/quay-thu",
       "label": "Quay thử",
@@ -55,12 +47,12 @@
       "seoDescription": "Công cụ tạo dàn số học xổ số miền Bắc bằng thuật toán mô phỏng ngẫu nhiên, chỉ dùng để tham khảo thông tin."
     },
     {
-      "id": "cao-thu-ai",
-      "href": "/cao-thu-ai",
-      "label": "Cao Thủ AI",
-      "description": "AI phân tích cao thủ",
-      "seoTitle": "Cao Thủ AI Dự Đoán Xổ Số Miền Bắc - Độ Chính Xác Cao",
-      "seoDescription": "Cao Thủ AI sử dụng thuật toán máy học để phân tích số liệu xổ số."
+      "id": "7",
+      "href": "/tin-tuc",
+      "label": "Tin tức",
+      "description": "Tin tức xổ số",
+      "seoTitle": "Tin Tức Xổ Số Miền Bắc – Cập Nhật Thông Tin Mới Nhất",
+      "seoDescription": "Cập nhật tin tức xổ số miền Bắc, lịch quay, cơ cấu giải thưởng và các thông tin chính thống liên quan đến XSMB."
     },
     {
       "id": "ai-pred",
@@ -73,50 +65,12 @@
   ],
   "mobile": [
     {
-      "id": "1",
-      "href": "/",
-      "label": "Trang chủ",
-      "description": "Trang chủ"
-    },
-    {
       "id": "cao-thu-ai-m",
       "href": "/cao-thu-ai",
       "label": "Cao Thủ AI",
       "description": "AI phân tích",
       "seoTitle": "Cao Thủ AI Dự Đoán Xổ Số Miền Bắc",
       "seoDescription": "Cao Thủ AI phân tích xổ số chính xác."
-    },
-    {
-      "id": "ai-pred-m",
-      "href": "/du-doan-ai",
-      "label": "Dự đoán AI",
-      "description": "AI phân tích",
-      "seoTitle": "Dự Đoán AI Xổ Số Miền Bắc – Phân Tích Dữ Liệu",
-      "seoDescription": "Dự đoán AI xổ số miền Bắc dựa trên phân tích dữ liệu lịch sử và mô phỏng thống kê, nội dung mang tính tham khảo."
-    },
-    {
-      "id": "3",
-      "href": "/ket-qua-theo-ngay",
-      "label": "Kết quả theo ngày",
-      "description": "Xem KQXS theo ngày",
-      "seoTitle": "Kết Quả Xổ Số Miền Bắc Theo Ngày – Tra Cứu XSMB",
-      "seoDescription": "Xem kết quả xổ số miền Bắc theo từng ngày đầy đủ 27 giải. Tra cứu nhanh, chính xác kết quả XSMB hôm nay và các ngày trước."
-    },
-    {
-      "id": "4",
-      "href": "/thong-ke",
-      "label": "Thống kê",
-      "description": "Thống kê loto",
-      "seoTitle": "Thống Kê Xổ Số Miền Bắc – Tổng Hợp Dữ Liệu XSMB",
-      "seoDescription": "Tổng hợp thống kê kết quả xổ số miền Bắc từ dữ liệu đã quay. Theo dõi tần suất, phân bố và thông tin XSMB dễ dàng."
-    },
-    {
-      "id": "loto-3-4-cang-m",
-      "href": "/thong-ke/loto-3-4-cang",
-      "label": "Loto 3 4 Càng",
-      "description": "Thống kê loto 3 càng, 4 càng",
-      "seoTitle": "Loto 3 4 Càng Xổ Số Miền Bắc – Thống Kê Kết Quả",
-      "seoDescription": "Tổng hợp và thống kê loto 3 càng, 4 càng xổ số miền Bắc từ dữ liệu đã quay, trình bày rõ ràng, dễ xem."
     },
     {
       "id": "5",
@@ -181,6 +135,14 @@
       "seoTitle": "Phân Tích Giải Đặc Biệt Xổ Số Miền Bắc – Dữ Liệu XSMB",
       "seoDescription": "Phân tích giải đặc biệt xổ số miền Bắc dựa trên dữ liệu lịch sử đã công bố, phục vụ tra cứu thông tin.",
       "id": "1768578655887"
+    },
+    {
+      "id": "loto-3-4-cang-m",
+      "href": "/thong-ke/loto-3-4-cang",
+      "label": "Loto 3 4 Càng",
+      "description": "Thống kê loto 3 càng, 4 càng",
+      "seoTitle": "Loto 3 4 Càng Xổ Số Miền Bắc – Thống Kê Kết Quả",
+      "seoDescription": "Tổng hợp và thống kê loto 3 càng, 4 càng xổ số miền Bắc từ dữ liệu đã quay, trình bày rõ ràng, dễ xem."
     },
     {
       "id": "10",

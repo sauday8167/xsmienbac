@@ -1,7 +1,5 @@
-/** @type {import('next').NextConfig} */
 const nextConfig = {
     reactStrictMode: true,
-    optimizeFonts: false,
     images: {
         domains: ['localhost'],
     },
@@ -13,5 +11,5 @@ const nextConfig = {
     },
 }
 
-module.exports = nextConfig
+module.exports = nextConfig;
 // restart

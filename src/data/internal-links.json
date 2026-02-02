@@ -1,0 +1,57 @@
+[
+    {
+        "keyword": "xsmb",
+        "url": "/",
+        "priority": 10
+    },
+    {
+        "keyword": "xổ số miền bắc",
+        "url": "/",
+        "priority": 10
+    },
+    {
+        "keyword": "soi cầu",
+        "url": "/soi-cau-bac-nho",
+        "priority": 9
+    },
+    {
+        "keyword": "soi cầu lô",
+        "url": "/soi-cau-bac-nho",
+        "priority": 9
+    },
+    {
+        "keyword": "thống kê loto",
+        "url": "/thong-ke",
+        "priority": 8
+    },
+    {
+        "keyword": "thống kê",
+        "url": "/thong-ke",
+        "priority": 8
+    },
+    {
+        "keyword": "quay thử",
+        "url": "/quay-thu",
+        "priority": 7
+    },
+    {
+        "keyword": "dò vé số",
+        "url": "/do-ve-so",
+        "priority": 7
+    },
+    {
+        "keyword": "tin tức xổ số",
+        "url": "/tin-tuc",
+        "priority": 6
+    },
+    {
+        "keyword": "lịch quay thưởng",
+        "url": "/lich-quay-thuong",
+        "priority": 5
+    },
+    {
+        "keyword": "kết quả xổ số",
+        "url": "/",
+        "priority": 10
+    }
+]

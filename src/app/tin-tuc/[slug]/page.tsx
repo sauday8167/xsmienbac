@@ -3,6 +3,10 @@ import type { Post } from '@/types';
 import { Metadata, ResolvingMetadata } from 'next';
 import PostDetailClient from './PostDetailClient';
 import { notFound } from 'next/navigation';
+import JsonLd from '@/components/seo/JsonLd';
+import { generateArticleSchema, generateBreadcrumbSchema } from '@/lib/schema-generator';
+import { linkify } from '@/lib/internal-linker';
+import { processContentImages } from '@/lib/image-seo';
 
 async function getPost(slug: string): Promise<Post | null> {
     try {
@@ -59,9 +63,13 @@ export async function generateMetadata(
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://xosomienbac24h.com';
     const postUrl = `${siteUrl}/tin-tuc/${post.slug}`;
+
+    // Use Dynamic OG Image
+    const ogImageUrl = `${siteUrl}/api/og?title=${encodeURIComponent(post.title)}&date=${encodeURIComponent(new Date(post.created_at).toLocaleDateString('vi-VN'))}`;
+
     const imageUrl = post.thumbnail
         ? (post.thumbnail.startsWith('http') ? post.thumbnail : `${siteUrl}${post.thumbnail}`)
-        : `${siteUrl}/default-share.jpg`;
+        : ogImageUrl;
 
     const previousImages = (await parent).openGraph?.images || [];
 
@@ -95,7 +103,25 @@ export default async function PostDetailPage({ params }: Props) {
         return notFound();
     }
 
+    // Process content for Auto Internal Linking
+    post.content = linkify(post.content);
+
+    // Process content for Auto Image SEO
+    post.content = processContentImages(post.content, post.title);
+
     const relatedPosts = post.category ? await getRelatedPosts(post.category, post.id) : [];
 
-    return <PostDetailClient post={post} relatedPosts={relatedPosts} />;
+    const breadcrumbs = [
+        { name: 'Trang chủ', item: '/' },
+        { name: 'Tin tức', item: '/tin-tuc' },
+        { name: post.title, item: `/tin-tuc/${post.slug}` }
+    ];
+
+    return (
+        <>
+            <JsonLd data={generateArticleSchema(post)} />
+            <JsonLd data={generateBreadcrumbSchema(breadcrumbs)} />
+            <PostDetailClient post={post} relatedPosts={relatedPosts} />
+        </>
+    );
 }

@@ -2,7 +2,9 @@
 
 import { useUI } from '@/context/UIContext';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
+import GoogleAd from './GoogleAd';
 
 interface Banner {
     id: string;
@@ -103,6 +105,13 @@ export default function Header() {
 
     return (
         <>
+            {/* AdSense (Top of Header) */}
+            <div className="bg-white border-b border-gray-100">
+                <div className="container mx-auto px-4 py-1">
+                    <GoogleAd position="header_top" style={{ maxHeight: '100px', minHeight: '50px' }} />
+                </div>
+            </div>
+
             {/* Header Ads (Top) */}
             {ads.length > 0 && (
                 <div className="bg-gray-100 py-2 border-b border-gray-200">
@@ -123,10 +132,11 @@ export default function Header() {
                                 {branding.logo && (
                                     <div className="relative">
                                         <div className="absolute -inset-1 bg-white/20 rounded-full blur group-hover:bg-white/30 transition-all duration-300"></div>
-                                        <img
+                                        <Image
                                             src={branding.logo}
                                             alt="Logo"
-                                            style={{ maxHeight: '80px', width: 'auto', maxWidth: '100%' }}
+                                            width={80}
+                                            height={80}
                                             className="relative w-16 h-16 md:w-20 md:h-20 object-contain drop-shadow-lg transform group-hover:scale-105 transition-transform duration-300"
                                         />
                                     </div>
@@ -197,7 +207,13 @@ export default function Header() {
                                 rel="noopener noreferrer"
                                 className="block rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
                             >
-                                <img src={banner.image} alt={banner.title} className="w-full h-auto object-cover" />
+                                <Image
+                                    src={banner.image}
+                                    alt={banner.title}
+                                    width={400}
+                                    height={200}
+                                    className="w-full h-auto object-cover"
+                                />
                             </a>
                         ))}
                     </div>
