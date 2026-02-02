@@ -78,3 +78,37 @@ export function extractAllLotoNumbers(result: LotteryResultRaw): string[] {
 
     return numbers;
 }
+
+/**
+ * Extract HEAD loto numbers (first 2 digits) from Special to Prize 6.
+ * Excludes Prize 7 as per request (or because they are only 2 digits anyway).
+ */
+export function extractHeadLotoNumbers(result: LotteryResultRaw): Set<string> {
+    const numbers = new Set<string>();
+
+    const addHeadNumber = (val: any) => {
+        if (!val) return;
+        const str = String(val).trim();
+        if (str.length >= 2) {
+            numbers.add(str.slice(0, 2));
+        } else if (str.length === 1) {
+            numbers.add(str.padStart(2, '0'));
+        }
+    };
+
+    addHeadNumber(result.special_prize);
+    addHeadNumber(result.prize_1);
+
+    [result.prize_2, result.prize_3, result.prize_4, result.prize_5, result.prize_6].forEach(prizeJson => {
+        try {
+            const prizeArray = JSON.parse(prizeJson);
+            if (Array.isArray(prizeArray)) {
+                prizeArray.forEach(num => addHeadNumber(num));
+            }
+        } catch (e) {
+            // Skip invalid JSON
+        }
+    });
+
+    return numbers;
+}

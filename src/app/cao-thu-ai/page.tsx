@@ -18,23 +18,22 @@ interface ApiResponse {
 }
 
 export default function CaoThuAIPage() {
-    const [activeTab, setActiveTab] = useState<'2d' | '3d' | '4d'>('2d');
+    const [activeTab, setActiveTab] = useState<'2d' | '3d' | '4d' | 'loto-dau'>('2d');
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState<ApiResponse | null>(null);
 
     // Initial fetch
     useEffect(() => {
         handleAnalyze();
-    }, []);
+    }, [activeTab]); // Trigger when tab changes
 
     const handleAnalyze = async () => {
         setLoading(true);
         try {
-            // For now, only 2D AI mining is implemented.
-            // Adjust 'type' if future 3d/4d AI is added.
             let typeParam = 'ai-mining';
             if (activeTab === '3d') typeParam = 'ai-mining-3d';
             if (activeTab === '4d') typeParam = 'ai-mining-4d';
+            if (activeTab === 'loto-dau') typeParam = 'ai-mining-loto-dau';
 
             // We use existing API.
             const res = await fetch(`/api/soi-cau-bach-thu?type=${typeParam}`);
@@ -64,13 +63,13 @@ export default function CaoThuAIPage() {
                 <div className="flex justify-center mt-6 space-x-4 flex-wrap gap-2">
                     {[
                         { id: '2d', label: 'Số 2D (Loto)' },
+                        { id: 'loto-dau', label: 'Loto Đầu (2 Số)' },
                         { id: '3d', label: 'Số 3D (3 Càng)' },
                         { id: '4d', label: 'Số 4D (4 Càng)' }
                     ].map(tab => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as any)}
-                            disabled={false}
                             className={`px-4 py-2 rounded-full font-bold transition-all text-sm md:text-base relative ${activeTab === tab.id
                                 ? 'bg-lottery-red-600 text-white shadow-lg transform scale-105'
                                 : 'bg-white text-gray-600 border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed'

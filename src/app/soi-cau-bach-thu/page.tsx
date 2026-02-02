@@ -39,12 +39,12 @@ interface ApiResponse {
 
 export default function SoiCauBachThuPage() {
     const [amplitude, setAmplitude] = useState<number>(3);
-    const [activeTab, setActiveTab] = useState<'loto' | 'special' | 'loto3d' | 'loto4d' | 'special-touch'>('loto');
+    const [activeTab, setActiveTab] = useState<'loto' | 'special' | 'loto3d' | 'loto4d' | 'special-touch' | 'loto-dau'>('loto');
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState<ApiResponse | null>(null);
     const [selectedBridge, setSelectedBridge] = useState<Bridge | null>(null);
 
-    const minAmplitude = (activeTab === 'loto3d' || activeTab === 'loto4d' || activeTab === 'special-touch') ? (activeTab === 'special-touch' ? 4 : 2) : 1;
+    const minAmplitude = 3; // User requested start from 3 days
 
     useEffect(() => {
         if (amplitude < minAmplitude) {
@@ -52,6 +52,13 @@ export default function SoiCauBachThuPage() {
         }
         handleAnalyze();
     }, [activeTab]); // Re-fetch when tab changes
+
+    // Helper to calculate next day
+    const getNextDate = (dateStr: string) => {
+        const d = new Date(dateStr);
+        d.setDate(d.getDate() + 1);
+        return d.toLocaleDateString('vi-VN');
+    };
 
     const handleAnalyze = async () => {
         setLoading(true);
@@ -76,22 +83,34 @@ export default function SoiCauBachThuPage() {
                     {activeTab === 'loto' ? 'Soi Cầu Loto Bạch Thủ' :
                         activeTab === 'special' ? 'Soi Cầu Bạch Thủ Đặc Biệt' :
                             activeTab === 'special-touch' ? 'Soi Cầu Chạm Đặc Biệt' :
-                                activeTab === 'loto3d' ? 'Soi Cầu Loto 3D (3 Càng)' :
-                                    'Soi Cầu Loto 4D (4 Càng)'}
+                                activeTab === 'loto-dau' ? 'Soi Cầu Loto Đầu (2 Số Đầu)' :
+                                    activeTab === 'loto3d' ? 'Soi Cầu Loto 3D (3 Càng)' :
+                                        'Soi Cầu Loto 4D (4 Càng)'}
                 </h1>
+
+                {data && (
+                    <div className="inline-block bg-green-100 text-green-800 px-4 py-1 rounded-full text-sm font-semibold mt-2 border border-green-200 animate-fade-in shadow-sm">
+                        ✅ Đã có kết quả {new Date(data.date).toLocaleDateString('vi-VN')} → Dự báo cho: <span className="text-lottery-red-600 font-bold text-base">{getNextDate(data.date)}</span>
+                    </div>
+                )}
+
                 <div className="w-24 h-1 bg-lottery-red-600 mx-auto rounded-full mt-4"></div>
+
+                {/* ... description ... */}
                 <p className="mt-4 text-gray-600 max-w-2xl mx-auto text-sm md:text-base">
                     {activeTab === 'loto' ? 'Hệ thống tự động tìm kiếm các vị trí ghép cầu có chu kỳ ổn định từ dữ liệu lịch sử.' :
                         activeTab === 'special' ? 'Hệ thống tìm kiếm các vị trí ghép cầu ăn thẳng Giải Đặc Biệt (2 số cuối) từ dữ liệu lịch sử.' :
                             activeTab === 'special-touch' ? 'Hệ thống tìm các vị trí ghép cầu có ít nhất một số trùng với các số của Giải Đặc Biệt (Chạm).' :
-                                activeTab === 'loto3d' ? 'Hệ thống tìm kiếm 3 vị trí ghép thành bộ 3 số (3 càng) ăn các giải từ ĐB đến Giải 6.' :
-                                    'Hệ thống tìm kiếm 4 vị trí ghép thành bộ 4 số (4 càng) ăn các giải từ ĐB đến Giải 5.'}
+                                activeTab === 'loto-dau' ? 'Hệ thống quét cầu ăn 2 số ĐẦU của các giải từ Đặc Biệt đến Giải 6.' :
+                                    activeTab === 'loto3d' ? 'Hệ thống tìm kiếm 3 vị trí ghép thành bộ 3 số (3 càng) ăn các giải từ ĐB đến Giải 6.' :
+                                        'Hệ thống tìm kiếm 4 vị trí ghép thành bộ 4 số (4 càng) ăn các giải từ ĐB đến Giải 5.'}
                 </p>
 
                 {/* Tabs */}
                 <div className="flex justify-center mt-6 space-x-4 flex-wrap gap-2">
                     {[
                         { id: 'loto', label: 'Bạch Thủ Loto' },
+                        { id: 'loto-dau', label: 'Loto Đầu' },
                         { id: 'special', label: 'Bạch Thủ Đặc Biệt' },
                         { id: 'special-touch', label: 'Chạm Đặc Biệt' },
                         { id: 'loto3d', label: 'Loto 3D' },
@@ -126,14 +145,14 @@ export default function SoiCauBachThuPage() {
                         <input
                             type="range"
                             min={minAmplitude}
-                            max="10"
+                            max="20"
                             value={amplitude}
                             onChange={(e) => setAmplitude(Number(e.target.value))}
                             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-lottery-red-600"
                         />
                         <div className="flex justify-between text-xs text-gray-500 mt-1">
                             <span>{minAmplitude} ngày</span>
-                            <span>10 ngày</span>
+                            <span>20 ngày</span>
                         </div>
                     </div>
 
@@ -175,8 +194,10 @@ export default function SoiCauBachThuPage() {
 
                         <div className="card bg-white shadow border border-gray-200 p-0 overflow-hidden">
                             <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 text-white">
-                                <h3 className="font-bold text-lg">🔥 Top {activeTab === 'loto4d' ? '4D' : activeTab === 'loto3d' ? '3D' : activeTab === 'special' ? 'ĐB' : activeTab === 'special-touch' ? 'Chạm' : 'Loto'} Đẹp Nhất</h3>
-                                <p className="text-blue-100 text-xs">Sắp xếp theo số lượng cầu</p>
+                                <h3 className="font-bold text-lg">
+                                    🔥 Top {activeTab === 'loto4d' ? '4D' : activeTab === 'loto3d' ? '3D' : activeTab === 'special' ? 'ĐB' : activeTab === 'special-touch' ? 'Chạm' : 'Loto'} Đẹp Nhất
+                                </h3>
+                                <p className="text-blue-100 text-xs">Sắp xếp theo số lượng cầu (Biên độ {amplitude} ngày)</p>
                             </div>
                             <div className="p-4 max-h-[500px] overflow-y-auto">
                                 {data.aggregated.map((item, idx) => (
@@ -275,7 +296,7 @@ export default function SoiCauBachThuPage() {
                                         <div className="relative pl-8">
                                             <div className="absolute -left-3 top-0 w-6 h-6 rounded-full bg-red-600 border-4 border-white shadow-md animate-pulse"></div>
                                             <div className="text-sm text-gray-500 mb-1">
-                                                Dự báo cho ngày mai (dựa trên kết quả {new Date(data.date).toLocaleDateString('vi-VN')})
+                                                Dự báo cho ngày mai <strong className="text-lottery-red-600">({data && getNextDate(data.date)})</strong>
                                             </div>
                                             <div className="bg-red-50 p-4 rounded border border-red-200 inline-block">
                                                 <div className="text-center">

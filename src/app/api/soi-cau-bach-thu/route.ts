@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { findBridges, findBridges3D, findBridges4D, Bridge } from '@/lib/soi-cau-bach-thu';
-import { findAIPatternsV2, findAIPatterns3D, findAIPatterns4D } from '../../../lib/ai-patterns';
+import { findAIPatternsV2, findAIPatterns3D, findAIPatterns4D, findAIPatternsLotoDau } from '@/lib/ai-patterns';
 import { queryOne } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
@@ -31,8 +31,8 @@ export async function GET(request: Request) {
             return NextResponse.json({ success: false, error: 'Biên độ phải từ 1 đến 20' }, { status: 400 });
         }
 
-        const type = (searchParams.get('type') || 'loto') as 'loto' | 'special' | 'loto3d' | 'loto4d' | 'special-touch' | 'ai-mining' | 'ai-mining-3d' | 'ai-mining-4d';
-        if (type !== 'loto' && type !== 'special' && type !== 'loto3d' && type !== 'loto4d' && type !== 'special-touch' && type !== 'ai-mining' && type !== 'ai-mining-3d' && type !== 'ai-mining-4d') {
+        const type = (searchParams.get('type') || 'loto') as 'loto' | 'special' | 'loto3d' | 'loto4d' | 'special-touch' | 'loto-dau' | 'ai-mining' | 'ai-mining-3d' | 'ai-mining-4d' | 'ai-mining-loto-dau';
+        if (type !== 'loto' && type !== 'special' && type !== 'loto3d' && type !== 'loto4d' && type !== 'special-touch' && type !== 'loto-dau' && type !== 'ai-mining' && type !== 'ai-mining-3d' && type !== 'ai-mining-4d' && type !== 'ai-mining-loto-dau') {
             return NextResponse.json({ success: false, error: 'Invalid type' }, { status: 400 });
         }
 
@@ -63,8 +63,10 @@ export async function GET(request: Request) {
             aiPatterns = await findAIPatterns3D(date!);
         } else if (type === 'ai-mining-4d') {
             aiPatterns = await findAIPatterns4D(date!);
+        } else if (type === 'ai-mining-loto-dau') {
+            aiPatterns = await findAIPatternsLotoDau(date!);
         } else {
-            bridges = await findBridges(date!, amplitude, type as 'loto' | 'special' | 'special-touch');
+            bridges = await findBridges(date!, amplitude, type as 'loto' | 'special' | 'special-touch' | 'loto-dau');
         }
 
         // Aggregate stats
@@ -85,7 +87,7 @@ export async function GET(request: Request) {
                 // predictedNumber is typically 2 digits, e.g. "34"
                 const digits = b.predictedNumber.split('');
                 const uniqueDigits = new Set(digits); // Avoid double counting if "33"
-                uniqueDigits.forEach(d => {
+                uniqueDigits.forEach((d: any) => {
                     touchFreq[d] = (touchFreq[d] || 0) + 1;
                 });
             });

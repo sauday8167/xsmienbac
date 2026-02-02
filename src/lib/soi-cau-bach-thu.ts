@@ -1,4 +1,4 @@
-import { LotteryResultRaw, extractAllLotoNumbers } from './lottery-helpers';
+import { LotteryResultRaw, extractAllLotoNumbers, extractHeadLotoNumbers } from './lottery-helpers';
 import { query } from './db';
 
 export interface BridgePath {
@@ -22,10 +22,7 @@ export interface Bridge {
     bridgepath: BridgePath[];
 }
 
-// ... existing flattenResult3D ...
-
-// Extract last 4 digits from Special -> G5 (exclude G6, G7 as they are usually shorter or excluded)
-// G6 are 3 digits, G7 are 2 digits.
+// Extract last 4 digits from Special -> G5 (exclude G6, G7)
 export function extract4DNumbers(result: LotteryResultRaw): Set<string> {
     const numbers = new Set<string>();
     const addNumber = (val: any) => {
@@ -34,7 +31,6 @@ export function extract4DNumbers(result: LotteryResultRaw): Set<string> {
         if (str.length >= 4) {
             numbers.add(str.slice(-4));
         } else {
-            // If less than 4 digits (unlikely for Spec->G5 but possible), pad it
             numbers.add(str.padStart(4, '0'));
         }
     };
@@ -49,8 +45,6 @@ export function extract4DNumbers(result: LotteryResultRaw): Set<string> {
     });
     return numbers;
 }
-
-// ... existing findBridges and others ...
 
 export async function findBridges4D(endDate: string, amplitude: number = 3): Promise<Bridge[]> {
     const limit = amplitude + 5;
@@ -67,7 +61,6 @@ export async function findBridges4D(endDate: string, amplitude: number = 3): Pro
         return [];
     }
 
-    // Flatten source (Spec -> G6)
     const flattenedResults = results.map(r => ({
         date: r.draw_date,
         raw: r,
@@ -75,24 +68,12 @@ export async function findBridges4D(endDate: string, amplitude: number = 3): Pro
         loto4DNumbers: extract4DNumbers(r)
     }));
 
-    // Safety check: if flat string is too long, 4 loops will kill CPU.
-    // 100^4 = 100,000,000 iterations.
-    // In JS/V8, simple loop is fast, but 100M is ~100-300ms if empty, but with logic inside it's seconds.
-    // We will try. If it times out, we need to optimize.
-
     const LEN = flattenedResults[0].flat.length;
     const bridges: Bridge[] = [];
-
-    // Limit execution time? Or ensure loop is tight.
-    // Optimization: We could pre-calculate indices that match.
-    // But for now, brute force.
 
     for (let i = 0; i < LEN; i++) {
         for (let j = 0; j < LEN; j++) {
             for (let k = 0; k < LEN; k++) {
-                // Optimization: Check if i,j,k can even form a valid prefix for *any* 4D number in target?
-                // Probably too complex to optimize prematurely.
-
                 for (let l = 0; l < LEN; l++) {
 
                     let isBridge = true;
@@ -152,7 +133,6 @@ export async function findBridges4D(endDate: string, amplitude: number = 3): Pro
     return bridges;
 }
 
-// Flatten Special -> G6 (Exclude G7) for Loto 3D source
 export function flattenResult3D(result: LotteryResultRaw): string {
     let sequence = '';
     sequence += String(result.special_prize || '').trim();
@@ -174,7 +154,6 @@ export function flattenResult3D(result: LotteryResultRaw): string {
     return sequence;
 }
 
-// Extract last 3 digits from Special -> G6
 export function extract3DNumbers(result: LotteryResultRaw): Set<string> {
     const numbers = new Set<string>();
     const addNumber = (val: any) => {
@@ -198,18 +177,10 @@ export function extract3DNumbers(result: LotteryResultRaw): Set<string> {
     return numbers;
 }
 
-// Helper to flatten the result object into a sequence of 107 digits
-// Order: Special -> G1 -> G2 -> ... -> G7
 export function flattenResult(result: LotteryResultRaw): string {
     let sequence = '';
-
-    // DB (Special): 5 digits
     sequence += String(result.special_prize || '').trim();
-
-    // G1: 5 digits
     sequence += String(result.prize_1 || '').trim();
-
-    // Helper for arrays
     const parsePrize = (json: string) => {
         try {
             const arr = JSON.parse(json);
@@ -219,32 +190,18 @@ export function flattenResult(result: LotteryResultRaw): string {
         } catch (e) { /* ignore */ }
         return '';
     };
-
-    // G2: 2 prizes * 5
     sequence += parsePrize(result.prize_2);
-    // G3: 6 prizes * 5
     sequence += parsePrize(result.prize_3);
-    // G4: 4 prizes * 4
     sequence += parsePrize(result.prize_4);
-    // G5: 6 prizes * 4
     sequence += parsePrize(result.prize_5);
-    // G6: 3 prizes * 3
     sequence += parsePrize(result.prize_6);
-    // G7: 4 prizes * 2
     sequence += parsePrize(result.prize_7);
-
     return sequence;
 }
 
-export async function findBridges(endDate: string, amplitude: number = 3, targetType: 'loto' | 'special' | 'special-touch' = 'loto'): Promise<Bridge[]> {
+export async function findBridges(endDate: string, amplitude: number = 3, targetType: 'loto' | 'special' | 'special-touch' | 'loto-dau' = 'loto'): Promise<Bridge[]> {
     // We need data for (amplitude + 1) days:
-    // To check a bridge of length 3:
-    // Day T (End): Form digits. Point to T+1 (Hypothetical).
-    // Day T-1: Form digits -> Checked against T
-    // Day T-2: Form digits -> Checked against T-1
-    // Day T-3: Form digits -> Checked against T-2
-    // So we need results from T-3 to T.
-
+    // ...
     // Fetch last (amplitude + 5) results to be safe
     const limit = amplitude + 5;
     const sql = `
@@ -270,7 +227,8 @@ export async function findBridges(endDate: string, amplitude: number = 3, target
         date: r.draw_date,
         raw: r,
         flat: flattenResult(r),
-        lotoNumbers: new Set(extractAllLotoNumbers(r)) // Use Set for O(1) lookup
+        lotoNumbers: new Set(extractAllLotoNumbers(r)), // Use Set for O(1) lookup
+        lotoHeadNumbers: new Set(extractHeadLotoNumbers(r)) // For Head Loto logic
     }));
 
     // Iterate all pairs
@@ -341,6 +299,13 @@ export async function findBridges(endDate: string, amplitude: number = 3, target
                         break;
                     }
 
+                } else if (targetType === 'loto-dau') {
+                    // HEAD Loto Mode (New)
+                    // Check if formedNumber exists in the HEAD numbers set
+                    if (!target.lotoHeadNumbers.has(formedNumber)) {
+                        isBridge = false;
+                        break;
+                    }
                 } else {
                     // Standard Loto Mode
                     if (!target.lotoNumbers.has(formedNumber)) {
