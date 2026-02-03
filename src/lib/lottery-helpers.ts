@@ -112,3 +112,67 @@ export function extractHeadLotoNumbers(result: LotteryResultRaw): Set<string> {
 
     return numbers;
 }
+
+/**
+ * Extract ALL 3D loto numbers (last 3 digits) from Special to Prize 6.
+ * Excludes Prize 7 (only 2 digits).
+ */
+export function extractAll3DNumbers(result: LotteryResultRaw): string[] {
+    const numbers: string[] = [];
+
+    const addNumber = (val: any) => {
+        if (!val) return;
+        const str = String(val).trim();
+        if (str.length >= 3) {
+            numbers.push(str.slice(-3).padStart(3, '0'));
+        }
+    };
+
+    addNumber(result.special_prize);
+    addNumber(result.prize_1);
+
+    [result.prize_2, result.prize_3, result.prize_4, result.prize_5, result.prize_6].forEach(prizeJson => {
+        try {
+            const prizeArray = JSON.parse(prizeJson);
+            if (Array.isArray(prizeArray)) {
+                prizeArray.forEach(num => addNumber(num));
+            }
+        } catch (e) {
+            // Skip invalid JSON
+        }
+    });
+
+    return numbers;
+}
+
+/**
+ * Extract ALL 4D loto numbers (last 4 digits) from Special to Prize 5.
+ * Excludes Prize 6 (3 digits) and Prize 7 (2 digits).
+ */
+export function extractAll4DNumbers(result: LotteryResultRaw): string[] {
+    const numbers: string[] = [];
+
+    const addNumber = (val: any) => {
+        if (!val) return;
+        const str = String(val).trim();
+        if (str.length >= 4) {
+            numbers.push(str.slice(-4).padStart(4, '0'));
+        }
+    };
+
+    addNumber(result.special_prize);
+    addNumber(result.prize_1);
+
+    [result.prize_2, result.prize_3, result.prize_4, result.prize_5].forEach(prizeJson => {
+        try {
+            const prizeArray = JSON.parse(prizeJson);
+            if (Array.isArray(prizeArray)) {
+                prizeArray.forEach(num => addNumber(num));
+            }
+        } catch (e) {
+            // Skip invalid JSON
+        }
+    });
+
+    return numbers;
+}

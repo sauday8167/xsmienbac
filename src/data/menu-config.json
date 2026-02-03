@@ -61,6 +61,14 @@
       "description": "AI phân tích xổ số",
       "seoTitle": "Dự Đoán AI Xổ Số Miền Bắc – Phân Tích Dữ Liệu",
       "seoDescription": "Dự đoán AI xổ số miền Bắc dựa trên phân tích dữ liệu lịch sử và mô phỏng thống kê, nội dung mang tính tham khảo."
+    },
+    {
+      "id": "ai-pred-2",
+      "href": "/du-doan-ai-2",
+      "label": "AI Phễu Lọc",
+      "description": "AI Tự học & Sàng lọc",
+      "seoTitle": "Dự Đoán AI 2.0 - Phễu Lọc Thông Minh",
+      "seoDescription": "Hệ thống dự đoán thế hệ mới với cơ chế tự học và phễu lọc 4 lớp."
     }
   ],
   "mobile": [
@@ -71,6 +79,14 @@
       "description": "AI phân tích",
       "seoTitle": "Cao Thủ AI Dự Đoán Xổ Số Miền Bắc",
       "seoDescription": "Cao Thủ AI phân tích xổ số chính xác."
+    },
+    {
+      "id": "ai-pred-2-m",
+      "href": "/du-doan-ai-2",
+      "label": "AI Phễu Lọc",
+      "description": "AI Tự học & Sàng lọc",
+      "seoTitle": "Dự Đoán AI 2.0 - Phễu Lọc Thông Minh",
+      "seoDescription": "Hệ thống dự đoán thế hệ mới với cơ chế tự học và phễu lọc 4 lớp."
     },
     {
       "id": "5",

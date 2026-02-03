@@ -1,14 +1,14 @@
 import React from 'react';
 
 interface LotteryResult {
-    special_prize: string;
-    prize_1: string;
-    prize_2: string[];
-    prize_3: string[];
-    prize_4: string[];
-    prize_5: string[];
-    prize_6: string[];
-    prize_7: string[];
+    special_prize: string | null;
+    prize_1: string | null;
+    prize_2: string[] | null;
+    prize_3: string[] | null;
+    prize_4: string[] | null;
+    prize_5: string[] | null;
+    prize_6: string[] | null;
+    prize_7: string[] | null;
 }
 
 interface LotoHeadTailTableProps {
@@ -19,7 +19,7 @@ export default function LotoHeadTailTable({ result }: LotoHeadTailTableProps) {
     // 1. Extract all numbers (keeping duplicates)
     const allLotos: string[] = [];
 
-    const add = (val: string) => {
+    const add = (val: string | null | undefined) => {
         if (!val) return;
         const str = String(val).trim();
         if (str.length >= 2) {

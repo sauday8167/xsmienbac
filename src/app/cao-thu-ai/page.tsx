@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import AIStatsTable from '@/components/ai/AIStatsTable';
+import AIHistoryTable from '@/components/ai/AIHistoryTable';
 
 interface AIPattern {
     name: string;
@@ -21,6 +23,7 @@ export default function CaoThuAIPage() {
     const [activeTab, setActiveTab] = useState<'2d' | '3d' | '4d' | 'loto-dau'>('2d');
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState<ApiResponse | null>(null);
+    const [historyData, setHistoryData] = useState<{ history: any[], stats: any[] } | null>(null);
 
     // Initial fetch
     useEffect(() => {
@@ -35,12 +38,28 @@ export default function CaoThuAIPage() {
             if (activeTab === '4d') typeParam = 'ai-mining-4d';
             if (activeTab === 'loto-dau') typeParam = 'ai-mining-loto-dau';
 
-            // We use existing API.
-            const res = await fetch(`/api/soi-cau-bach-thu?type=${typeParam}`);
-            const result = await res.json();
+            // Parallel fetch for speed
+            const promises: Promise<any>[] = [
+                fetch(`/api/soi-cau-bach-thu?type=${typeParam}`).then(res => res.json())
+            ];
+
+            // Fetch history for 2D, Loto Dau, 3D, and 4D tabs
+            if (['2d', 'loto-dau', '3d', '4d'].includes(activeTab)) {
+                const historyType = activeTab; // Identical mapping
+                promises.push(fetch(`/api/ai-history?days=10&type=${historyType}`).then(res => res.json()));
+            } else {
+                setHistoryData(null); // Reset for other tabs
+            }
+
+            const [result, historyResult] = await Promise.all(promises);
+
             if (result.success) {
                 setData(result.data);
             }
+            if (historyResult && historyResult.success) {
+                setHistoryData(historyResult.data);
+            }
+
         } catch (error) {
             console.error(error);
         } finally {
@@ -102,9 +121,10 @@ export default function CaoThuAIPage() {
 
             {/* Results */}
             {data?.aiPatterns && (
-                <div className="space-y-6 animate-fade-in pb-12">
+                <div className="space-y-8 animate-fade-in pb-12">
+                    {/* Analysis Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {data.aiPatterns.map((pattern, idx) => (
+                        {data.aiPatterns.map((pattern: AIPattern, idx: number) => (
                             <div key={idx} className="card bg-white shadow-xl border-t-4 border-lottery-red-600 rounded-xl overflow-hidden transform hover:-translate-y-1 transition-all">
                                 <div className="p-6">
                                     <div className="flex justify-between items-start mb-4">
@@ -122,7 +142,7 @@ export default function CaoThuAIPage() {
                                     <div className="bg-gray-50 p-4 rounded-lg text-center mb-6">
                                         <div className="text-sm text-gray-400 mb-1 uppercase text-xs font-bold">Số Đề Xuất</div>
                                         <div className="flex justify-center gap-2 flex-wrap">
-                                            {pattern.numbers.map(num => (
+                                            {pattern.numbers.map((num: string) => (
                                                 <span key={num} className="text-4xl font-black text-lottery-red-600 tracking-widest drop-shadow-sm">
                                                     {num}
                                                 </span>
@@ -147,6 +167,16 @@ export default function CaoThuAIPage() {
                             </div>
                         ))}
                     </div>
+
+                    {/* NEW: History & Stats Tables (For 2D, Loto Dau, 3D, 4D) */}
+                    {historyData && ['2d', 'loto-dau', '3d', '4d'].includes(activeTab) && (
+                        <div className="flex flex-col gap-10 mt-12 border-t pt-10">
+                            {/* Table 2: History (Bottom) */}
+                            <div className="w-full">
+                                <AIHistoryTable history={historyData.history} stats={historyData.stats} />
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
 

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { format, parseISO } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { SpinningNumber } from './SpinningNumber';
@@ -29,16 +29,50 @@ interface LiveResultTableProps {
 // CONSTANTS & HELPERS
 // ----------------------------------------------------------------------
 
-// Strict Waterfall Order: G1 -> G2 -> ... -> G7 -> Special Prize
-const ANIMATION_ORDER: { key: keyof LotteryResult; label: string }[] = [
-    { key: 'prize_1', label: 'Giải Nhất' },
-    { key: 'prize_2', label: 'Giải Nhì' },
-    { key: 'prize_3', label: 'Giải Ba' },
-    { key: 'prize_4', label: 'Giải Tư' },
-    { key: 'prize_5', label: 'Giải Năm' },
-    { key: 'prize_6', label: 'Giải Sáu' },
-    { key: 'prize_7', label: 'Giải Bảy' },
-    { key: 'special_prize', label: 'Đặc Biệt' },
+// Definition of a Slot
+type SlotDef = {
+    key: keyof LotteryResult;
+    index: number; // Index within the array (0 for scalar)
+    label: string;
+};
+
+// Strict Sequence: G1 -> G2(2) -> G3(6) -> G4(4) -> G5(6) -> G6(3) -> G7(4) -> Special
+const SLOT_ORDER: SlotDef[] = [
+    // Giải Nhất (1)
+    { key: 'prize_1', index: 0, label: 'Giải Nhất' },
+    // Giải Nhì (2)
+    { key: 'prize_2', index: 0, label: 'Giải Nhì 1' },
+    { key: 'prize_2', index: 1, label: 'Giải Nhì 2' },
+    // Giải Ba (6)
+    { key: 'prize_3', index: 0, label: 'Giải Ba 1' },
+    { key: 'prize_3', index: 1, label: 'Giải Ba 2' },
+    { key: 'prize_3', index: 2, label: 'Giải Ba 3' },
+    { key: 'prize_3', index: 3, label: 'Giải Ba 4' },
+    { key: 'prize_3', index: 4, label: 'Giải Ba 5' },
+    { key: 'prize_3', index: 5, label: 'Giải Ba 6' },
+    // Giải Tư (4)
+    { key: 'prize_4', index: 0, label: 'Giải Tư 1' },
+    { key: 'prize_4', index: 1, label: 'Giải Tư 2' },
+    { key: 'prize_4', index: 2, label: 'Giải Tư 3' },
+    { key: 'prize_4', index: 3, label: 'Giải Tư 4' },
+    // Giải Năm (6)
+    { key: 'prize_5', index: 0, label: 'Giải Năm 1' },
+    { key: 'prize_5', index: 1, label: 'Giải Năm 2' },
+    { key: 'prize_5', index: 2, label: 'Giải Năm 3' },
+    { key: 'prize_5', index: 3, label: 'Giải Năm 4' },
+    { key: 'prize_5', index: 4, label: 'Giải Năm 5' },
+    { key: 'prize_5', index: 5, label: 'Giải Năm 6' },
+    // Giải Sáu (3)
+    { key: 'prize_6', index: 0, label: 'Giải Sáu 1' },
+    { key: 'prize_6', index: 1, label: 'Giải Sáu 2' },
+    { key: 'prize_6', index: 2, label: 'Giải Sáu 3' },
+    // Giải Bảy (4)
+    { key: 'prize_7', index: 0, label: 'Giải Bảy 1' },
+    { key: 'prize_7', index: 1, label: 'Giải Bảy 2' },
+    { key: 'prize_7', index: 2, label: 'Giải Bảy 3' },
+    { key: 'prize_7', index: 3, label: 'Giải Bảy 4' },
+    // Đặc Biệt (Last)
+    { key: 'special_prize', index: 0, label: 'Đặc Biệt' },
 ];
 
 const padArray = (arr: string[] | null, length: number) => {
@@ -54,171 +88,88 @@ const padArray = (arr: string[] | null, length: number) => {
 // ----------------------------------------------------------------------
 
 export default function LiveResultTable({
-    result: apiResult, // The raw result from API (source of truth)
+    result: apiResult,
     isLive = false,
 }: LiveResultTableProps) {
-    // displayedResult is what the user SEES. It starts empty and fills up via animation.
-    const [displayedResult, setDisplayedResult] = useState<LotteryResult>(() => ({
-        ...apiResult,
-        special_prize: '',
-        prize_1: '',
-        prize_2: [],
-        prize_3: [],
-        prize_4: [],
-        prize_5: [],
-        prize_6: [],
-        prize_7: [],
-    }));
+    // We strictly follow apiResult.
+    // Logic: Look at SLOT_ORDER. Find the first slot that is EMPTY in apiResult.
+    // That slot is the "Active Cursor" (Rolling).
+    // All slots before it are DONE.
+    // All slots after it are WAITING (Hidden).
 
-    // Status map for each individual number slot: 'waiting' | 'rolling' | 'done'
-    // key format: "prizeKey-index", e.g. "prize_1-0", "prize_3-4"
-    const [statusMap, setStatusMap] = useState<Record<string, 'waiting' | 'rolling' | 'done'>>({});
+    // Helper: Get value from result object
+    const getValue = (res: LotteryResult, key: keyof LotteryResult, idx: number): string => {
+        const val = res[key];
+        if (Array.isArray(val)) return val[idx] || '';
+        return (val as string) || '';
+    };
 
-    // Queue of items to animate: { key, index, value }
-    const queueRef = useRef<{ key: keyof LotteryResult; index: number; value: string }[]>([]);
-    const isAnimatingRef = useRef(false);
-    const mountedRef = useRef(false);
-    const processedMapRef = useRef<Set<string>>(new Set()); // To avoid re-adding same items
+    // 1. Determine Cursor Position
+    const cursorIndex = useMemo(() => {
+        if (!isLive) return 999; // If not live, show all
 
-    // ----------------------------------------------------------------------
-    // 1. SYNC API RESULT TO QUEUE
-    // ----------------------------------------------------------------------
-    useEffect(() => {
-        if (!apiResult) return;
+        // Find first empty slot
+        const idx = SLOT_ORDER.findIndex(slot => {
+            const val = getValue(apiResult, slot.key, slot.index);
+            return !val || val === '';
+        });
 
-        // If NOT live, show everything immediately (no animation)
-        if (!isLive) {
-            setDisplayedResult(apiResult);
-            // Mark all as done
-            const allDone: Record<string, 'done'> = {};
-            // (Simulate filling allDone for static display if needed, but SpinningNumber handles finalValue=str + status=undefined as DONE usually.
-            // However, to be safe, we can leave statusMap empty or set all to done.)
-            return;
-        }
-
-        // If LIVE, diff against what we have processed to build the queue STRICTLY in order
-        const newItems: { key: keyof LotteryResult; index: number; value: string }[] = [];
-
-        // Iterate through our STRICT ORDER
-        for (const { key } of ANIMATION_ORDER) {
-            const apiVal = apiResult[key];
-            if (!apiVal) continue;
-
-            const values = Array.isArray(apiVal) ? apiVal : [apiVal];
-
-            values.forEach((val, idx) => {
-                if (!val) return;
-
-                const uniqueId = `${key}-${idx}`;
-                // If we haven't processed this specific slot yet...
-                if (!processedMapRef.current.has(uniqueId)) {
-                    // check if it's already in queue? No need if we rely on processedMapRef.
-                    // But wait, if we crash/reload, we might want to re-animate? 
-                    // For now, assume fresh load = start from scratch or catch up.
-
-                    // Add to local list, then we will sort/append to queue
-                    newItems.push({ key, index: idx, value: val });
-                    processedMapRef.current.add(uniqueId);
-                }
-            });
-        }
-
-        if (newItems.length > 0) {
-            // Because we iterated in ANIMATION_ORDER, newItems is ALREADY roughly ordered by prize type.
-            // But within a prize (e.g. Prize 3 has 6 numbers), we extracted them in index order 0->5.
-            // This is exactly what we want: Left-to-Right within a prize, and Prize 1 -> ... -> Special.
-
-            // Push to queue
-            queueRef.current.push(...newItems);
-
-            // Trigger animation loop if not running
-            processQueue();
-        }
+        // Special Start Logic:
+        // If NO results at all yet, and it's past 18:14, start rolling first slot.
+        // We assume parent handles "isLive" based on time.
+        // If idx === 0 (first slot empty), it means we are at start.
+        if (idx === -1) return 999; // All full -> Show all
+        return idx;
 
     }, [apiResult, isLive]);
 
-    // ----------------------------------------------------------------------
-    // 2. ANIMATION LOOP
-    // ----------------------------------------------------------------------
-    const processQueue = async () => {
-        if (isAnimatingRef.current) return;
-        isAnimatingRef.current = true;
+    // 2. Setup Display Helper
+    // Returns: { status: 'done' | 'rolling' | 'waiting', value: string }
+    const getSlotState = (key: keyof LotteryResult, index: number) => {
+        // Find position in SLOT_ORDER
+        const globalOrderIndex = SLOT_ORDER.findIndex(s => s.key === key && s.index === index);
 
-        while (queueRef.current.length > 0) {
-            if (!mountedRef.current) break;
+        if (globalOrderIndex === -1) return { status: 'waiting', value: '' }; // Should not happen
 
-            const item = queueRef.current.shift(); // Get next item
-            if (!item) break;
-
-            const { key, index, value } = item;
-            const uniqueId = `${key}-${index}`;
-
-            // A. Start ROLLING
-            setStatusMap(prev => ({ ...prev, [uniqueId]: 'rolling' }));
-
-            // Rolling duration (drum effect)
-            await new Promise(r => setTimeout(r, 400)); // 400ms rolling
-
-            // B. Reveal (DONE) & Update Displayed Data
-            // We update state synchronously so visuals match
-            setStatusMap(prev => ({ ...prev, [uniqueId]: 'done' }));
-
-            setDisplayedResult(prev => {
-                const next = { ...prev };
-                const prevVal = next[key];
-
-                if (Array.isArray(prevVal)) {
-                    // Copy array
-                    const newArr = [...(prevVal || [])];
-                    // Ensure size
-                    while (newArr.length <= index) newArr.push('');
-                    newArr[index] = value;
-                    (next as any)[key] = newArr;
-                } else {
-                    (next as any)[key] = value;
-                }
-                return next;
-            });
-
-            // Short pause between numbers
-            await new Promise(r => setTimeout(r, 100));
+        if (!isLive) {
+            return { status: 'done', value: getValue(apiResult, key, index) };
         }
 
-        isAnimatingRef.current = false;
+        if (globalOrderIndex < cursorIndex) {
+            return { status: 'done', value: getValue(apiResult, key, index) };
+        } else if (globalOrderIndex === cursorIndex) {
+            return { status: 'rolling', value: '' }; // The Cursor!
+        } else {
+            return { status: 'waiting', value: '' };
+        }
     };
-
-    useEffect(() => {
-        mountedRef.current = true;
-        return () => { mountedRef.current = false; };
-    }, []);
 
 
     // ----------------------------------------------------------------------
     // 3. RENDER HELPERS
     // ----------------------------------------------------------------------
     const renderNum = (key: keyof LotteryResult, index: number, digitCount: number, className: string, isRed = false) => {
+        const { status, value } = getSlotState(key, index);
         const uniqueId = `${key}-${index}`;
 
-        // Data from DISPLAYED result (what is currently revealed)
-        const valRaw = displayedResult[key];
-        const val = Array.isArray(valRaw) ? valRaw[index] : (valRaw as string);
+        // WAITING: Render NOTHING (Blank) as requested
+        if (status === 'waiting') {
+            return (
+                <div className={`flex justify-center items-center h-8 md:h-10 w-full`}>
+                    {/* Empty Space - No text */}
+                </div>
+            );
+        }
 
-        // If not in displayedResult yet, IT IS EMPTY (waiting).
-        // Unless it is 'rolling' in statusMap? 
-        // Logic: 
-        // - status='waiting' -> show nothing/placeholder
-        // - status='rolling' -> show random rolling numbers (SpinningNumber handles this via forceStatus='rolling')
-        // - status='done' -> show final value
-
-        const status = statusMap[uniqueId] || 'waiting';
-        // Note: 'waiting' is default if not yet touched.
+        // DONE or ROLLING: Use SpinningNumber
+        // For 'rolling', SpinningNumber with forceStatus='rolling' will spin indefinitely
 
         return (
             <SpinningNumber
                 key={uniqueId}
-                finalValue={val || ''}
+                finalValue={value}
                 isRevealed={status === 'done'}
-                forceStatus={status}
+                forceStatus={status === 'rolling' ? 'rolling' : undefined}
                 digitCount={digitCount}
                 variant="text"
                 colorMode={isRed ? 'red' : 'base'}
@@ -256,22 +207,15 @@ export default function LiveResultTable({
                 {/* Main Result Table */}
                 <table className="w-full text-center border-collapse">
                     <tbody>
-                        {/* Special Prize - MOVED TO BOTTOM VISUALLY? 
-                            Wait, user said "Order of appearance: G1 -> ... -> Special". 
-                            But usually the TABLE LAYOUT keeps Special at top or bottom?
-                            Traditional XSMB table has Special at TOP. 
-                            The user said "Thứ tự xuất hiện" (Animation Order).
-                            So we KEEP the layout, but animate G1 first.
-                        */}
-                        <tr className="bg-red-50/30 border-b border-gray-200">
-                            <td className="w-16 md:w-32 py-2 md:py-3 font-bold text-gray-700 bg-gray-50 border-r border-gray-200 text-sm md:text-base">
+                        {/* Special Prize - TOP (Fixed Position) */}
+                        <tr className="bg-red-50/50 border-b-2 border-red-200">
+                            <td className="w-16 md:w-32 py-2 md:py-3 font-bold text-red-700 bg-red-100/50 border-r border-red-200 text-sm md:text-base">
                                 <span className="md:hidden">ĐB</span>
                                 <span className="hidden md:inline">Đặc biệt</span>
                             </td>
                             <td className="py-2 md:py-3">
                                 <div className="flex justify-center">
-                                    {/* Reduced text-3xl */}
-                                    {renderNum('special_prize', 0, 5, "text-2xl md:text-3xl font-bold text-red-600 tracking-wider", true)}
+                                    {renderNum('special_prize', 0, 5, "text-2xl md:text-3xl font-black text-red-600 tracking-wider dropshadow-sm", true)}
                                 </div>
                             </td>
                         </tr>
@@ -284,7 +228,6 @@ export default function LiveResultTable({
                             </td>
                             <td className="py-2 md:py-3">
                                 <div className="flex justify-center">
-                                    {/* Reduced text-xl/2xl to lg/xl */}
                                     {renderNum('prize_1', 0, 5, "text-lg md:text-xl font-bold text-gray-900 tracking-wide")}
                                 </div>
                             </td>
@@ -298,7 +241,7 @@ export default function LiveResultTable({
                             </td>
                             <td className="py-2 md:py-3">
                                 <div className="flex flex-wrap justify-around md:justify-center md:gap-16">
-                                    {padArray(displayedResult.prize_2, 2).map((_, i) => renderNum('prize_2', i, 5, "text-lg md:text-xl font-bold text-gray-900 tracking-wide"))}
+                                    {padArray(apiResult.prize_2, 2).map((_, i) => renderNum('prize_2', i, 5, "text-lg md:text-xl font-bold text-gray-900 tracking-wide"))}
                                 </div>
                             </td>
                         </tr>
@@ -311,7 +254,7 @@ export default function LiveResultTable({
                             </td>
                             <td className="py-2 md:py-3">
                                 <div className="grid grid-cols-3 gap-y-1 gap-x-1 md:gap-y-2 md:gap-x-12 max-w-2xl mx-auto items-center justify-items-center">
-                                    {padArray(displayedResult.prize_3, 6).map((_, i) => renderNum('prize_3', i, 5, "text-base md:text-lg font-bold text-gray-900 tracking-wide"))}
+                                    {padArray(apiResult.prize_3, 6).map((_, i) => renderNum('prize_3', i, 5, "text-base md:text-lg font-bold text-gray-900 tracking-wide"))}
                                 </div>
                             </td>
                         </tr>
@@ -324,7 +267,7 @@ export default function LiveResultTable({
                             </td>
                             <td className="py-2 md:py-3">
                                 <div className="flex flex-wrap justify-center gap-4 md:gap-8">
-                                    {padArray(displayedResult.prize_4, 4).map((_, i) => renderNum('prize_4', i, 4, "text-base md:text-lg font-bold text-gray-900 tracking-wide"))}
+                                    {padArray(apiResult.prize_4, 4).map((_, i) => renderNum('prize_4', i, 4, "text-base md:text-lg font-bold text-gray-900 tracking-wide"))}
                                 </div>
                             </td>
                         </tr>
@@ -337,7 +280,7 @@ export default function LiveResultTable({
                             </td>
                             <td className="py-2 md:py-3">
                                 <div className="grid grid-cols-3 gap-y-1 gap-x-2 md:gap-y-2 md:gap-x-16 max-w-lg mx-auto justify-items-center">
-                                    {padArray(displayedResult.prize_5, 6).map((_, i) => renderNum('prize_5', i, 4, "text-base md:text-lg font-bold text-gray-900 tracking-wide"))}
+                                    {padArray(apiResult.prize_5, 6).map((_, i) => renderNum('prize_5', i, 4, "text-base md:text-lg font-bold text-gray-900 tracking-wide"))}
                                 </div>
                             </td>
                         </tr>
@@ -350,20 +293,20 @@ export default function LiveResultTable({
                             </td>
                             <td className="py-2 md:py-3">
                                 <div className="flex justify-around md:justify-center md:gap-24">
-                                    {padArray(displayedResult.prize_6, 3).map((_, i) => renderNum('prize_6', i, 3, "text-base md:text-lg font-bold text-gray-900 tracking-wide"))}
+                                    {padArray(apiResult.prize_6, 3).map((_, i) => renderNum('prize_6', i, 3, "text-base md:text-lg font-bold text-gray-900 tracking-wide"))}
                                 </div>
                             </td>
                         </tr>
 
                         {/* Prize 7 - Red Text */}
-                        <tr>
+                        <tr className="border-b border-gray-200">
                             <td className="py-2 md:py-3 font-bold text-gray-700 bg-gray-50 border-r border-gray-200 text-sm md:text-base">
                                 <span className="md:hidden">G.7</span>
                                 <span className="hidden md:inline">Giải bảy</span>
                             </td>
                             <td className="py-2 md:py-3">
                                 <div className="flex justify-around md:justify-center md:gap-24">
-                                    {padArray(displayedResult.prize_7, 4).map((_, i) => renderNum('prize_7', i, 2, "text-lg md:text-xl font-bold text-red-600 tracking-wide", true))}
+                                    {padArray(apiResult.prize_7, 4).map((_, i) => renderNum('prize_7', i, 2, "text-lg md:text-xl font-bold text-red-600 tracking-wide", true))}
                                 </div>
                             </td>
                         </tr>
@@ -371,11 +314,12 @@ export default function LiveResultTable({
                 </table>
             </div>
 
-            {/* Head/Tail Analysis - Using DISPLAYED result so it updates real-time */}
+            {/* Head/Tail Analysis - Real-time update */}
             <div className="mt-6">
-                <LotoHeadTailTable result={displayedResult} />
+                <LotoHeadTailTable result={apiResult} />
             </div>
         </div>
     );
 }
+
 

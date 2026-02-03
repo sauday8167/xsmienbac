@@ -21,9 +21,9 @@ export default function HomePage() {
         const now = new Date();
         const hour = now.getHours();
         const minute = now.getMinutes();
+        // Drawing time: 18:10 to 18:40
         return hour === 18 && minute >= 10 && minute <= 40;
     };
-
 
     const fetchLatestResult = async () => {
         try {
