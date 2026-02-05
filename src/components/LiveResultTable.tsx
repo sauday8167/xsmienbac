@@ -91,11 +91,10 @@ export default function LiveResultTable({
     result: apiResult,
     isLive = false,
 }: LiveResultTableProps) {
-    // We strictly follow apiResult.
-    // Logic: Look at SLOT_ORDER. Find the first slot that is EMPTY in apiResult.
-    // That slot is the "Active Cursor" (Rolling).
-    // All slots before it are DONE.
-    // All slots after it are WAITING (Hidden).
+    // List of keys to check for "isFull" status
+    const SLOT_KEYS: (keyof LotteryResult)[] = [
+        'prize_1', 'prize_2', 'prize_3', 'prize_4', 'prize_5', 'prize_6', 'prize_7', 'special_prize'
+    ];
 
     // Helper: Get value from result object
     const getValue = (res: LotteryResult, key: keyof LotteryResult, idx: number): string => {
@@ -104,32 +103,37 @@ export default function LiveResultTable({
         return (val as string) || '';
     };
 
-    // 1. Determine Cursor Position
-    const cursorIndex = useMemo(() => {
-        if (!isLive) return 999; // If not live, show all
+    // Helper to check if a specific slot is fully revealed
+    const isSlotFull = (key: keyof LotteryResult, index: number, res: LotteryResult) => {
+        const val = getValue(res, key, index);
+        if (!val || val.trim() === '') return false;
 
-        // Find first empty slot
+        // Placeholder check
+        const isPlaceholder = (s: string) =>
+            s.includes('...') || s.includes('---') || s.includes('?') || s.includes('waiting');
+
+        return !isPlaceholder(val);
+    };
+
+    // Index of the first slot in global SLOT_ORDER that is NOT revealed yet
+    const cursorIndex = useMemo(() => {
+        if (!isLive) return 999;
+
+        // Find the first slot in COMPREHENSIVE SLOT_ORDER (outer constant) that is not full
         const idx = SLOT_ORDER.findIndex(slot => {
-            const val = getValue(apiResult, slot.key, slot.index);
-            return !val || val === '';
+            return !isSlotFull(slot.key, slot.index, apiResult);
         });
 
-        // Special Start Logic:
-        // If NO results at all yet, and it's past 18:14, start rolling first slot.
-        // We assume parent handles "isLive" based on time.
-        // If idx === 0 (first slot empty), it means we are at start.
-        if (idx === -1) return 999; // All full -> Show all
+        if (idx === -1) return 999;
         return idx;
-
     }, [apiResult, isLive]);
 
     // 2. Setup Display Helper
-    // Returns: { status: 'done' | 'rolling' | 'waiting', value: string }
     const getSlotState = (key: keyof LotteryResult, index: number) => {
-        // Find position in SLOT_ORDER
+        // Find position in global SLOT_ORDER
         const globalOrderIndex = SLOT_ORDER.findIndex(s => s.key === key && s.index === index);
 
-        if (globalOrderIndex === -1) return { status: 'waiting', value: '' }; // Should not happen
+        if (globalOrderIndex === -1) return { status: 'waiting', value: '' };
 
         if (!isLive) {
             return { status: 'done', value: getValue(apiResult, key, index) };
@@ -138,7 +142,7 @@ export default function LiveResultTable({
         if (globalOrderIndex < cursorIndex) {
             return { status: 'done', value: getValue(apiResult, key, index) };
         } else if (globalOrderIndex === cursorIndex) {
-            return { status: 'rolling', value: '' }; // The Cursor!
+            return { status: 'rolling', value: '' };
         } else {
             return { status: 'waiting', value: '' };
         }

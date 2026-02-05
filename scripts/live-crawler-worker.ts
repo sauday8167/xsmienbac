@@ -79,26 +79,37 @@ async function savePartialResult(data) {
             );
         }
 
-        // 2. Prepare params (only update non-null values)
+        // 2. Prepare params (only update non-null values and valid number formats)
+        const checkDigits = (val: string | null | string[], count: number) => {
+            if (!val) return null;
+            if (Array.isArray(val)) {
+                // For arrays, only keep if all items are digits and match expected length (if provided)
+                const isValid = val.every(item => /^\d+$/.test(item.trim()));
+                return isValid ? JSON.stringify(val) : null;
+            }
+            // For single strings, must be digits only
+            return /^\d+$/.test(val.trim()) ? val : null;
+        };
+
         const params = [
-            // Special prize: only if 5 digits
-            data.special_prize && /^\d{5}$/.test(data.special_prize) ? data.special_prize : null,
+            // Special prize: 5 digits
+            checkDigits(data.special_prize, 5),
 
-            // Prize 1
-            data.prize_1,
+            // Prize 1: 5 digits
+            checkDigits(data.prize_1, 5),
 
-            // Prize 2-7 (arrays)
-            data.prize_2 ? JSON.stringify(data.prize_2) : null,
-            data.prize_3 ? JSON.stringify(data.prize_3) : null,
-            data.prize_4 ? JSON.stringify(data.prize_4) : null,
-            data.prize_5 ? JSON.stringify(data.prize_5) : null,
-            data.prize_6 ? JSON.stringify(data.prize_6) : null,
-            data.prize_7 ? JSON.stringify(data.prize_7) : null,
+            // Prize 2-7
+            checkDigits(data.prize_2, 5),
+            checkDigits(data.prize_3, 5),
+            checkDigits(data.prize_4, 5),
+            checkDigits(data.prize_5, 4),
+            checkDigits(data.prize_6, 3),
+            checkDigits(data.prize_7, 2),
 
             draw_date
         ];
 
-        // 3. Update using COALESCE (preserves old values if new is NULL)
+        // 3. Update using COALESCE (preserves old values if new is NULL/Invalid)
         await query(`
             UPDATE xsmb_results SET
                 special_prize = COALESCE(?, special_prize),

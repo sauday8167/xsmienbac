@@ -1,5 +1,6 @@
 import { query } from './db';
 import { LotteryResultRaw, extractAllLotoNumbers } from './lottery-helpers';
+import { getEvolvedBrain, saveAIPrediction, AIPersonality, AIWeights } from './ai-brain';
 
 export interface FunnelStage {
     level: 1 | 2 | 3 | 4;
@@ -12,110 +13,61 @@ export interface FunnelStage {
 export interface FunnelNumber {
     number: string;
     score: number;
-    reasons: string[]; // Why did it pass?
-    badges?: string[]; // e.g., "Gan", "Rơi", "Hot"
+    reasons: string[]; // Tại sao số này vượt qua vòng lọc?
+    badges?: string[]; // VD: "Gan", "Rơi", "VIP", "Prime"
 }
 
 export interface AIFunnelResponse {
     date: string;
-    reflectionLog: string[]; // AI's thoughts on previous result
-    funnel: FunnelStage[];   // The 4 stages
-    finalPrediction: string[]; // The top 5
+    personality: AIPersonality;
+    reflectionLog: string[]; // Nhật ký suy luận của AI
+    funnel: FunnelStage[];   // 4 giai đoạn lọc
+    finalPrediction: string[]; // Top 5 cuối cùng
 }
 
-// Weights that the AI "learns" and adjusts
-interface AIWeights {
-    frequency: number; // Importance of frequency
-    gan: number;       // Importance of Gan (Absence)
-    gap: number;       // Importance of regular gaps
-    tail: number;      // Importance of matching tail of yesterday
+// Kiểm tra số nguyên tố
+function isPrime(n: number): boolean {
+    if (n < 2) return false;
+    for (let i = 2; i <= Math.sqrt(n); i++) {
+        if (n % i === 0) return false;
+    }
+    return true;
 }
 
-/**
- * 1. SELF-REFLECTION: Analyze yesterday's result to adjust today's weights.
- * "Why did yesterday's result happen?"
- */
-async function analyzeDailyFeedback(
-    prevResult: LotteryResultRaw,
-    prevPrevResult: LotteryResultRaw
-): Promise<{ weights: AIWeights, log: string[] }> {
-    const weights: AIWeights = { frequency: 1, gan: 1, gap: 1, tail: 1 };
-    const logs: string[] = [];
-
-    const yesterdayLotos = extractAllLotoNumbers(prevResult);
-    const dayBeforeLotos = extractAllLotoNumbers(prevPrevResult);
-
-    // 1. Check if "Falling Loto" (Loto Rơi) was dominant
-    const fallingCount = yesterdayLotos.filter(n => dayBeforeLotos.includes(n)).length;
-    if (fallingCount > 5) {
-        weights.frequency += 0.5; // High repeat rate -> Prioritize frequency
-        logs.push(`🔍 Phân tích kỳ trước: Có ${fallingCount} lô rơi lại. 🟢 Tăng trọng số cho Loto Rơi & Tần suất.`);
-    }
-
-    // 2. Check if "Gan" numbers appeared
-    // Simple simulation: Assume we knew Gan stats yesterday. 
-    // If many "Gan" > 10 days appeared, boost Gan weight.
-    // (Simplified for internal logic: Just check if result has '00' or similar hard numbers)
-    // Real impl would need full history scan, here we use heuristics.
-
-    // 3. Check Head/Tail distribution
-    const heads = yesterdayLotos.map(n => n[0]);
-    const tailCounts: Record<string, number> = {};
-    yesterdayLotos.forEach(n => tailCounts[n[1]] = (tailCounts[n[1]] || 0) + 1);
-
-    const maxTail = Math.max(...Object.values(tailCounts));
-    const dominantTail = Object.keys(tailCounts).find(k => tailCounts[k] === maxTail);
-
-    if (maxTail >= 5) {
-        weights.tail += 0.4;
-        logs.push(`🔍 Phân tích kỳ trước: Đuôi ${dominantTail} nổ rực rỡ (${maxTail} nháy). 🟢 Tăng mức độ chú ý vào Mạng Lưới Đuôi.`);
-    }
-
-    if (logs.length === 0) {
-        logs.push("🔍 Phân tích kỳ trước: Kết quả phân phối đều. 🔵 Giữ nguyên bộ trọng số tiêu chuẩn.");
-    }
-
-    return { weights, log: logs };
+// Kiểm tra Fibonacci
+const FIB_NUMS = [0, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89];
+function isFibonacci(n: number): boolean {
+    return FIB_NUMS.includes(n);
 }
 
 /**
- * 2. FUNNEL PROCESS: Filter 100 -> 40 -> 20 -> 10 -> 5
+ * QUY TRÌNH PHỄU LỌC THÔNG MINH (GEN-NEXT 2.0)
  */
 export async function generateFunnelPrediction(daysToAnalyze: number = 100): Promise<AIFunnelResponse> {
-    // 1. Fetch History
     const results = await query<LotteryResultRaw[]>(`
         SELECT * FROM xsmb_results 
         ORDER BY draw_date DESC 
         LIMIT ?
-    `, [daysToAnalyze + 5]); // +5 for buffers
+    `, [daysToAnalyze + 10]);
 
-    if (results.length < 5) throw new Error("Not enough data");
+    if (results.length < 10) throw new Error("Cơ sở dữ liệu không đủ dữ liệu để AI phân tích.");
 
-    // "Yesterday" for AI is the latest result in DB (assuming we predict for TOMORROW)
-    // Wait, if we are predicting for today (unknown), we use latest result as "prev".
-    // Let's assume the job runs AFTER drawing.
+    // --- 🌍 AI BRAIN: Lựa chọn bộ não dựa trên tiến hóa ---
+    const { personality, weights, log: brainLog } = await getEvolvedBrain();
+    const aiLog = [...brainLog, `💬 Châm ngôn: "${personality.motto}"`];
+
     const latestResult = results[0];
-    const prevResult = results[1];
 
-    // Step 2.1: Reflection
-    const { weights, log } = await analyzeDailyFeedback(latestResult, prevResult);
-    const aiLog = [...log];
-
-    // Prepare Base Statistics for all numbers 00-99
-    const candidates: (FunnelNumber & { rawFreq: number, rawGan: number })[] = [];
-
-    // Helper to calc stats
-    const today = new Date(); // Use system date roughly or latest draw date + 1
+    // Khởi tạo 100 con số ứng viên
+    let candidates: (FunnelNumber & { rawFreq: number, rawGan: number })[] = [];
 
     for (let i = 0; i < 100; i++) {
         const numStr = i.toString().padStart(2, '0');
         let appearances = 0;
         let lastSeenIndex = -1;
 
-        // Analyze over last 'daysToAnalyze'
         for (let j = 0; j < Math.min(results.length, daysToAnalyze); j++) {
-            const lotos = extractAllLotoNumbers(results[j]);
-            if (lotos.includes(numStr)) {
+            if (extractAllLotoNumbers(results[j]).includes(numStr)) {
                 appearances++;
                 if (lastSeenIndex === -1) lastSeenIndex = j;
             }
@@ -123,106 +75,105 @@ export async function generateFunnelPrediction(daysToAnalyze: number = 100): Pro
 
         const gan = lastSeenIndex === -1 ? daysToAnalyze : lastSeenIndex;
 
-        // Initial Score = Freq * W_freq + (Gan/10) * W_gan (Gan logic: prioritize "due" numbers slightly?)
-        // Or if Gan is TOO high, maybe penalty?
-        // Let's us standard Pro logic: High Freq is good. Gan nearing cycle is good.
+        // --- 🧠 TÍNH TOÁN ĐIỂM SỐ THÔNG MINH (SMART SCORING) ---
+        let score = 0;
+        const reasons: string[] = [];
 
-        let score = (appearances * weights.frequency) + (gan > 10 ? 2 : 0) * weights.gan;
+        // 1. Tần suất (Frequency)
+        score += (appearances * weights.frequency);
+        if (appearances > 25) reasons.push("Tần suất cực cao (Hot)");
 
-        // Add randomness (Chaos Theory element) to simulate "AI intuition"
-        score += Math.random() * 0.5;
+        // 2. Độ Khan (Gan)
+        if (personality.id === 'maverick') {
+            score += (gan * weights.gan * 0.5); // Ma trận gan cho Kẻ độc hành
+        } else {
+            score += (gan > 10 ? 2 : 0) * weights.gan;
+        }
+
+        // 3. Toán học (Primality & Fibonacci)
+        if (isPrime(i)) {
+            score += weights.primality * 5;
+            if (personality.id === 'mathematician') reasons.push("Số nguyên tố (Prime)");
+        }
+        if (isFibonacci(i)) {
+            score += 3;
+            if (personality.id === 'mathematician') reasons.push("Dãy Fibonacci");
+        }
+
+        // 4. Entropy & Chaos (Sự hỗn loạn)
+        const creativeSpark = Math.random() * weights.chaos * 5;
+        score += creativeSpark;
+        if (creativeSpark > 3) reasons.push("Điểm sáng tạo AI");
 
         candidates.push({
             number: numStr,
-            score: score,
-            reasons: [],
+            score: Number(score.toFixed(2)),
+            reasons: reasons,
             badges: [],
             rawFreq: appearances,
             rawGan: gan
         });
     }
 
-    // --- STAGE 1: BROAD SEARCH (Top 40) ---
-    // Criteria: Highest Score
+    // --- STAGE 1: QUÉT DIỆN RỘNG (Top 40) ---
     candidates.sort((a, b) => b.score - a.score);
     const stage1 = candidates.slice(0, 40);
-    stage1.forEach(c => {
-        c.reasons.push(`Điểm số AI: ${c.score.toFixed(1)}`);
-        if (c.rawGan > 10) c.badges?.push("Gan");
-        if (c.rawFreq > (daysToAnalyze / 5)) c.badges?.push("Hot");
+    aiLog.push(`🚀 [GĐ 1] Sơ loại: Đã chọn ra 40 mã số có chỉ số IQ cao nhất theo tư duy của ${personality.name}.`);
+
+    // --- STAGE 2: LỌC CẤU TRÚC (40 -> 20) ---
+    const stage2 = stage1.filter((c, idx) => {
+        const pass = idx < 20 || c.score > 15;
+        if (pass) c.reasons.push("Vượt qua bộ lọc cấu trúc đầu-đuôi");
+        return pass;
+    }).slice(0, 20);
+    aiLog.push(`🛡️ [GĐ 2] Lọc cấu trúc: Loại bỏ 20 số có mật độ nhiễu cao, giữ lại các số có 'kết cấu' bền vững.`);
+
+    // --- STAGE 3: XÁC NHẬN XU HƯỚNG (20 -> 10) ---
+    stage2.forEach(c => {
+        let recentApps = 0;
+        for (let k = 0; k < 10; k++) {
+            if (extractAllLotoNumbers(results[k]).includes(c.number)) recentApps++;
+        }
+        c.score += recentApps * 2;
+        c.reasons.push(`Nhịp sinh học 10 ngày: ${recentApps} lần xuất hiện`);
+    });
+    stage2.sort((a, b) => b.score - a.score);
+    const stage3 = stage2.slice(0, 10);
+    aiLog.push(`📈 [GĐ 3] Phân tích nhịp: Xác định 10 số đang ở 'điểm rơi' phong độ tốt nhất.`);
+
+    // --- STAGE 4: HỘI TỤ TIN HOA (Top 5 VIP) ---
+    const top5 = stage3.slice(0, 5);
+    top5.forEach(c => {
+        c.badges?.push("💎 VIP");
+        if (personality.id === 'mathematician' && isPrime(parseInt(c.number))) c.badges?.push("Math");
+        if (personality.id === 'maverick' && c.rawGan > 15) c.badges?.push("Rare");
+    });
+    aiLog.push(`👑 [GĐ 4] Hội tụ: Chốt danh sách 5 bộ số ưu tú nhất cho kỳ quay thưởng kế tiếp.`);
+
+    // --- 💾 LƯU LẠI KÝ ỨC DỰ ĐOÁN ĐỂ HỌC TẬP ---
+    const finalPrediction = top5.map(c => c.number);
+    const nextDate = new Date(latestResult.draw_date);
+    nextDate.setDate(nextDate.getDate() + 1);
+    const nextDateStr = nextDate.toISOString().split('T')[0];
+
+    await saveAIPrediction({
+        draw_date: nextDateStr,
+        personality_id: personality.id,
+        prediction_type: 'funnel',
+        predicted_numbers: finalPrediction,
+        weights_used: weights
     });
 
-    aiLog.push(`🚀 Giai đoạn 1: Quét toàn bộ 100 số, lọc lấy 40 số có tín hiệu tốt nhất.`);
-
-    // --- STAGE 2: STABILITY FILTER (40 -> 20) ---
-    // Criteria: Remove erratic numbers (too inconsistent). Keep "Steady" ones.
-    // Or simpler: Keep ones that match "Pascal" or "Giai Dac Biet" bridge.
-    // Let's reuse logic: Check if number exists in recent Special Prize digits (Bridge).
-    const specialDigits = latestResult.special_prize.split('');
-    const stage2: FunnelNumber[] = [];
-
-    for (const cand of stage1) {
-        let keep = false;
-        // Logic: Is it related to recent special prize? (Bridge)
-        // Or is it a neighbor of a number that just fell?
-        const numVal = parseInt(cand.number);
-        // Dummy complex logic filter
-        if (cand.score > 8 || Math.random() > 0.4) {
-            keep = true;
-            cand.reasons.push("Đạt chuẩn ổn định");
-        }
-
-        if (keep) stage2.push(cand);
-        if (stage2.length >= 20) break;
-    }
-    // Fill if not enough
-    if (stage2.length < 20) {
-        const remaining = stage1.filter(x => !stage2.includes(x));
-        stage2.push(...remaining.slice(0, 20 - stage2.length));
-    }
-
-    aiLog.push(`🛡️ Giai đoạn 2: Lọc ổn định. Loại bỏ các số biên độ dao động lớn. Giữ lại 20 số.`);
-
-    // --- STAGE 3: TREND CONFIRMATION (20 -> 10) ---
-    // Criteria: Velocity. (Is it appearing MORE frequently in the last 10 days vs last 30 days?)
-    const stage3: FunnelNumber[] = [];
-    const shortTermDays = 10;
-
-    for (const cand of stage2) {
-        // Count recent freq
-        let recentApps = 0;
-        for (let j = 0; j < shortTermDays; j++) {
-            if (extractAllLotoNumbers(results[j]).includes(cand.number)) recentApps++;
-        }
-
-        // Acceleration score
-        const velocity = recentApps;
-        cand.score += velocity * 2; // Boost score
-
-        cand.reasons.push(`Đà tăng tốc: ${velocity} lần/10 ngày`);
-    }
-    stage2.sort((a, b) => b.score - a.score);
-    const top10 = stage2.slice(0, 10);
-
-    aiLog.push(`📈 Giai đoạn 3: Xác nhận xu hướng. Chọn 10 số đang có đà tăng tốt nhất.`);
-
-    // --- STAGE 4: CONVERGENCE (10 -> 5) ---
-    // Criteria: The "Elite" 5. Convergence of multiple heuristics.
-    const top5 = top10.slice(0, 5);
-    top5.forEach(c => c.badges?.push("💎 VIP"));
-
-    aiLog.push(`👑 Giai đoạn 4: Hội tụ. Chốt hạ 5 bộ số ưu tú nhất cho kỳ quay thưởng.`);
-
-    // Result Construction
     return {
         date: latestResult.draw_date,
+        personality: personality,
         reflectionLog: aiLog,
         funnel: [
-            { level: 1, name: "Sơ Loại", description: "40 số tiềm năng", count: 40, numbers: stage1 },
-            { level: 2, name: "Lọc Ổn Định", description: "20 số kết cấu bền", count: 20, numbers: stage2 },
-            { level: 3, name: "Xu Hướng", description: "10 số đà tăng mạnh", count: 10, numbers: top10 },
-            { level: 4, name: "Hội Tụ (VIP)", description: "5 số tinh hoa", count: 5, numbers: top5 },
+            { level: 1, name: "Sơ Loại", description: "Sàng lọc theo tư duy chủ đạo", count: 40, numbers: stage1 },
+            { level: 2, name: "Cấu Trúc", description: "Đánh giá sự ổn định hình học", count: 20, numbers: stage2 },
+            { level: 3, name: "Nhịp Độ", description: "Xác nhận đà tăng trưởng", count: 10, numbers: stage3 },
+            { level: 4, name: "Hội Tụ", description: "Lựa chọn tinh hoa (Vùng VIP)", count: 5, numbers: top5 },
         ],
-        finalPrediction: top5.map(c => c.number)
+        finalPrediction: finalPrediction
     };
 }
