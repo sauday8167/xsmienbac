@@ -93,7 +93,7 @@ export default function HomePage() {
 
     useEffect(() => {
         // Dynamic polling interval based on time
-        const intervalTime = isDrawingTime() ? 8000 : 60000; // 8s during draw, 1min otherwise
+        const intervalTime = isDrawingTime() ? 3000 : 60000; // 3s during draw, 1min otherwise
         const interval = setInterval(fetchLatestResult, intervalTime);
         return () => clearInterval(interval);
     }, [latestResult]);

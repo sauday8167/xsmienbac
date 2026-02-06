@@ -153,21 +153,395 @@ export async function crawlApi2(): Promise<RealtimeXSMB | null> {
     }
 }
 
-/**
- * Main crawler function - Tries API 1 then API 2
- */
-export async function crawlLiveXSMB(): Promise<RealtimeXSMB | null> {
-    // 1. Try API 1 (Fastest, JSON)
-    const data1 = await crawlApi1();
-    if (data1 && (data1.special_prize || data1.prize_1 || (data1.prize_7 && data1.prize_7.length > 0))) {
-        return data1;
+// --- API 3: kqxs.vn (JSON - HIGH PRIORITY) ---
+interface Api3Response {
+    numbers: {
+        "1": {
+            "1": string[]; // Đặc biệt
+            "2": string[]; // Giải 1
+            "3": string[]; // Giải 2
+            "4": string[]; // Giải 3
+            "5": string[]; // Giải 4
+            "6": string[]; // Giải 5
+            "7": string[]; // Giải 6
+            "8": string[]; // Giải 7
+        }
+    };
+    directLottery?: {
+        "1": string[];
+    };
+}
+
+export async function crawlApi3(): Promise<RealtimeXSMB | null> {
+    const url = `https://www.kqxs.vn/realtime/mien-bac.html?t=${Date.now()}`;
+    try {
+        const { data } = await axios.get<Api3Response>(url, {
+            timeout: 5000,
+            headers: {
+                'User-Agent': getRandomUserAgent(),
+                'Referer': 'https://www.kqxs.vn/'
+            }
+        });
+
+        if (!data || !data.numbers) return null;
+
+        const nums = data.numbers['1'];
+        return {
+            draw_date: new Date().toISOString().split('T')[0],
+            special_prize: nums['1']?.[0] || null,
+            prize_1: nums['2']?.[0] || null,
+            prize_2: nums['3'] || null,
+            prize_3: nums['4'] || null,
+            prize_4: nums['5'] || null,
+            prize_5: nums['6'] || null,
+            prize_6: nums['7'] || null,
+            prize_7: nums['8'] || null,
+            source: 'API-3 (kqxs.vn)',
+            crawled_at: new Date().toISOString()
+        };
+    } catch (error) {
+        return null;
+    }
+}
+
+// --- API 4: xskt.com.vn (JSON - HIGH PRIORITY) ---
+interface Api4Response {
+    kqxs: string; // "950787924397697..."
+}
+
+function parseXSKTString(str: string): RealtimeXSMB {
+    // Parse chuỗi số: "950787924397697..."
+    // Format: G1(5) + G2(5+5) + G3(5*6) + G4(4*4) + G5(4*6) + G6(3*3) + G7(2*4) + DB(5)
+    let pos = 0;
+
+    const prize_1 = str.substring(pos, pos + 5) || null;
+    pos += 5;
+
+    const prize_2 = [
+        str.substring(pos, pos + 5),
+        str.substring(pos + 5, pos + 10)
+    ].filter(Boolean);
+    pos += 10;
+
+    const prize_3 = [];
+    for (let i = 0; i < 6; i++) {
+        const num = str.substring(pos, pos + 5);
+        if (num) prize_3.push(num);
+        pos += 5;
     }
 
-    // 2. Try API 2 (Official, Reliable)
-    const data2 = await crawlApi2();
-    if (data2 && (data2.special_prize || data2.prize_1 || (data2.prize_7 && data2.prize_7.length > 0))) {
-        return data2;
+    const prize_4 = [];
+    for (let i = 0; i < 4; i++) {
+        const num = str.substring(pos, pos + 4);
+        if (num) prize_4.push(num);
+        pos += 4;
+    }
+
+    const prize_5 = [];
+    for (let i = 0; i < 6; i++) {
+        const num = str.substring(pos, pos + 4);
+        if (num) prize_5.push(num);
+        pos += 4;
+    }
+
+    const prize_6 = [];
+    for (let i = 0; i < 3; i++) {
+        const num = str.substring(pos, pos + 3);
+        if (num) prize_6.push(num);
+        pos += 3;
+    }
+
+    const prize_7 = [];
+    for (let i = 0; i < 4; i++) {
+        const num = str.substring(pos, pos + 2);
+        if (num) prize_7.push(num);
+        pos += 2;
+    }
+
+    // Đặc biệt ở cuối
+    const special_prize = str.substring(pos, pos + 5) || null;
+
+    return {
+        draw_date: new Date().toISOString().split('T')[0],
+        special_prize,
+        prize_1,
+        prize_2: prize_2.length > 0 ? prize_2 : null,
+        prize_3: prize_3.length > 0 ? prize_3 : null,
+        prize_4: prize_4.length > 0 ? prize_4 : null,
+        prize_5: prize_5.length > 0 ? prize_5 : null,
+        prize_6: prize_6.length > 0 ? prize_6 : null,
+        prize_7: prize_7.length > 0 ? prize_7 : null,
+        source: 'API-4 (xskt.com.vn)',
+        crawled_at: new Date().toISOString()
+    };
+}
+
+export async function crawlApi4(): Promise<RealtimeXSMB | null> {
+    const url = `https://ttttmb.xskt.com.vn/zzz/ttttxs-s.jsp?rr=${Date.now()}&areaCode=MB&s=0`;
+    try {
+        const { data } = await axios.get<Api4Response>(url, {
+            timeout: 5000,
+            headers: {
+                'User-Agent': getRandomUserAgent()
+            }
+        });
+
+        if (!data || !data.kqxs || data.kqxs.length < 10) return null;
+
+        return parseXSKTString(data.kqxs);
+    } catch (error) {
+        return null;
+    }
+}
+
+// --- API 5: xosodaiphat.com (JSON - MEDIUM PRIORITY) ---
+interface Api5Item {
+    Prize: string;
+    Range: string;
+}
+interface Api5Response {
+    CrDateTime: string;
+    LotPrizes: Api5Item[];
+}
+
+export async function crawlApi5(): Promise<RealtimeXSMB | null> {
+    // Generate ID: yyyyMMdd + session code
+    const today = new Date();
+    const dateStr = today.toISOString().split('T')[0].replace(/-/g, '');
+    // Try multiple session codes
+    const sessionCodes = ['11180', '11190', '11200', '11210', '11220', '11230', '11240', '11250', '11260', '11270', '11280', '11290'];
+
+    for (const code of sessionCodes) {
+        const url = `https://live.xosodaiphat.com/lotteryLive/1/${dateStr}${code}`;
+        try {
+            const { data } = await axios.get<Api5Response[]>(url, {
+                timeout: 3000,
+                headers: {
+                    'User-Agent': getRandomUserAgent(),
+                    'Referer': 'https://xosodaiphat.com/'
+                }
+            });
+
+            if (!Array.isArray(data) || data.length === 0) continue;
+            const latest = data[0];
+
+            const result: RealtimeXSMB = {
+                draw_date: new Date().toISOString().split('T')[0],
+                special_prize: null,
+                prize_1: null,
+                prize_2: null,
+                prize_3: null,
+                prize_4: null,
+                prize_5: null,
+                prize_6: null,
+                prize_7: null,
+                source: 'API-5 (xosodaiphat)',
+                crawled_at: new Date().toISOString()
+            };
+
+            latest.LotPrizes.forEach(item => {
+                const numbers = item.Range.split('-').map(s => s.trim()).filter(s => s.length > 0);
+                if (numbers.length === 0) return;
+
+                switch (item.Prize) {
+                    case 'DB': result.special_prize = numbers[0]; break;
+                    case 'G.1': result.prize_1 = numbers[0]; break;
+                    case 'G.2': result.prize_2 = numbers; break;
+                    case 'G.3': result.prize_3 = numbers; break;
+                    case 'G.4': result.prize_4 = numbers; break;
+                    case 'G.5': result.prize_5 = numbers; break;
+                    case 'G.6': result.prize_6 = numbers; break;
+                    case 'G.7': result.prize_7 = numbers; break;
+                }
+            });
+
+            // If we got some data, return it
+            if (result.prize_1 || result.prize_7) {
+                return result;
+            }
+        } catch (error) {
+            continue;
+        }
     }
 
     return null;
+}
+
+// --- API 6 & 7: mketqua.net & ketqua04.net (Raw Text - LOW PRIORITY) ---
+function parseRawTextFormat(rawText: string): RealtimeXSMB | null {
+    try {
+        // Format: "timestamp;;symbol;prize_data;..."
+        // Example: "1770377145;;05-61-18-*;562-720-581;8225-8191-6358-0638-1942-7726;..."
+        const parts = rawText.split(';');
+        if (parts.length < 8) return null;
+
+        // Skip timestamp and symbol (first 2 parts)
+        let idx = 2;
+
+        const prize_7 = parts[idx++]?.split('-').filter(Boolean) || null;
+        const prize_6 = parts[idx++]?.split('-').filter(Boolean) || null;
+        const prize_5 = parts[idx++]?.split('-').filter(Boolean) || null;
+        const prize_4 = parts[idx++]?.split('-').filter(Boolean) || null;
+        const prize_3 = parts[idx++]?.split('-').filter(Boolean) || null;
+        const prize_2 = parts[idx++]?.split('-').filter(Boolean) || null;
+        const prize_1 = parts[idx++] || null;
+        const special_prize = parts[idx++] || null;
+
+        return {
+            draw_date: new Date().toISOString().split('T')[0],
+            special_prize,
+            prize_1,
+            prize_2: prize_2 && prize_2.length > 0 ? prize_2 : null,
+            prize_3: prize_3 && prize_3.length > 0 ? prize_3 : null,
+            prize_4: prize_4 && prize_4.length > 0 ? prize_4 : null,
+            prize_5: prize_5 && prize_5.length > 0 ? prize_5 : null,
+            prize_6: prize_6 && prize_6.length > 0 ? prize_6 : null,
+            prize_7: prize_7 && prize_7.length > 0 ? prize_7 : null,
+            source: 'Raw Text Parser',
+            crawled_at: new Date().toISOString()
+        };
+    } catch (error) {
+        return null;
+    }
+}
+
+export async function crawlApi6(): Promise<RealtimeXSMB | null> {
+    const url = `https://data.mketqua.net/pre_loads/kq-mb.raw?t=${Date.now()}`;
+    try {
+        const { data } = await axios.get<string>(url, {
+            timeout: 5000,
+            headers: {
+                'User-Agent': getRandomUserAgent()
+            }
+        });
+
+        if (!data || typeof data !== 'string') return null;
+
+        const result = parseRawTextFormat(data);
+        if (result) {
+            result.source = 'API-6 (mketqua.net)';
+        }
+        return result;
+    } catch (error) {
+        return null;
+    }
+}
+
+export async function crawlApi7(): Promise<RealtimeXSMB | null> {
+    const url = `https://data.ketqua04.net/pre_loads/kq-mb.raw?t=${Date.now()}`;
+    try {
+        const { data } = await axios.get<string>(url, {
+            timeout: 5000,
+            headers: {
+                'User-Agent': getRandomUserAgent()
+            }
+        });
+
+        if (!data || typeof data !== 'string') return null;
+
+        const result = parseRawTextFormat(data);
+        if (result) {
+            result.source = 'API-7 (ketqua04.net)';
+        }
+        return result;
+    } catch (error) {
+        return null;
+    }
+}
+
+// --- HELPER FUNCTIONS ---
+function isValidResult(result: RealtimeXSMB | null): boolean {
+    if (!result) return false;
+    return !!(result.special_prize || result.prize_1 || (result.prize_7 && result.prize_7.length > 0));
+}
+
+function getResultCompleteness(result: RealtimeXSMB): number {
+    let score = 0;
+    if (result.special_prize) score += 20;
+    if (result.prize_1) score += 15;
+    if (result.prize_2 && result.prize_2.length > 0) score += 10;
+    if (result.prize_3 && result.prize_3.length > 0) score += 10;
+    if (result.prize_4 && result.prize_4.length > 0) score += 10;
+    if (result.prize_5 && result.prize_5.length > 0) score += 10;
+    if (result.prize_6 && result.prize_6.length > 0) score += 10;
+    if (result.prize_7 && result.prize_7.length > 0) score += 15;
+    return score;
+}
+
+const API_PRIORITIES: { [key: string]: number } = {
+    'API-1 (onrender)': 3,
+    'API-2 (xoso.com.vn)': 4,
+    'API-3 (kqxs.vn)': 5,
+    'API-4 (xskt.com.vn)': 5,
+    'API-5 (xosodaiphat)': 3,
+    'API-6 (mketqua.net)': 2,
+    'API-7 (ketqua04.net)': 2,
+};
+
+function selectBestResult(results: (RealtimeXSMB | null)[]): RealtimeXSMB | null {
+    const validResults = results.filter(isValidResult) as RealtimeXSMB[];
+    if (validResults.length === 0) return null;
+
+    // Sort by: completeness DESC, then priority DESC
+    validResults.sort((a, b) => {
+        const scoreA = getResultCompleteness(a);
+        const scoreB = getResultCompleteness(b);
+        if (scoreA !== scoreB) return scoreB - scoreA;
+
+        const priorityA = API_PRIORITIES[a.source || ''] || 0;
+        const priorityB = API_PRIORITIES[b.source || ''] || 0;
+        return priorityB - priorityA;
+    });
+
+    return validResults[0];
+}
+
+// --- RACING SYSTEM ---
+export async function crawlAllAPIsRacing(): Promise<RealtimeXSMB | null> {
+    console.log('[Racing] Starting parallel API calls...');
+    const startTime = Date.now();
+
+    // Start all API calls in parallel
+    const apiPromises = [
+        crawlApi1().catch(() => null),
+        crawlApi2().catch(() => null),
+        crawlApi3().catch(() => null),
+        crawlApi4().catch(() => null),
+        crawlApi5().catch(() => null),
+        crawlApi6().catch(() => null),
+        crawlApi7().catch(() => null),
+    ];
+
+    // Wait for all to complete (with timeout)
+    const allResults = await Promise.all(apiPromises);
+    const duration = Date.now() - startTime;
+
+    // Log results
+    allResults.forEach((result, idx) => {
+        if (result) {
+            const completeness = getResultCompleteness(result);
+            console.log(`[Racing] API ${idx + 1} (${result.source}): ✅ ${completeness}% complete`);
+        } else {
+            console.log(`[Racing] API ${idx + 1}: ❌ Failed`);
+        }
+    });
+
+    // Select best result
+    const bestResult = selectBestResult(allResults);
+
+    if (bestResult) {
+        console.log(`[Racing] Best result: ${bestResult.source} (${getResultCompleteness(bestResult)}% complete) in ${duration}ms`);
+    } else {
+        console.log(`[Racing] No valid results found in ${duration}ms`);
+    }
+
+    return bestResult;
+}
+
+/**
+ * Main crawler function - Uses racing system or fallback
+ */
+export async function crawlLiveXSMB(): Promise<RealtimeXSMB | null> {
+    // Use racing system for better speed and reliability
+    return await crawlAllAPIsRacing();
 }

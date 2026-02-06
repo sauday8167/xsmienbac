@@ -69,17 +69,17 @@
       "description": "AI Tự học & Sàng lọc",
       "seoTitle": "Dự Đoán AI 2.0 - Phễu Lọc Thông Minh",
       "seoDescription": "Hệ thống dự đoán thế hệ mới với cơ chế tự học và phễu lọc 4 lớp."
+    },
+    {
+      "id": "simulation",
+      "href": "/mo-phong",
+      "label": "Mô Phỏng",
+      "description": "Mô phỏng quay số tự động",
+      "seoTitle": "Mô Phỏng Xổ Số Miền Bắc - Quay Thử Tự Động 18 Lần/Ngày",
+      "seoDescription": "Hệ thống mô phỏng tự động quay xổ số 18 lần mỗi ngày, thống kê và phân tích pattern nội bộ."
     }
   ],
   "mobile": [
-    {
-      "id": "cao-thu-ai-m",
-      "href": "/cao-thu-ai",
-      "label": "Cao Thủ AI",
-      "description": "AI phân tích",
-      "seoTitle": "Cao Thủ AI Dự Đoán Xổ Số Miền Bắc",
-      "seoDescription": "Cao Thủ AI phân tích xổ số chính xác."
-    },
     {
       "id": "ai-pred-2-m",
       "href": "/du-doan-ai-2",

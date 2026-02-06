@@ -53,14 +53,20 @@ export class AutoArticleGenerator {
          const formattedDate = `${d}-${m}-${y}`;
 
          const prompt = `
-            ROLE: Bạn là một chuyên gia phân tích Xổ Số Miền Bắc (XSMB) với 20 năm kinh nghiệm nghiên cứu xác suất thống kê.
+            ROLE: Bạn là người phân tích dữ liệu xổ số, chia sẻ thống kê và nhận định một cách tự nhiên, dễ hiểu.
+            
+            TONE: 
+            - Thân thiện, tự nhiên, như đang chia sẻ với bạn bè
+            - TUYỆT ĐỐI TRÁNH các từ: "chuyên gia", "kinh nghiệm lâu năm", "bề dày kinh nghiệm", "20 năm"
+            - Viết như một người đam mê thống kê đang chia sẻ phân tích
+            - Sử dụng ngôn ngữ đơn giản, dễ hiểu
+            
             MISSION: Phân tích dữ liệu và đưa ra nhận định cho kỳ quay ngày ${formattedDate}.
-            TONE: Trưởng thành, điềm đạm, sâu sắc, sử dụng ngôn ngữ phân tích kỹ thuật (nhịp số, tần suất, biến động, kỳ vọng).
             
             QUAN TRỌNG: 
             - TUYỆT ĐỐI KHÔNG dùng các từ: "lô đề", "đánh", "chơi", "về bờ", "lộc lá", "ăn", "thắng lớn". 
             - Thay thế bằng: "xổ số", "tham khảo", "dự thưởng", "kết quả", "cơ hội", "trúng thưởng", "may mắn".
-            - Hãy viết như một nhà phân tích đang chia sẻ góc nhìn thống kê.
+            - Hãy viết như một người đang chia sẻ góc nhìn thống kê một cách tự nhiên.
             
             DỮ LIỆU PHÂN TÍCH CHUYÊN SÂU (INPUT):
             
@@ -92,7 +98,7 @@ export class AutoArticleGenerator {
             1. Title (JSON field): "${formattedDate} - Phân Tích & Dự Đoán Kết Quả Xổ Số Miền Bắc"
             
             2. Introduction: 
-               - Chào quý bạn đọc.
+               - Chào bạn đọc một cách tự nhiên, thân thiện.
                - Nhận định ngắn gọn về xu hướng quay thưởng hôm qua.
 
             3. Phân Tích Thống Kê (Use Bullet Points & Bold Numbers):
@@ -124,8 +130,10 @@ export class AutoArticleGenerator {
             
             Part 1: JSON Metadata
             {
-                "title": "${formattedDate} - ...",
-                "excerpt": "Phân tích thống kê và dự đoán kết quả XSMB ${formattedDate}..."
+                "title": "${formattedDate} - Phân Tích & Dự Đoán Kết Quả XSMB",
+                "excerpt": "Phân tích thống kê và dự đoán kết quả XSMB ${formattedDate}... (100-150 ký tự)",
+                "meta_title": "Dự Đoán XSMB ${formattedDate} - Phân Tích Chính Xác (50-60 ký tự)",
+                "meta_description": "Phân tích thống kê chi tiết và dự đoán XSMB ${formattedDate}. Bạch thủ, song thủ, dàn đề tiềm năng dựa trên dữ liệu thực tế. (150-160 ký tự)"
             }
             
             ---HTML_START---
@@ -213,6 +221,8 @@ export class AutoArticleGenerator {
                     title = ?, 
                     content = ?, 
                     excerpt = ?, 
+                    meta_title = ?,
+                    meta_description = ?,
                     thumbnail_url = ?, 
                     category = ?, 
                     status = ?, 
@@ -222,6 +232,8 @@ export class AutoArticleGenerator {
                   article.title,
                   article.content,
                   article.excerpt,
+                  article.meta_title || article.title,
+                  article.meta_description || article.excerpt,
                   thumbnail,
                   'soi-cau',
                   status,
@@ -232,13 +244,15 @@ export class AutoArticleGenerator {
          } else {
             console.log(`Creating new post with slug ${slug}...`);
             await query(
-               `INSERT INTO posts (title, slug, content, excerpt, thumbnail_url, category, status, published_at, created_at, updated_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+               `INSERT INTO posts (title, slug, content, excerpt, meta_title, meta_description, thumbnail_url, category, status, published_at, created_at, updated_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                [
                   article.title,
                   slug,
                   article.content,
                   article.excerpt,
+                  article.meta_title || article.title,
+                  article.meta_description || article.excerpt,
                   thumbnail,
                   'soi-cau',
                   status,
