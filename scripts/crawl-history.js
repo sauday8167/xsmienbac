@@ -97,7 +97,11 @@ async function crawlMinhNgoc(date) {
             }
         });
 
-        if (!results.special) return null;
+        // Relaxed check: Return result if ANY prize data is found, not just special prize
+        // During live drawing, prizes appear sequentially (usually starting from Prize 1 or 7)
+        const hasData = results.special || results.prize1 || (results.prize7 && results.prize7.length > 0);
+
+        if (!hasData) return null;
 
         return {
             draw_date: dbDate,

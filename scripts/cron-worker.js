@@ -24,8 +24,8 @@ async function runTask() {
 
         const result = await crawlMinhNgoc(today);
 
-        if (result && result.special_prize) {
-            console.log(`Has data! Special Prize: ${result.special_prize}`);
+        if (result) {
+            console.log(`Has data! Special Prize: ${result.special_prize || '(Not yet)'}`);
 
             await db.run(
                 `INSERT INTO xsmb_results 
@@ -63,23 +63,25 @@ async function runTask() {
             //     console.error('Failed to trigger article generation:', err);
             // }
 
-            // Trigger Bac Nho Pre-calculation
-            try {
-                console.log('Triggering Bac Nho calculation...');
-                const { exec } = require('child_process');
-                exec('npm run calculate-bac-nho', { env: { ...process.env, NODE_OPTIONS: '--max-old-space-size=6144' } }, (error, stdout, stderr) => {
-                    if (error) {
-                        console.error(`Calculation error: ${error.message}`);
-                        return;
-                    }
-                    if (stderr) {
-                        console.error(`Calculation stderr: ${stderr}`);
-                        return;
-                    }
-                    console.log(`Calculation stdout: ${stdout}`);
-                });
-            } catch (err) {
-                console.error('Failed to trigger calculation:', err);
+            // Trigger Bac Nho Pre-calculation - ONLY if Special Prize is present (End of Live)
+            if (result.special_prize && result.special_prize.length > 0) {
+                try {
+                    console.log('Triggering Bac Nho calculation...');
+                    const { exec } = require('child_process');
+                    exec('npm run calculate-bac-nho', { env: { ...process.env, NODE_OPTIONS: '--max-old-space-size=6144' } }, (error, stdout, stderr) => {
+                        if (error) {
+                            console.error(`Calculation error: ${error.message}`);
+                            return;
+                        }
+                        if (stderr) {
+                            console.error(`Calculation stderr: ${stderr}`);
+                            return;
+                        }
+                        console.log(`Calculation stdout: ${stdout}`);
+                    });
+                } catch (err) {
+                    console.error('Failed to trigger calculation:', err);
+                }
             }
         } else {
             console.log('No data found yet.');
@@ -96,15 +98,22 @@ async function runTask() {
 // Every 2 minutes from 18:10 to 18:50 (Vietnam time usually results come 18:15-18:30)
 console.log('Cron worker started.');
 console.log('Schedules:');
-console.log(' - 18:40: Final Check + 100 Days Analysis');
+console.log(' - 18:15-18:45: Live Crawl (Every minute)');
 console.log(' - 18:52: 180 Days Analysis');
 console.log(' - 19:04: 365 Days Analysis');
 console.log(' - 19:16: 730 Days Analysis');
 console.log(' - 19:28: 1000 Days Analysis');
 
-// 1. 18:40 - Crawl + Default (100 days)
-cron.schedule('40 18 * * *', () => {
-    runTask();
+// 1. Live Crawl: Every minute from 18:15 to 18:45
+cron.schedule('* 18 * * *', () => {
+    const now = new Date();
+    // Adjust to VN time roughly if needed, or rely on server time (assuming server is VN or UTC+7 aware context, or simplest: assume local time is correct)
+    // The previous code comment said "18:10 to 18:50" but code was "40 18 * * *".
+    // We'll run every minute if minutes are between 15 and 45.
+    const minutes = now.getMinutes();
+    if (minutes >= 15 && minutes <= 45) {
+        runTask();
+    }
 });
 
 // Helper to run calculation

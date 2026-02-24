@@ -1,6 +1,8 @@
 import { GeminiClient } from './gemini-client';
 import { ContextProvider } from './context-provider';
 import { query, queryOne } from '@/lib/db';
+import { getLatestTacticalAdvice } from '../ai-learning';
+import { calculateLoGan } from '@/lib/statistics';
 
 export class AIAnalyst {
     static async runDailyAnalysis(customTargetDate?: string) {
@@ -46,6 +48,17 @@ export class AIAnalyst {
                 }).join('\n');
             }
 
+            // 0.6. Get Latest Tactical Advice & Gan Stats
+            const [tacticalAdvice, loGan50] = await Promise.all([
+                getLatestTacticalAdvice(),
+                calculateLoGan(50, 60) // High risk numbers
+            ]);
+
+            const ganList = loGan50.map((g: any) => g.number).join(', ');
+            const tacticalContext = tacticalAdvice
+                ? `BÀI HỌC KINH NGHIỆM: ${tacticalAdvice.advice}\nMỨC ĐỘ RỦI RO: ${tacticalAdvice.risk_level}`
+                : "Đang thu thập kinh nghiệm...";
+
             // 1. Check if we already have a prediction for target date
             const existing = await queryOne(
                 `SELECT id FROM ai_predictions WHERE draw_date = ?`,
@@ -90,6 +103,7 @@ QUY TẮC TỪ NGỮ (BẮT BUỘC):
 - HÃY dùng: "loto", "cặp loto", "loto đặc biệt", "giải đặc biệt".
 
 MỤC TIÊU: Dự đoán 5 cặp loto tiềm năng nhất cho ngày ${targetDate}.
+MỤC TIÊU KPI: Phải trúng ít nhất 2 nháy trở lên (Tỷ lệ chính xác mong muốn >90%).
 
 DỮ LIỆU ĐẦU VÀO:
 ${contextText}
@@ -97,11 +111,18 @@ ${contextText}
 LỊCH SỬ DỰ ĐOÁN 3 NGÀY QUA:
 ${historyContext}
 
+BÀI HỌC & CHIẾN THUẬT TỪ GEMINI CORE:
+${tacticalContext}
+
+CẢNH BÁO TỪ CHUYÊN GIA GAN (KIỂM SOÁT RỦI RO):
+Danh sách loto Gan cực cao (CẤM DỰ ĐOÁN VÀO NHỮNG SỐ NÀY): ${ganList}
+
 NHIỆM VỤ:
-1. TỔNG KẾT NGẮN GỌN phong độ dự đoán trong 3 ngày qua dựa trên "LỊCH SỬ DỰ ĐOÁN" ở trên. Nêu rõ ngày nào trúng, trúng số nào.
-2. Phân tích dữ liệu để tìm ra 5 cặp loto có xác suất về cao nhất hôm nay.
-3. Giải thích lý do chọn lựa một cách đơn giản (Bạc nhớ, Tần suất, Cầu chạy).
-4. Đưa ra lời khuyên quản lý vốn ngắn gọn.
+1. TỔNG KẾT phong độ dựa trên lịch sử và áp dụng BÀI HỌC KINH NGHIỆM để điều chỉnh lựa chọn.
+2. Tuyệt đối KHÔNG chọn các số trong danh sách CẢNH BÁO TỪ CHUYÊN GIA GAN.
+3. Phân tích dữ liệu để tìm ra 5 cặp loto có khả năng nổ 2 nháy cao nhất.
+4. Ưu tiên sự hội tụ của nhiều phương pháp (Bạc nhớ + Tần suất + Loto rơi).
+5. Trình bày lý do chọn lựa sắc bén, mang tính chuyên sâu hơn.
 
 ĐỊNH DẠNG ĐẦU RA (JSON):
 Trả về MỘT obect JSON duy nhất (không markdown wrapper nếu có thể, hoặc nằm trong block code json):

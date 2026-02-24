@@ -6,6 +6,9 @@ export interface AIPersonality {
     name: string;
     description: string;
     motto: string;
+    debateStyle: string;
+    avatar?: string;
+    strengths: string[];
 }
 
 export interface AIWeights {
@@ -20,29 +23,53 @@ export interface AIWeights {
 export const PERSONALITIES: AIPersonality[] = [
     {
         id: 'strategist',
-        name: 'Chiến Lược Gia (The Strategist)',
+        name: 'Chiến Lược Gia',
         description: 'Ưu tiên sự ổn định, xác suất thống kê dài hạn và các cầu bền vững.',
-        motto: 'Sự kiên nhẫn là chìa khóa của thành công.'
+        motto: 'Sự kiên nhẫn là chìa khóa của thành công.',
+        debateStyle: 'Điềm tĩnh, thực tế, luôn dẫn chứng số liệu lịch sử.',
+        strengths: ['Tần suất', 'Thống kê thứ/ngày', 'Bạch thủ']
     },
     {
         id: 'maverick',
-        name: 'Kẻ Độc Hành (The Maverick)',
+        name: 'Kẻ Độc Hành',
         description: 'Thích những con số đột phá, ít người chú ý và có tính bất ngờ cao.',
-        motto: 'Khác biệt tạo nên đẳng cấp.'
+        motto: 'Khác biệt tạo nên đẳng cấp.',
+        debateStyle: 'Phản biện, nghi ngờ đám đông, bảo vệ số gan.',
+        strengths: ['Lô Gan', 'Đột biến', 'Bạc nhớ']
     },
     {
         id: 'mathematician',
-        name: 'Nhà Toán Học (The Mathematician)',
+        name: 'Nhà Toán Học',
         description: 'Tập trung vào các dãy số đặc biệt: Số nguyên tố, Fibonacci và Tỷ lệ vàng.',
-        motto: 'Toán học không bao giờ nói dối.'
+        motto: 'Toán học không bao giờ nói dối.',
+        debateStyle: 'Logic, chính xác, coi trọng các quy luật hình học.',
+        strengths: ['Toán học', 'Cầu 3D/4D', 'Tỷ lệ vàng']
     },
     {
         id: 'intuitive',
-        name: 'Trực Giác (The Intuitive)',
+        name: 'Trực Giác',
         description: 'Sử dụng thuật toán Entropy và lý thuyết hỗn mang để tìm kiếm điểm rơi.',
-        motto: 'Cảm hứng đến từ những điều ngẫu nhiên.'
+        motto: 'Cảm hứng đến từ những điều ngẫu nhiên.',
+        debateStyle: 'Sáng tạo, linh cảm, nhạy bén với nhịp điệu mới.',
+        strengths: ['Lô rơi', 'Entropy', 'Nhịp sinh học']
+    },
+    {
+        id: 'gan_expert',
+        name: 'Chuyên Gia Gan',
+        description: 'Chuyên gia quản trị rủi ro, chuyên nghiên cứu các số gan và dự báo nguy cơ gan.',
+        motto: 'An toàn là trên hết, tránh xa rủi ro.',
+        debateStyle: 'Khắt khe, thực tế, luôn đặt dấu hỏi về độ rủi ro của các bộ số.',
+        strengths: ['Lô Gan', 'Tiềm năng Gan', 'Thẩm định rủi ro']
     }
 ];
+
+export function getPersonalityById(id: string): AIPersonality | undefined {
+    return PERSONALITIES.find(p => p.id === id);
+}
+
+export function getAllPersonalities(): AIPersonality[] {
+    return PERSONALITIES;
+}
 
 /**
  * 1. LẤY KINH NGHIỆM TỪ QUÁ KHỨ (Experience Retrieval)
@@ -102,6 +129,7 @@ export async function getEvolvedBrain(predictionType: string = 'funnel') {
         case 'maverick': weights.gan += 1.2; weights.frequency -= 0.5; break;
         case 'mathematician': weights.primality += 1.5; weights.tail += 0.5; break;
         case 'intuitive': weights.chaos += 1.5; weights.entropy += 1.0; break;
+        case 'gan_expert': weights.gan += 1.5; weights.frequency -= 0.3; break;
     }
 
     return { personality: selected, weights, log: logs, performanceMap };

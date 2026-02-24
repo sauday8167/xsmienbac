@@ -8,14 +8,6 @@
     "seoDescription": "AI phân tích dữ liệu kết quả XSMB đã quay nhằm tổng hợp xu hướng thống kê. Thông tin chỉ để tham khảo, không dự đoán hay tư vấn."
   },
   {
-    "id": "simulation",
-    "href": "/mo-phong",
-    "label": "Mô Phỏng",
-    "icon": "refresh",
-    "seoTitle": "Mô Phỏng Xổ Số - Quay Thử Tự Động 18 Lần/Ngày",
-    "seoDescription": "Hệ thống mô phỏng tự động quay xổ số 18 lần mỗi ngày, phân tích pattern và thống kê nội bộ."
-  },
-  {
     "id": "s5",
     "href": "/du-doan",
     "label": "Tần Suất Loto",
