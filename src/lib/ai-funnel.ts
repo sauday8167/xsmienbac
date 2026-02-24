@@ -1,4 +1,4 @@
-import { query } from './db';
+import { query, queryOne } from './db';
 import { LotteryResultRaw, extractAllLotoNumbers } from './lottery-helpers';
 import { PERSONALITIES, AIWeights, AIPersonality, saveAIPrediction } from './ai-brain';
 import { analyzeBacNho } from './bac-nho';
@@ -61,8 +61,46 @@ export async function generateConsensusPrediction(daysToAnalyze: number = 100): 
     const drawDate = latestResult.draw_date;
     const rng = (offset: number = 0) => seededRandom(drawDate + offset);
 
+    // --- 💾 CACHE CHECK: Nếu đã có dự đoán cho ngày này, trả về từ cache ---
+    try {
+        const cached = await queryOne<any>(`
+            SELECT predicted_numbers, created_at
+            FROM ai_experience
+            WHERE draw_date = ? AND prediction_type = 'funnel' AND personality_id = 'consensus_team'
+            ORDER BY created_at DESC
+            LIMIT 1
+        `, [drawDate]);
+
+        if (cached) {
+            const finalNumbers: string[] = JSON.parse(cached.predicted_numbers);
+            console.log(`💾 AI Funnel Cache HIT for ${drawDate}: ${finalNumbers.join(', ')}`);
+            // Trả về response nhẹ từ cache (không cần tính toán lại)
+            const tacticalAdvice = await getLatestTacticalAdvice();
+            const history = await import('./ai-learning').then(m => m.getCouncilHistory(10));
+            return {
+                date: drawDate,
+                personalities: PERSONALITIES,
+                reflectionLog: [
+                    { speaker: 'Hệ thống', message: `💾 Đang hiển thị kết quả đã cached cho kỳ ${drawDate}. Hội đồng đã họp và chốt số này hôm nay.`, type: 'info' },
+                    { speaker: 'Hệ thống', message: `✅ Hội đồng đã đạt được đồng thuận cuối cùng. Chốt 5 bộ số VIP.`, type: 'consensus' },
+                ],
+                funnel: [
+                    { level: 1, name: 'Đề Xuất', description: 'Các chuyên gia đưa ra lựa chọn riêng lẻ', count: 40, numbers: [] },
+                    { level: 2, name: 'Tranh Luận', description: 'Phản biện và dẫn chứng số liệu', count: 20, numbers: [] },
+                    { level: 3, name: 'Sàng Lọc', description: 'Loại bỏ các số ít sự đồng thuận', count: 10, numbers: finalNumbers.map((n, i) => ({ number: n, score: 80 - i * 5, reasons: ['Đã được hội đồng phê duyệt'], badges: i < 5 ? ['💎 VIP'] : [] })) },
+                    { level: 4, name: 'Đồng Thuận', description: 'Hội tụ tinh hoa (Top 5 VIP)', count: 5, numbers: finalNumbers.map((n, i) => ({ number: n, score: 80 - i * 5, reasons: ['Đã được hội đồng phê duyệt'], badges: ['💎 VIP'] })) },
+                ],
+                finalPrediction: finalNumbers,
+            } as any;
+        }
+    } catch (e) {
+        // Table chưa tạo hoặc lỗi cache → tiếp tục tính bình thường
+        console.warn('Cache check failed, recalculating:', e);
+    }
+
     // --- 🔮 LATEST TACTICAL ADVICE (Gemini Memory) ---
     const tacticalAdvice = await getLatestTacticalAdvice();
+
 
     // --- 🌍 DATA GATHERING (Parallel) ---
     const [bacNho, lotoRoi, bridges, loGan, frequent] = await Promise.all([
