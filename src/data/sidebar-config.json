@@ -4,14 +4,22 @@
     "href": "/du-doan-ai",
     "label": "Dự đoán AI",
     "icon": "bulb",
-    "seoTitle": "1Dự Đoán AI Xổ Số Miền Bắc – Phân Tích Dữ Liệu Tham Khảo",
+    "seoTitle": "Dự Đoán AI Xổ Số Miền Bắc – Phân Tích Dữ Liệu Tham Khảo",
     "seoDescription": "AI phân tích dữ liệu kết quả XSMB đã quay nhằm tổng hợp xu hướng thống kê. Thông tin chỉ để tham khảo, không dự đoán hay tư vấn."
+  },
+  {
+    "label": "Hội Đồng AI",
+    "href": "/hoi-dong-ai",
+    "icon": "chart",
+    "seoTitle": "Hội Đồng AI Dự Đoán Kết Quả XSMB – Phân Tích Loto Thông Minh",
+    "seoDescription": "Hệ thống Hội Đồng AI dự đoán xổ số miền Bắc (XSMB) đa chiều. Ứng dụng trí tuệ nhân tạo phân tích xác suất loto chính xác cao.",
+    "id": "1771944147086"
   },
   {
     "id": "s5",
     "href": "/du-doan",
     "label": "Tần Suất Loto",
-    "icon": "bulb",
+    "icon": "calendar",
     "seoTitle": "Tần Suất Loto XSMB - Thống Kê Số Về Nhiều Nhất & Số Gan",
     "seoDescription": "Thống kê tần suất xuất hiện các cặp loto XSMB 30-50 ngày. Phân tích số nóng, số gan, chu kỳ ra số chi tiết chính xác."
   },
@@ -54,6 +62,22 @@
     "icon": "calendar",
     "seoTitle": "Thống Kê XSMB Theo Ngày Tháng - Phân Tích Ngày 1-31",
     "seoDescription": "Thống kê XSMB theo ngày trong tháng (1-31). Tìm quy luật số xuất hiện theo lịch âm dương, ngày đặc biệt trong tháng."
+  },
+  {
+    "id": "s9-ngay-trong-nam",
+    "href": "/thong-ke-theo-ngay-trong-nam",
+    "label": "Thống kê kỷ niệm",
+    "icon": "calendar",
+    "seoTitle": "Thống Kê Kỷ Niệm XSMB Theo Ngày Trong Năm",
+    "seoDescription": "Thống kê kết quả xổ số theo cùng một ngày, cùng một tháng xuyên suốt nhiều năm trong lịch sử. Tính năng xem lịch sử XSMB theo kỷ niệm."
+  },
+  {
+    "id": "s9-quay-mo-phong",
+    "href": "/quay-mo-phong",
+    "label": "Quay Mô Phỏng",
+    "icon": "star",
+    "seoTitle": "Quay Thử Xổ Số Miền Bắc Mô Phỏng – Dự Đoán XSMB Tự Động",
+    "seoDescription": "Hệ thống quay thử xổ số miền Bắc mô phỏng tự động hàng ngày. Tổng hợp tần suất loto xuất hiện nhiều nhất từ hàng chục lần quay giả lập để tìm cặp số may mắn."
   },
   {
     "id": "1768323179769",

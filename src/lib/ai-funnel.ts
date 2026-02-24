@@ -62,6 +62,8 @@ export async function generateConsensusPrediction(daysToAnalyze: number = 100): 
     const rng = (offset: number = 0) => seededRandom(drawDate + offset);
 
     // --- 💾 CACHE CHECK: Nếu đã có dự đoán cho ngày này, trả về từ cache ---
+    let hasCached = false;
+    let cachedPredictedNumbers: string[] | null = null;
     try {
         const cached = await queryOne<any>(`
             SELECT predicted_numbers, created_at
@@ -72,29 +74,11 @@ export async function generateConsensusPrediction(daysToAnalyze: number = 100): 
         `, [drawDate]);
 
         if (cached) {
-            const finalNumbers: string[] = JSON.parse(cached.predicted_numbers);
-            console.log(`💾 AI Funnel Cache HIT for ${drawDate}: ${finalNumbers.join(', ')}`);
-            // Trả về response nhẹ từ cache (không cần tính toán lại)
-            const tacticalAdvice = await getLatestTacticalAdvice();
-            const history = await import('./ai-learning').then(m => m.getCouncilHistory(10));
-            return {
-                date: drawDate,
-                personalities: PERSONALITIES,
-                reflectionLog: [
-                    { speaker: 'Hệ thống', message: `💾 Đang hiển thị kết quả đã cached cho kỳ ${drawDate}. Hội đồng đã họp và chốt số này hôm nay.`, type: 'info' },
-                    { speaker: 'Hệ thống', message: `✅ Hội đồng đã đạt được đồng thuận cuối cùng. Chốt 5 bộ số VIP.`, type: 'consensus' },
-                ],
-                funnel: [
-                    { level: 1, name: 'Đề Xuất', description: 'Các chuyên gia đưa ra lựa chọn riêng lẻ', count: 40, numbers: [] },
-                    { level: 2, name: 'Tranh Luận', description: 'Phản biện và dẫn chứng số liệu', count: 20, numbers: [] },
-                    { level: 3, name: 'Sàng Lọc', description: 'Loại bỏ các số ít sự đồng thuận', count: 10, numbers: finalNumbers.map((n, i) => ({ number: n, score: 80 - i * 5, reasons: ['Đã được hội đồng phê duyệt'], badges: i < 5 ? ['💎 VIP'] : [] })) },
-                    { level: 4, name: 'Đồng Thuận', description: 'Hội tụ tinh hoa (Top 5 VIP)', count: 5, numbers: finalNumbers.map((n, i) => ({ number: n, score: 80 - i * 5, reasons: ['Đã được hội đồng phê duyệt'], badges: ['💎 VIP'] })) },
-                ],
-                finalPrediction: finalNumbers,
-            } as any;
+            cachedPredictedNumbers = JSON.parse(cached.predicted_numbers);
+            console.log(`💾 AI Funnel Cache HIT for ${drawDate}: ${cachedPredictedNumbers?.join(', ')}`);
+            hasCached = true;
         }
     } catch (e) {
-        // Table chưa tạo hoặc lỗi cache → tiếp tục tính bình thường
         console.warn('Cache check failed, recalculating:', e);
     }
 
@@ -115,6 +99,10 @@ export async function generateConsensusPrediction(daysToAnalyze: number = 100): 
         { speaker: 'Hệ thống', message: `🚀 Khởi động phiên thảo luận Gen-Next 3.0 cho kỳ quay ${drawDate}.`, type: 'info' },
         { speaker: 'Hệ thống', message: `👥 Đang triệu tập Hội đồng chuyên gia: ${PERSONALITIES.map(p => p.name).join(', ')}.`, type: 'info' }
     ];
+
+    if (hasCached) {
+        logs.push({ speaker: 'Hệ thống', message: `💾 Đang tái hiện lại tiến trình thảo luận đã cached cho kỳ ${drawDate}. Hội đồng đã họp và chốt số này hôm nay.`, type: 'info' });
+    }
 
     // 1. INDIVIDUAL PROPOSALS
     const expertPicks = new Map<string, { number: string, score: number, reasons: string[] }[]>();
@@ -285,13 +273,15 @@ export async function generateConsensusPrediction(daysToAnalyze: number = 100): 
         if (idx < 10) stages[2].numbers.push(item);
     });
 
-    await saveAIPrediction({
-        draw_date: drawDate,
-        personality_id: 'consensus_team',
-        prediction_type: 'funnel',
-        predicted_numbers: finalNumbers,
-        weights_used: { consensus: true }
-    });
+    if (!hasCached) {
+        await saveAIPrediction({
+            draw_date: drawDate,
+            personality_id: 'consensus_team',
+            prediction_type: 'funnel',
+            predicted_numbers: finalNumbers,
+            weights_used: { consensus: true }
+        });
+    }
 
     return {
         date: drawDate,

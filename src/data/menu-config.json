@@ -53,32 +53,24 @@
       "description": "Tin tức xổ số",
       "seoTitle": "Tin Tức Xổ Số Miền Bắc – Cập Nhật Thông Tin Mới Nhất",
       "seoDescription": "Cập nhật tin tức xổ số miền Bắc, lịch quay, cơ cấu giải thưởng và các thông tin chính thống liên quan đến XSMB."
-    },
-    {
-      "id": "ai-pred",
-      "href": "/du-doan-ai",
-      "label": "Dự đoán AI",
-      "description": "AI phân tích xổ số",
-      "seoTitle": "Dự Đoán AI Xổ Số Miền Bắc – Phân Tích Dữ Liệu",
-      "seoDescription": "Dự đoán AI xổ số miền Bắc dựa trên phân tích dữ liệu lịch sử và mô phỏng thống kê, nội dung mang tính tham khảo."
-    },
-    {
-      "id": "ai-pred-2",
-      "href": "/du-doan-ai-2",
-      "label": "AI Phễu Lọc",
-      "description": "AI Tự học & Sàng lọc",
-      "seoTitle": "Dự Đoán AI 2.0 - Phễu Lọc Thông Minh",
-      "seoDescription": "Hệ thống dự đoán thế hệ mới với cơ chế tự học và phễu lọc 4 lớp."
     }
   ],
   "mobile": [
     {
       "id": "ai-pred-2-m",
-      "href": "/du-doan-ai-2",
+      "href": "/hoi-dong-ai",
       "label": "AI Phễu Lọc",
       "description": "AI Tự học & Sàng lọc",
-      "seoTitle": "Dự Đoán AI 2.0 - Phễu Lọc Thông Minh",
-      "seoDescription": "Hệ thống dự đoán thế hệ mới với cơ chế tự học và phễu lọc 4 lớp."
+      "seoTitle": "Hội Đồng AI Dự Đoán Kết Quả XSMB – Phân Tích Loto Thông Minh",
+      "seoDescription": "Hệ thống Hội Đồng AI dự đoán xổ số miền Bắc (XSMB) đa chiều. Ứng dụng trí tuệ nhân tạo phân tích xác suất loto chính xác cao."
+    },
+    {
+      "label": "Hội Đồng AI",
+      "href": "/hoi-dong-ai",
+      "description": "Hội Đồng Dự Đoán AI",
+      "seoTitle": "Hội Đồng AI Dự Đoán Kết Quả XSMB – Phân Tích Loto Thông Minh",
+      "seoDescription": "Hệ thống Hội Đồng AI dự đoán xổ số miền Bắc (XSMB) đa chiều. Ứng dụng trí tuệ nhân tạo phân tích xác suất loto chính xác cao.",
+      "id": "1771944067718"
     },
     {
       "id": "5",
@@ -119,6 +111,22 @@
       "seoTitle": "Thống Kê Xổ Số Miền Bắc Theo Ngày – Tổng Hợp Kết Quả",
       "seoDescription": "Tổng hợp thống kê kết quả xổ số miền Bắc theo ngày dựa trên dữ liệu lịch sử, hỗ trợ tra cứu thông tin XSMB.",
       "id": "1768578521295"
+    },
+    {
+      "label": "Thống kê kỷ niệm",
+      "href": "/thong-ke-theo-ngay-trong-nam",
+      "description": "",
+      "seoTitle": "Thống Kê Kỷ Niệm XSMB Theo Ngày Trong Năm",
+      "seoDescription": "Thống kê kết quả xổ số theo cùng một ngày, cùng một tháng xuyên suốt nhiều năm trong lịch sử. Tính năng xem lịch sử XSMB theo kỷ niệm.",
+      "id": "1768578521296"
+    },
+    {
+      "label": "Quay Mô Phỏng",
+      "href": "/quay-mo-phong",
+      "description": "",
+      "seoTitle": "Quay Thử Xổ Số Miền Bắc Mô Phỏng – Dự Đoán XSMB Tự Động",
+      "seoDescription": "Hệ thống quay thử xổ số miền Bắc mô phỏng tự động hàng ngày. Tổng hợp tần suất loto xuất hiện nhiều nhất từ hàng chục lần quay giả lập để tìm cặp số may mắn.",
+      "id": "1768578521297"
     },
     {
       "label": "Phân tích bạch thủ",
