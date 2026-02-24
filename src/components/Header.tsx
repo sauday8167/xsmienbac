@@ -134,7 +134,7 @@ export default function Header() {
                                         <div className="absolute -inset-1 bg-white/20 rounded-full blur group-hover:bg-white/30 transition-all duration-300"></div>
                                         <Image
                                             src={branding.logo}
-                                            alt="Logo"
+                                            alt={`${branding.siteName || 'XSMB'} - Xổ Số Miền Bắc 24h`}
                                             width={80}
                                             height={80}
                                             className="relative w-16 h-16 md:w-20 md:h-20 object-contain drop-shadow-lg transform group-hover:scale-105 transition-transform duration-300"
@@ -142,9 +142,9 @@ export default function Header() {
                                     </div>
                                 )}
                                 <div className="text-white flex flex-col justify-center">
-                                    <h1 className="text-2xl md:text-3xl font-black leading-none tracking-tighter drop-shadow-sm uppercase">
+                                    <div className="text-2xl md:text-3xl font-black leading-none tracking-tighter drop-shadow-sm uppercase" aria-label="Trang chủ XSMB">
                                         {branding.siteName || 'XSMB'}
-                                    </h1>
+                                    </div>
                                     <div className="h-0.5 w-12 bg-white/40 my-1 rounded-full"></div>
                                     <p className="text-[10px] md:text-xs font-bold text-lottery-red-100 uppercase tracking-widest opacity-90">
                                         Hệ Thống Xổ Số Miền Bắc 24h

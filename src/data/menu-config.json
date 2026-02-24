@@ -69,14 +69,6 @@
       "description": "AI Tự học & Sàng lọc",
       "seoTitle": "Dự Đoán AI 2.0 - Phễu Lọc Thông Minh",
       "seoDescription": "Hệ thống dự đoán thế hệ mới với cơ chế tự học và phễu lọc 4 lớp."
-    },
-    {
-      "id": "simulation",
-      "href": "/mo-phong",
-      "label": "Mô Phỏng",
-      "description": "Mô phỏng quay số tự động",
-      "seoTitle": "Mô Phỏng Xổ Số Miền Bắc - Quay Thử Tự Động 18 Lần/Ngày",
-      "seoDescription": "Hệ thống mô phỏng tự động quay xổ số 18 lần mỗi ngày, thống kê và phân tích pattern nội bộ."
     }
   ],
   "mobile": [
@@ -99,9 +91,9 @@
     {
       "label": "Bạc nhớ khung 3 ngày",
       "href": "/bac-nho-khung-3-ngay",
-      "description": "",
-      "seoTitle": "",
-      "seoDescription": "",
+      "description": "Phân tích bạc nhớ chu kỳ 3 ngày",
+      "seoTitle": "Bạc Nhớ Khung 3 Ngày XSMB – Dự Đoán Số Rơi Chính Xác",
+      "seoDescription": "Phân tích bạc nhớ xổ số miền Bắc theo khung 3 ngày với 4 dạng: Số đơn, Cặp 2, Cặp 3, 2 Ngày. Tìm quy luật số rơi trong chu kỳ ngắn hạn.",
       "id": "1768578391991"
     },
     {

@@ -30,6 +30,7 @@ interface SidebarItem {
  * @returns Metadata object for the page
  */
 export async function getPageMetadata(pathname: string): Promise<Metadata> {
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://xosomienbac24h.com';
     try {
         const cwd = process.cwd();
         const menuPath = join(cwd, 'src/data/menu-config.json');
@@ -60,21 +61,21 @@ export async function getPageMetadata(pathname: string): Promise<Metadata> {
         const menuItem = allMenuItems.find(i => i.href === pathname);
 
         if (menuItem && menuItem.seoTitle) {
-            return formatMetadata(menuItem.seoTitle, menuItem.seoDescription);
+            return formatMetadata(menuItem.seoTitle, menuItem.seoDescription, siteUrl, pathname);
         }
 
         // 2. Check Sidebar
         const sidebarItem = sidebarItems.find(i => i.href === pathname);
         if (sidebarItem && sidebarItem.seoTitle) {
-            return formatMetadata(sidebarItem.seoTitle, sidebarItem.seoDescription);
+            return formatMetadata(sidebarItem.seoTitle, sidebarItem.seoDescription, siteUrl, pathname);
         }
 
         // Fallback to label if no SEO data
-        if (menuItem) return formatMetadata(`${menuItem.label} - XSMB`);
-        if (sidebarItem) return formatMetadata(`${sidebarItem.label} - XSMB`);
+        if (menuItem) return formatMetadata(`${menuItem.label} - XSMB`, undefined, siteUrl, pathname);
+        if (sidebarItem) return formatMetadata(`${sidebarItem.label} - XSMB`, undefined, siteUrl, pathname);
 
         // Ultimate fallback
-        return formatMetadata('XSMB - Kết Quả Xổ Số Miền Bắc');
+        return formatMetadata('XSMB - Kết Quả Xổ Số Miền Bắc', undefined, siteUrl, pathname);
 
     } catch (error) {
         console.error('Error loading SEO config:', error);
@@ -82,14 +83,21 @@ export async function getPageMetadata(pathname: string): Promise<Metadata> {
     }
 }
 
-function formatMetadata(title: string, description?: string): Metadata {
+function formatMetadata(title: string, description?: string, siteUrl?: string, pathname?: string): Metadata {
+    const canonicalUrl = siteUrl && pathname ? `${siteUrl}${pathname}` : undefined;
     return {
         title,
         description: description || '',
+        ...(canonicalUrl && {
+            alternates: {
+                canonical: canonicalUrl,
+            },
+        }),
         openGraph: {
             title,
             description: description || '',
             type: 'website',
+            ...(canonicalUrl && { url: canonicalUrl }),
         },
         twitter: {
             card: 'summary_large_image',

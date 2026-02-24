@@ -5,25 +5,48 @@ import { Post } from '@/types';
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://xosomienbac24h.com';
 
-    // 1. Static Routes
-    const routes = [
+    // 1. Static Routes — High priority tool/analysis pages
+    const toolRoutes = [
         '',
         '/soi-cau-bac-nho',
+        '/soi-cau-bach-thu',
+        '/soi-cau-loto-roi',
+        '/soi-cau-giai-dac-biet',
+        '/bac-nho-khung-3-ngay',
         '/thong-ke',
+        '/thong-ke-theo-ngay',
+        '/thong-ke-theo-thu',
+        '/thong-ke/loto-3-4-cang',
+        '/du-doan',
+        '/du-doan-ai',
+        '/ket-qua-theo-ngay',
         '/do-ve-so',
         '/quay-thu',
-        '/tin-tuc',
-        '/lich-quay-thuong',
-        '/dieu-khoan',
-        '/chinh-sach-bao-mat',
-        '/mien-tru-trach-nhiem',
-        '/gioi-thieu/ban-bien-tap',
+        '/tao-dan-xo-so',
+        '/so-mo',
     ].map((route) => ({
         url: `${siteUrl}${route}`,
         lastModified: new Date(),
         changeFrequency: 'daily' as const,
-        priority: route === '' ? 1 : 0.8,
+        priority: route === '' ? 1 : 0.85,
     }));
+
+    // 2. Static Info/Policy Routes — Lower priority
+    const infoRoutes = [
+        '/tin-tuc',
+        '/chinh-sach-bao-mat',
+        '/dieu-khoan-su-dung',
+        '/mien-tru-trach-nhiem',
+        '/lien-he',
+        '/gioi-thieu/ban-bien-tap',
+    ].map((route) => ({
+        url: `${siteUrl}${route}`,
+        lastModified: new Date(),
+        changeFrequency: 'monthly' as const,
+        priority: 0.5,
+    }));
+
+    const routes = [...toolRoutes, ...infoRoutes];
 
     // 2. Blog Posts
     let posts: Post[] = [];

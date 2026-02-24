@@ -32,6 +32,16 @@ export default function StatisticsPage() {
         <div className="space-y-8">
             <JsonLd data={generateManualArticleSchema(schemaArgs.title, schemaArgs.description, '/thong-ke')} />
             <JsonLd data={generateBreadcrumbSchema(breadcrumbs)} />
+
+            {/* Page H1 — visible to Google and users */}
+            <div className="text-center md:text-left">
+                <h1 className="text-3xl md:text-4xl font-bold text-lottery-gray-800 mb-2">
+                    Thống Kê Xổ Số Miền Bắc (XSMB)
+                </h1>
+                <p className="text-lottery-gray-600 text-sm">Phân tích tần suất, lô gan, đầu đuôi và chu kỳ số từ dữ liệu lịch sử XSMB</p>
+                <div className="w-20 h-1 bg-lottery-red-600 rounded-full mt-3 md:mx-0 mx-auto"></div>
+            </div>
+
             <StatisticsClient />
             {/* Topic Cluster Hub */}
             <div className="my-8">

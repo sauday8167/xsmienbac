@@ -139,13 +139,43 @@ export default async function Footer() {
                     <div>
                         <h3 className="text-lg font-bold mb-4 text-lottery-gold-400">{config.quickLinks.title}</h3>
                         <ul className="space-y-2 text-sm">
-                            {config.quickLinks.links.map((link: any, index: number) => (
+                            {/* Static essential links — always shown */}
+                            {[
+                                { label: 'Trang chủ', href: '/' },
+                                { label: 'Kết quả theo ngày', href: '/ket-qua-theo-ngay' },
+                                { label: 'Thống kê XSMB', href: '/thong-ke' },
+                                { label: 'Thống kê theo thứ', href: '/thong-ke-theo-thu' },
+                                { label: 'Thống kê theo ngày', href: '/thong-ke-theo-ngay' },
+                                { label: 'Soi Cầu Bạc Nhớ', href: '/soi-cau-bac-nho' },
+                                { label: 'Bạc Nhớ Khung 3 Ngày', href: '/bac-nho-khung-3-ngay' },
+                                { label: 'Phân Tích Bạch Thủ', href: '/soi-cau-bach-thu' },
+                                { label: 'Loto Rơi XSMB', href: '/soi-cau-loto-roi' },
+                                { label: 'Giải Đặc Biệt', href: '/soi-cau-giai-dac-biet' },
+                                { label: 'Dự đoán AI', href: '/du-doan-ai' },
+                                { label: 'Tin tức / Soi cầu', href: '/tin-tuc' },
+                            ].map((link, index) => (
                                 <li key={index}>
                                     <Link href={link.href} className="text-lottery-gray-300 hover:text-white transition-colors">
                                         {link.label}
                                     </Link>
                                 </li>
                             ))}
+                            {/* Dynamic links from config (if any extra) */}
+                            {config.quickLinks.links
+                                .filter((link: any) => ![
+                                    '/', '/ket-qua-theo-ngay', '/thong-ke', '/tin-tuc',
+                                    '/thong-ke-theo-thu', '/thong-ke-theo-ngay',
+                                    '/soi-cau-bac-nho', '/bac-nho-khung-3-ngay',
+                                    '/soi-cau-bach-thu', '/soi-cau-loto-roi',
+                                    '/soi-cau-giai-dac-biet', '/du-doan-ai',
+                                ].includes(link.href))
+                                .map((link: any, index: number) => (
+                                    <li key={`extra-${index}`}>
+                                        <Link href={link.href} className="text-lottery-gray-300 hover:text-white transition-colors">
+                                            {link.label}
+                                        </Link>
+                                    </li>
+                                ))}
                         </ul>
                     </div>
 

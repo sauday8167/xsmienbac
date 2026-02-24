@@ -37,6 +37,27 @@ interface ApiResponse {
     touchStats?: { digit: string; count: number }[];
 }
 
+import JsonLd from '@/components/seo/JsonLd';
+import { generateManualArticleSchema, generateBreadcrumbSchema, generateFAQSchema } from '@/lib/schema-generator';
+import TopicHub from '@/components/TopicHub';
+
+const BACH_THU_BREADCRUMBS = [
+    { name: 'Trang chu', item: '/' },
+    { name: 'Phan Tich Bach Thu', item: '/soi-cau-bach-thu' }
+];
+
+const BACH_THU_SCHEMA = {
+    title: 'Soi Cau Bach Thu XSMB - Phan Tich Song Thu & Dan De Chuan',
+    description: 'Phan tich Bach Thu va Song Thu XSMB dua tren thuat toan thong ke. Du doan cac cap so co xac suat cao nhat hom nay.',
+};
+
+const BACH_THU_FAQS = [
+    { question: 'Bach thu la gi?', answer: 'Bach thu la cach choi xo so lo de dat cuoc vao duy nhat mot con so (2 chu so cuoi) trong ngay. Neu con so do ve trong bat ky giai nao cua bang ket qua XSMB, nguoi choi thang.' },
+    { question: 'Song thu khac bach thu nhu the nao?', answer: 'Song thu la chon 2 con so thay vi 1. Ty le thang cao hon vi co 2 co hoi ve, nhung von dau tu cung gap doi.' },
+    { question: 'Nen chon bien do phan tich bao nhieu ngay?', answer: 'Bien do 7-14 ngay thuong cho ket qua can bang. Bien do 3 ngay bat duoc tin hieu nong gan day, bien do 30 ngay cho cai nhin tong quan hon.' },
+    { question: 'Cau 3 cang la gi?', answer: 'Cau 3 cang la du doan chinh xac 3 chu so cuoi cua Giai Dac Biet. Giai thuong cao (1 an 600-900) nhung do kho lon. Can phan tich ky du lieu chu ky truoc khi danh.' },
+];
+
 export default function SoiCauBachThuPage() {
     const [amplitude, setAmplitude] = useState<number>(3);
     const [activeTab, setActiveTab] = useState<'loto' | 'special' | 'loto3d' | 'loto4d' | 'special-touch' | 'loto-dau'>('loto');
@@ -99,6 +120,9 @@ export default function SoiCauBachThuPage() {
 
     return (
         <div className="max-w-7xl mx-auto space-y-8 p-4">
+            <JsonLd data={generateManualArticleSchema(BACH_THU_SCHEMA.title, BACH_THU_SCHEMA.description, '/soi-cau-bach-thu')} />
+            <JsonLd data={generateBreadcrumbSchema(BACH_THU_BREADCRUMBS)} />
+            <JsonLd data={generateFAQSchema(BACH_THU_FAQS)} />
             <div className="text-center">
                 <h1 className="text-xl md:text-3xl font-bold text-lottery-gray-800 mb-2">
                     {activeTab === 'loto' ? 'Soi Cầu Loto Bạch Thủ' :
@@ -357,15 +381,55 @@ export default function SoiCauBachThuPage() {
                     </div>
                 </div>
             )}
+            {/* Topic Hub — Internal links */}
+            <div className="my-6">
+                <TopicHub title="Công Cụ Soi Cầu Liên Quan" />
+            </div>
+
             {/* SEO Content */}
-            <div className="mt-10 p-6 bg-gray-50 rounded-xl border border-gray-100 text-sm text-gray-700 leading-relaxed text-justify shadow-sm">
-                <h2 className="text-lg font-bold text-gray-900 mb-3">Giới thiệu về Soi Cầu Bạch Thủ</h2>
+            <div className="mt-10 p-6 bg-gray-50 rounded-xl border border-gray-100 text-sm text-gray-700 leading-relaxed text-justify shadow-sm space-y-4">
+                <h2 className="text-lg font-bold text-gray-900">Phân Tích Bạch Thủ XSMB — Cách Chốt Số Chính Xác</h2>
                 <p>
-                    Công cụ <strong>Soi Cầu Bạch Thủ</strong> được thiết kế dành riêng cho những người chơi yêu thích lối đánh 'nhất tiễn hạ song điêu' – một ăn cả, ngã về không.
-                    Hệ thống tự động quét hàng triệu biến thể cầu chạy trong quá khứ để tìm ra các vị trí ghép cầu ổn định nhất (cầu chạy đều 3-5 ngày).
-                    Bạn có thể tùy chỉnh biên độ ngày, xem chi tiết đường đi của cầu trên bảng kết quả để kiểm chứng độ tin cậy.
-                    Dù là cầu bạch thủ lô, cầu giải đặc biệt hay cầu 3 càng, 4 càng, công cụ này sẽ giúp bạn sàng lọc ra những con số tinh túy nhất, giảm thiểu rủi ro và tối ưu hóa nguồn vốn đầu tư.
+                    <strong>Soi Cầu Bạch Thủ</strong> (hay <strong>Song Thủ</strong>) là phương pháp phân tích dữ liệu thống kê để xác định <em>một hoặc hai con số</em> có xác suất xuất hiện cao nhất trong kỳ quay XSMB tiếp theo.
+                    Công cụ được thiết kế dành riêng cho những người chơi yêu thích lối đánh &quot;nhất tiễn hạ song điêu&quot; — đặt ít, ăn nhiều, tối ưu vốn.
                 </p>
+                <p>
+                    Hệ thống tự động phân tích hàng nghìn biến thể cầu chạy trong quá khứ và cung cấp các loại phân tích:
+                </p>
+                <ul className="list-disc pl-5 space-y-1">
+                    <li><strong>Cầu Bạch Thủ Lô:</strong> Tìm 1 con số lô (2 chữ số cuối) có xác suất cao nhất sẽ về trong ngày mai</li>
+                    <li><strong>Song Thủ Lô:</strong> Chọn 2 con số lô có cơ hội về cao nhất — tăng tỷ lệ chiến thắng so với chỉ chơi 1 số</li>
+                    <li><strong>Cầu 3 Càng / 4 Càng:</strong> Phân tích và dự đoán bộ số 3 hoặc 4 chữ số — giải thưởng cao, độ khó lớn</li>
+                    <li><strong>Cầu Giải Đặc Biệt:</strong> Dự đoán 2 số cuối của Giải Đặc Biệt dựa trên chu kỳ lịch sử</li>
+                </ul>
+                <p>
+                    Bạn có thể <strong>tùy chỉnh biên độ ngày</strong> phân tích (3, 7, 14, 30 ngày) để phù hợp với chiến lược của mình.
+                    Dữ liệu cầu được trình bày trực quan với bảng kết quả lịch sử giúp kiểm chứng độ tin cậy của từng bộ cầu.
+                    <em>Lưu ý: Mọi thông tin chỉ mang tính tham khảo thống kê, không đảm bảo kết quả trúng thưởng.</em>
+                </p>
+
+                {/* FAQ Section */}
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                    <h3 className="text-base font-bold text-gray-800 mb-3">Câu Hỏi Thường Gặp về Bạch Thủ XSMB</h3>
+                    <div className="space-y-3">
+                        <div>
+                            <p className="font-semibold text-gray-800">Bạch thủ là gì?</p>
+                            <p className="text-gray-600">Bạch thủ là cách chơi xổ số lô đề đặt cược vào duy nhất một con số (2 chữ số cuối) trong ngày. Nếu con số đó về trong bất kỳ giải nào của bảng kết quả XSMB, người chơi thắng với tỷ lệ cao hơn đánh nhiều số nhưng vốn ít hơn.</p>
+                        </div>
+                        <div>
+                            <p className="font-semibold text-gray-800">Song thủ khác bạch thủ như thế nào?</p>
+                            <p className="text-gray-600">Song thủ là chọn 2 con số thay vì 1. Tỷ lệ thắng cao hơn vì có 2 cơ hội về, nhưng vốn đầu tư cũng gấp đôi. Song thủ phù hợp khi có 2 số cùng có tín hiệu mạnh từ dữ liệu thống kê.</p>
+                        </div>
+                        <div>
+                            <p className="font-semibold text-gray-800">Nên chọn biên độ phân tích bao nhiêu ngày?</p>
+                            <p className="text-gray-600">Biên độ 7-14 ngày thường cho kết quả cân bằng giữa xu hướng ngắn hạn và dài hạn. Biên độ 3 ngày bắt được tín hiệu &quot;nóng&quot; gần đây, biên độ 30 ngày cho cái nhìn tổng quan về chu kỳ dài hạn hơn.</p>
+                        </div>
+                        <div>
+                            <p className="font-semibold text-gray-800">Cầu 3 càng là gì và độ khó như thế nào?</p>
+                            <p className="text-gray-600">Cầu 3 càng là dự đoán chính xác 3 chữ số cuối của Giải Đặc Biệt. Tỷ lệ trúng thưởng thấp hơn lô đề thông thường nhưng giải thưởng rất cao (thường 1 ăn 600-900). Cần phân tích kỹ dữ liệu chu kỳ trước khi đánh.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );
