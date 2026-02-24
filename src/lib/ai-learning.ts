@@ -2,6 +2,41 @@ import { query, queryOne } from './db';
 import { GeminiClient } from './ai/gemini-client';
 import { extractAllLotoNumbers } from './lottery-helpers';
 
+/**
+ * Tự động tạo các bảng cần thiết nếu chưa tồn tại.
+ * Gọi trước bất kỳ query nào để tránh crash khi chưa migrate.
+ */
+async function ensureTablesExist() {
+    try {
+        await query(`
+            CREATE TABLE IF NOT EXISTS ai_experience (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                draw_date TEXT NOT NULL,
+                personality_id TEXT NOT NULL,
+                prediction_type TEXT NOT NULL,
+                predicted_numbers TEXT NOT NULL,
+                weights_used TEXT,
+                accuracy_score REAL DEFAULT 0,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+        await query(`
+            CREATE TABLE IF NOT EXISTS ai_lessons_learned (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                draw_date TEXT NOT NULL,
+                personality_id TEXT NOT NULL,
+                analysis TEXT NOT NULL,
+                tactical_adjustments TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+        await query(`CREATE INDEX IF NOT EXISTS idx_ai_exp_date ON ai_experience(draw_date)`);
+        await query(`CREATE INDEX IF NOT EXISTS idx_ai_lessons_date ON ai_lessons_learned(draw_date)`);
+    } catch (e) {
+        // Bỏ qua nếu index đã tồn tại
+    }
+}
+
 export interface TacticalAdjustment {
     weights: {
         frequency?: number;
@@ -112,27 +147,37 @@ HÃY TRẢ VỀ KẾT QUẢ DƯỚI DẠNG JSON NHƯ SAU:
  * 2. LẤY CHIẾN THUẬT MỚI NHẤT
  */
 export async function getLatestTacticalAdvice(): Promise<TacticalAdjustment | null> {
-    const latest = await queryOne<any>(`
-        SELECT * FROM ai_lessons_learned 
-        WHERE personality_id = 'council' 
-        ORDER BY draw_date DESC 
-        LIMIT 1
-    `);
-
-    if (!latest) return null;
-
-    return JSON.parse(latest.tactical_adjustments);
+    try {
+        await ensureTablesExist();
+        const latest = await queryOne<any>(`
+            SELECT * FROM ai_lessons_learned 
+            WHERE personality_id = 'council' 
+            ORDER BY draw_date DESC 
+            LIMIT 1
+        `);
+        if (!latest) return null;
+        return JSON.parse(latest.tactical_adjustments);
+    } catch (e) {
+        console.warn('getLatestTacticalAdvice: table not ready yet, returning null');
+        return null;
+    }
 }
 
 /**
  * 3. LẤY LỊCH SỬ 10 NGÀY CHO UI
  */
 export async function getCouncilHistory(limit: number = 10) {
-    return await query<any[]>(`
-        SELECT draw_date, predicted_numbers, accuracy_score, created_at
-        FROM ai_experience
-        WHERE prediction_type = 'funnel'
-        ORDER BY draw_date DESC
-        LIMIT ?
-    `, [limit]);
+    try {
+        await ensureTablesExist();
+        return await query<any[]>(`
+            SELECT draw_date, predicted_numbers, accuracy_score, created_at
+            FROM ai_experience
+            WHERE prediction_type = 'funnel'
+            ORDER BY draw_date DESC
+            LIMIT ?
+        `, [limit]);
+    } catch (e) {
+        console.warn('getCouncilHistory: table not ready yet, returning empty');
+        return [];
+    }
 }
