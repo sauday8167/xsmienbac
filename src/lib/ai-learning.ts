@@ -164,16 +164,21 @@ export async function getLatestTacticalAdvice(): Promise<TacticalAdjustment | nu
 }
 
 /**
- * 3. LẤY LỊCH SỬ 10 NGÀY CHO UI
+ * 3. LẤY LỊCH SỬ 10 NGÀY CHO UI (deduplicated – 1 entry per day)
  */
 export async function getCouncilHistory(limit: number = 10) {
     try {
         await ensureTablesExist();
         return await query<any[]>(`
-            SELECT draw_date, predicted_numbers, accuracy_score, created_at
-            FROM ai_experience
-            WHERE prediction_type = 'funnel'
-            ORDER BY draw_date DESC
+            SELECT e.draw_date, e.predicted_numbers, e.accuracy_score, e.created_at
+            FROM ai_experience e
+            INNER JOIN (
+                SELECT draw_date, MAX(id) as max_id
+                FROM ai_experience
+                WHERE prediction_type = 'funnel'
+                GROUP BY draw_date
+            ) latest ON e.id = latest.max_id
+            ORDER BY e.draw_date DESC
             LIMIT ?
         `, [limit]);
     } catch (e) {

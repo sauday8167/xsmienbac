@@ -98,11 +98,13 @@ async function runTask() {
 // Every 2 minutes from 18:10 to 18:50 (Vietnam time usually results come 18:15-18:30)
 console.log('Cron worker started.');
 console.log('Schedules:');
+console.log(' - 17:30: AI Council Prediction (/hoi-dong-ai) - chốt số trước giờ quay');
 console.log(' - 18:15-18:45: Live Crawl (Every minute)');
 console.log(' - 18:52: 180 Days Analysis');
 console.log(' - 19:04: 365 Days Analysis');
 console.log(' - 19:16: 730 Days Analysis');
 console.log(' - 19:28: 1000 Days Analysis');
+console.log(' - 20:35: AI Prediction (/du-doan-ai) - phân tích sau kết quả');
 
 // 1. Live Crawl: Every minute from 18:15 to 18:45
 cron.schedule('* 18 * * *', () => {
@@ -152,7 +154,21 @@ cron.schedule('28 19 * * *', () => {
     runCalculation(1000);
 });
 
-// 6. 20:35 - AI Prediction
+// 6. 17:30 - AI Council Funnel Prediction (Hội Đồng AI - /hoi-dong-ai)
+cron.schedule('30 17 * * *', () => {
+    console.log(`[${new Date().toISOString()}] Triggering AI Council Funnel Prediction...`);
+    const { exec } = require('child_process');
+    exec('node scripts/run-council.js', (error, stdout, stderr) => {
+        if (error) {
+            console.error(`[Council] Error: ${error.message}`);
+            return;
+        }
+        if (stderr) console.error(`[Council] Stderr: ${stderr}`);
+        console.log(`[Council] Done:\n${stdout}`);
+    });
+});
+
+// 7. 20:35 - AI Prediction (Dự Đoán AI - /du-doan-ai)
 cron.schedule('35 20 * * *', () => {
     console.log(`[${new Date().toISOString()}] Triggering AI Prediction...`);
     const { exec } = require('child_process');
@@ -167,4 +183,5 @@ cron.schedule('35 20 * * *', () => {
         console.log(`AI Analysis Stdout: ${stdout}`);
     });
 });
+
 

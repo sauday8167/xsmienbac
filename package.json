@@ -11,7 +11,8 @@
     "worker": "node scripts/cron-worker.js",
     "live-worker": "npx tsx scripts/live-crawler-worker.ts",
     "calculate-bac-nho": "tsx scripts/calculate-bac-nho.ts",
-    "run-ai": "tsx scripts/run-ai.ts"
+    "run-ai": "tsx scripts/run-ai.ts",
+    "run-council": "node scripts/run-council.js"
   },
   "dependencies": {
     "@ducanh2912/next-pwa": "^10.2.9",
