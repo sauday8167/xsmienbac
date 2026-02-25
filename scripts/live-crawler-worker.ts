@@ -17,7 +17,7 @@ function getCrawlStrategy() {
     if (hour === 18 && minute >= 15 && minute <= 26) {
         return {
             active: true,
-            interval: 10000 + Math.random() * 5000, // 10-15 seconds
+            interval: 3000 + Math.random() * 2000, // 3-5 seconds
             phase: 'PRIZES_1_TO_7',
             description: 'Đang quay Giải 1 → Giải 7'
         };
