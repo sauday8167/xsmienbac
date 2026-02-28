@@ -145,7 +145,7 @@ async function main() {
         if (mode === 'all' || mode === 'accuracy') {
             console.log('\n--- Bước 1: Cập nhật accuracy_score 3 ngày qua ---');
             const today = new Date();
-            for (let i = 1; i <= 3; i++) {
+            for (let i = 0; i <= 3; i++) {
                 const d = new Date(today);
                 d.setDate(d.getDate() - i);
                 const dateStr = d.toISOString().split('T')[0];
