@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import type { LotteryResultRaw, NumberFrequency, LotoStats, ApiResponse } from '@/types';

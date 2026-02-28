@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
+
 /**
  * Cron Job Endpoint: Auto AI Prediction
  * Schedule: 00:10 daily (Vietnam time)
