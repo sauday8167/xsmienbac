@@ -1,19 +1,13 @@
 import { Post } from '@/types';
-import { readFileSync } from 'fs';
-import { join } from 'path';
+import siteConfig from '@/data/seo-config.json';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://xosomienbac24h.com';
 const SITE_NAME = 'XSMB 24h';
 const LOGO_URL = `${SITE_URL}/logo-v5.png`;
 
-// Load site config for real info
+// Site config for real info
 function getSiteConfig() {
-    try {
-        const config = JSON.parse(readFileSync(join(process.cwd(), 'src/data/seo-config.json'), 'utf8'));
-        return config;
-    } catch {
-        return {};
-    }
+    return siteConfig || {};
 }
 
 export function generateOrganizationSchema() {
@@ -30,17 +24,9 @@ export function generateOrganizationSchema() {
             height: 60,
         },
         sameAs: [
-            config.facebookUrl || 'https://www.facebook.com/xsmb24h',
+            config.social?.facebook,
+            config.social?.youtube,
         ].filter(Boolean),
-        ...(config.phone && {
-            contactPoint: {
-                '@type': 'ContactPoint',
-                telephone: config.phone,
-                contactType: 'customer service',
-                areaServed: 'VN',
-                availableLanguage: ['Vietnamese'],
-            },
-        }),
     };
 }
 
