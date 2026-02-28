@@ -83,6 +83,30 @@ async function checkAndUpdateAccuracy(db, drawDate) {
     }
 }
 
+async function checkAndRetryPrediction(db) {
+    console.log(`[${new Date().toISOString()}] Kiểm tra tình trạng chốt số hôm nay...`);
+    try {
+        // Today's date in VN time format (YYYY-MM-DD)
+        const todayStr = new Date().toLocaleString('en-ZA', { timeZone: 'Asia/Ho_Chi_Minh' }).split(',')[0].replace(/\//g, '-');
+
+        // Check if there is already a funnel prediction for today
+        const existing = await db.get(`
+            SELECT id FROM ai_experience 
+            WHERE draw_date = ? AND prediction_type = 'funnel'
+            LIMIT 1
+        `, [todayStr]);
+
+        if (existing) {
+            console.log(`[Council Check] Đã có dự đoán cho ngày ${todayStr} (ID: ${existing.id}). Không cần chốt lại.`);
+        } else {
+            console.log(`[Council Check] CHƯA có dự đoán cho ngày ${todayStr}! Đang tiến hành chốt số lại...`);
+            await triggerCouncilPrediction();
+        }
+    } catch (err) {
+        console.error('[Council Check] Lỗi khi kiểm tra:', err.message);
+    }
+}
+
 async function triggerCouncilPrediction() {
     console.log(`[${new Date().toISOString()}] Gọi API tạo dự đoán Hội Đồng AI...`);
     try {
@@ -105,7 +129,10 @@ async function triggerCouncilPrediction() {
 }
 
 async function main() {
-    console.log(`\n====== RUN COUNCIL SCRIPT ======`);
+    const args = process.argv.slice(2);
+    const mode = args.find(arg => arg.startsWith('--mode='))?.split('=')[1] || 'all';
+
+    console.log(`\n====== RUN COUNCIL SCRIPT [Mode: ${mode.toUpperCase()}] ======`);
     console.log(`Thời gian: ${new Date().toLocaleString('vi-VN')}`);
 
     const db = await open({
@@ -115,18 +142,29 @@ async function main() {
 
     try {
         // Step 1: Update accuracy for last 3 days
-        console.log('\n--- Bước 1: Cập nhật accuracy_score 3 ngày qua ---');
-        const today = new Date();
-        for (let i = 1; i <= 3; i++) {
-            const d = new Date(today);
-            d.setDate(d.getDate() - i);
-            const dateStr = d.toISOString().split('T')[0];
-            await checkAndUpdateAccuracy(db, dateStr);
+        if (mode === 'all' || mode === 'accuracy') {
+            console.log('\n--- Bước 1: Cập nhật accuracy_score 3 ngày qua ---');
+            const today = new Date();
+            for (let i = 1; i <= 3; i++) {
+                const d = new Date(today);
+                d.setDate(d.getDate() - i);
+                const dateStr = d.toISOString().split('T')[0];
+                await checkAndUpdateAccuracy(db, dateStr);
+            }
+        } else {
+            console.log('\n--- Bỏ qua Bước 1 (Accuracy) theo chế độ đã chọn ---');
         }
 
         // Step 2: Trigger today's prediction (calls the API which calls generateConsensusPrediction)
-        console.log('\n--- Bước 2: Tạo dự đoán mới cho hôm nay ---');
-        await triggerCouncilPrediction();
+        if (mode === 'all' || mode === 'predict') {
+            console.log('\n--- Bước 2: Tạo dự đoán mới cho hôm nay ---');
+            await triggerCouncilPrediction();
+        } else if (mode === 'check') {
+            console.log('\n--- Bước Check: Kiểm tra và chốt lại nếu thiếu ---');
+            await checkAndRetryPrediction(db);
+        } else {
+            console.log('\n--- Bỏ qua Bước 2 (Predict) theo chế độ đã chọn ---');
+        }
 
         console.log('\n====== HOÀN TẤT ======\n');
     } catch (err) {

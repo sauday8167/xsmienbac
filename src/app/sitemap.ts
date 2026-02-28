@@ -19,6 +19,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         '/thong-ke/loto-3-4-cang',
         '/du-doan',
         '/du-doan-ai',
+        '/hoi-dong-ai',
         '/ket-qua-theo-ngay',
         '/do-ve-so',
         '/quay-thu',
@@ -30,6 +31,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         changeFrequency: 'daily' as const,
         priority: route === '' ? 1 : 0.85,
     }));
+
 
     // 2. Static Info/Policy Routes — Lower priority
     const infoRoutes = [

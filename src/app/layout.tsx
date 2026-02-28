@@ -92,14 +92,26 @@ export async function generateMetadata(): Promise<Metadata> {
         },
         openGraph: {
             type: 'website',
+            siteName: 'XSMB 24h',
+            locale: 'vi_VN',
             url: siteUrl,
             images: [
                 {
                     url: ogImage,
                     width: 1200,
                     height: 630,
+                    alt: 'XSMB - Kết Quả Xổ Số Miền Bắc',
                 },
             ],
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title: 'XSMB - Kết Quả Xổ Số Miền Bắc Hôm Nay',
+            description: 'Xem kết quả xổ số miền Bắc (XSMB) hôm nay nhanh nhất, chính xác nhất.',
+            images: [ogImage],
+        },
+        alternates: {
+            canonical: siteUrl,
         },
         icons: {
             icon: [

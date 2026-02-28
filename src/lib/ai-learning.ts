@@ -45,6 +45,9 @@ export interface TacticalAdjustment {
         primality?: number;
         entropy?: number;
         chaos?: number;
+        loto_roi?: number;
+        bac_nho?: number;
+        bridges?: number;
     };
     preferred_numbers?: string[];
     banned_numbers?: string[];
@@ -93,29 +96,37 @@ export async function generateDailyCouncilLessons(date: string) {
         };
     });
 
-    // Tạo prompt cho Gemini phân tích
     const prompt = `
-Bạn là một Chuyên gia Cố vấn AI cao cấp cho Hội đồng Dự đoán Xổ số Miền Bắc (XSMB).
-Mục tiêu của Hội đồng là trúng ít nhất 2 nháy trở lên mỗi kỳ (>90% độ tin cậy hội tụ).
+Bạn là một Chuyên gia Cố vấn Chiến lược AI cao cấp cho Hội đồng Dự đoán XSMB.
+MỤC TIÊU TỐI THƯỢNG: Đạt KPI ít nhất 2 nháy trúng (>= 2 con lô trúng) trong danh sách Top 5 VIP mỗi ngày.
 
-Dưới đây là lịch sử 10 ngày gần nhất của Hội đồng:
+Dưới đây là lịch sử hiệu suất 10 ngày qua của Hội đồng:
 ${JSON.stringify(performanceSummary, null, 2)}
 
-Dữ liệu kết quả thực tế hôm nay (${date}): ${actualNumbers.join(', ')}
+Kết quả thực tế hôm nay (${date}): ${actualNumbers.join(', ')}
 
-NHIỆM VỤ CỦA BẠN:
-1. Phân tích tại sao Hội đồng lại trượt hoặc trúng ít trong các ngày qua.
-2. Tìm ra quy luật "sai lầm" lặp đi lặp lại (ví dụ: bị "bẫy" bởi các số gan, hoặc quá tin vào tần suất).
-3. Đề xuất điều chỉnh trọng số (Weights) kỹ thuật cho ngày mai để tối ưu hóa tỷ lệ trúng.
-4. Dự báo các vùng số (Heads/Tails) đang có xu hướng "ảo" (ảo là kết quả thực tế khác xa thống kê).
+NHIỆM VỤ CỦA BẠN (TRUY TÌM NGUYÊN NHÂN & ĐỀ XUẤT):
+1. PHÂN TÍCH THẤT BẠI: Tại sao Hội đồng chưa đạt KPI 2 nháy? Có phải do bị "bẫy" bởi các số gan, hay do thuật toán Bạc nhớ đang bị "loãng" trong chu kỳ này?
+2. NHẬN DIỆN VÙNG ẢO: Xác định các đầu/đuôi nào đang có xu hướng "gãy" thống kê (thống kê cho ra rất nhiều nhưng thực tế không về).
+3. DANH SÁCH ĐEN (Banned Numbers): Liệt kê các số cực kỳ rủi ro không được phép cho vào Top 5 ngày mai.
+4. DANH SÁCH ƯU TIÊN (Preferred Numbers): Liệt kê 5-7 số có xác suất "nổ" cao nhất dựa trên nhịp rơi hiện tại.
+5. ĐIỀU CHỈNH TRỌNG SỐ (Tactical Weights): Tăng/Giảm trọng số cho các yếu tố (frequency, gan, loto_roi, bac_nho) để tối ưu hóa bộ lọc.
 
-HÃY TRẢ VỀ KẾT QUẢ DƯỚI DẠNG JSON NHƯ SAU:
+HÃY TRẢ VỀ DẠNG JSON NGHIÊM NGẶT:
 {
-  "analysis": "Chuỗi văn bản phân tích chuyên sâu...",
+  "analysis": "Phân tích sâu sắc về nhịp độ thị trường và sai lầm của Hội đồng...",
   "tactical_adjustments": {
-    "weights": { "frequency": 1.2, "gan": 0.8, ... },
-    "advice": "Lời khuyên chiến thuật ngắn gọn...",
-    "risk_level": "medium"
+    "weights": { 
+        "frequency": 1.0, 
+        "gan": 0.5, 
+        "loto_roi": 1.5, 
+        "bac_nho": 1.3,
+        "bridges": 1.2
+    },
+    "preferred_numbers": ["12", "34", ...],
+    "banned_numbers": ["99", "00", ...],
+    "advice": "Chiến thuật chốt hạ cho ngày mai...",
+    "risk_level": "high | medium | low"
   }
 }
 `;

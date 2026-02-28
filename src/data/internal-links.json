@@ -5,19 +5,74 @@
         "priority": 10
     },
     {
+        "keyword": "kqxs miền bắc",
+        "url": "/",
+        "priority": 10
+    },
+    {
         "keyword": "xổ số miền bắc",
         "url": "/",
         "priority": 10
     },
     {
-        "keyword": "soi cầu",
+        "keyword": "kết quả xổ số",
+        "url": "/",
+        "priority": 10
+    },
+    {
+        "keyword": "sxmb",
+        "url": "/",
+        "priority": 9
+    },
+    {
+        "keyword": "soi cầu bạc nhớ",
         "url": "/soi-cau-bac-nho",
         "priority": 9
     },
     {
-        "keyword": "soi cầu lô",
+        "keyword": "bạc nhớ",
         "url": "/soi-cau-bac-nho",
         "priority": 9
+    },
+    {
+        "keyword": "soi cầu",
+        "url": "/soi-cau-bac-nho",
+        "priority": 8
+    },
+    {
+        "keyword": "soi cầu bạch thủ",
+        "url": "/soi-cau-bach-thu",
+        "priority": 9
+    },
+    {
+        "keyword": "cầu bạch thủ",
+        "url": "/soi-cau-bach-thu",
+        "priority": 9
+    },
+    {
+        "keyword": "lô rơi",
+        "url": "/soi-cau-loto-roi",
+        "priority": 9
+    },
+    {
+        "keyword": "soi cầu lô rơi",
+        "url": "/soi-cau-loto-roi",
+        "priority": 9
+    },
+    {
+        "keyword": "giải đặc biệt",
+        "url": "/soi-cau-giai-dac-biet",
+        "priority": 8
+    },
+    {
+        "keyword": "soi cầu giải đặc biệt",
+        "url": "/soi-cau-giai-dac-biet",
+        "priority": 8
+    },
+    {
+        "keyword": "bạc nhớ khung 3 ngày",
+        "url": "/bac-nho-khung-3-ngay",
+        "priority": 8
     },
     {
         "keyword": "thống kê loto",
@@ -25,8 +80,43 @@
         "priority": 8
     },
     {
-        "keyword": "thống kê",
+        "keyword": "thống kê xổ số",
         "url": "/thong-ke",
+        "priority": 8
+    },
+    {
+        "keyword": "thống kê theo ngày",
+        "url": "/thong-ke-theo-ngay",
+        "priority": 7
+    },
+    {
+        "keyword": "thống kê theo thứ",
+        "url": "/thong-ke-theo-thu",
+        "priority": 7
+    },
+    {
+        "keyword": "dự đoán xổ số",
+        "url": "/du-doan",
+        "priority": 8
+    },
+    {
+        "keyword": "dự đoán",
+        "url": "/du-doan",
+        "priority": 7
+    },
+    {
+        "keyword": "dự đoán AI",
+        "url": "/du-doan-ai",
+        "priority": 8
+    },
+    {
+        "keyword": "hội đồng AI",
+        "url": "/hoi-dong-ai",
+        "priority": 8
+    },
+    {
+        "keyword": "AI dự đoán",
+        "url": "/hoi-dong-ai",
         "priority": 8
     },
     {
@@ -40,18 +130,23 @@
         "priority": 7
     },
     {
+        "keyword": "tạo dàn xổ số",
+        "url": "/tao-dan-xo-so",
+        "priority": 7
+    },
+    {
+        "keyword": "số mơ",
+        "url": "/so-mo",
+        "priority": 7
+    },
+    {
         "keyword": "tin tức xổ số",
         "url": "/tin-tuc",
         "priority": 6
     },
     {
-        "keyword": "lịch quay thưởng",
-        "url": "/lich-quay-thuong",
-        "priority": 5
-    },
-    {
-        "keyword": "kết quả xổ số",
+        "keyword": "lô đề",
         "url": "/",
-        "priority": 10
+        "priority": 6
     }
 ]

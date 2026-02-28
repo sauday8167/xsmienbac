@@ -58,7 +58,11 @@ export async function generateConsensusPrediction(daysToAnalyze: number = 100): 
     if (results.length < 10) throw new Error("Cơ sở dữ liệu không đủ dữ liệu để AI phân tích.");
 
     const latestResult = results[0];
-    const drawDate = latestResult.draw_date;
+    const latestDate = new Date(latestResult.draw_date);
+    const targetDateObj = new Date(latestDate);
+    targetDateObj.setDate(targetDateObj.getDate() + 1);
+    const drawDate = targetDateObj.toISOString().split('T')[0];
+
     const rng = (offset: number = 0) => seededRandom(drawDate + offset);
 
     // --- 💾 CACHE CHECK: Nếu đã có dự đoán cho ngày này, trả về từ cache ---
@@ -165,11 +169,28 @@ export async function generateConsensusPrediction(daysToAnalyze: number = 100): 
                 }
             }
 
-            // Apply Tactical Adjustments from Gemini
+            // Apply Tactical Adjustments from Gemini (Dynamic Weights)
             if (tacticalAdvice && tacticalAdvice.weights) {
-                const tWeights = tacticalAdvice.weights;
-                if (p.id === 'strategist' && tWeights.frequency) score *= tWeights.frequency;
-                if (p.id === 'maverick' && tWeights.gan) score *= tWeights.gan;
+                const tw = tacticalAdvice.weights;
+                if (tw.frequency) score *= (1 + (tw.frequency - 1) * (weights.frequency || 1));
+                if (tw.gan) score *= (1 + (tw.gan - 1) * (weights.gan || 1));
+
+                // New weight categories from Gen-Next 3.5
+                if (tw.loto_roi && (p.id === 'intuitive' || p.id === 'strategist')) score *= tw.loto_roi;
+                if (tw.bac_nho && (p.id === 'maverick' || p.id === 'strategist')) score *= tw.bac_nho;
+                if (tw.bridges && (p.id === 'strategist')) score *= tw.bridges;
+            }
+
+            // Preferred Numbers Boost
+            if (tacticalAdvice?.preferred_numbers?.includes(numStr)) {
+                score *= 1.5;
+                reasons.push("⭐ Nằm trong danh sách ưu tiên của Hội đồng");
+            }
+
+            // Banned Numbers Penalty
+            if (tacticalAdvice?.banned_numbers?.includes(numStr)) {
+                score *= 0.1; // Gần như loại bỏ
+                reasons.push("🚫 Bị Hội đồng cảnh báo rủi ro cao");
             }
 
             if (score > 0) {
@@ -181,7 +202,7 @@ export async function generateConsensusPrediction(daysToAnalyze: number = 100): 
         expertPicks.set(p.id, candidates.slice(0, 10));
     }
 
-    // 2. THE DEBATE
+    // 2. THE DEBATE & AGGREGATION
     const consensusMap = new Map<string, { totalScore: number, support: string[], arguments: string[] }>();
 
     PERSONALITIES.forEach(p => {
@@ -191,40 +212,50 @@ export async function generateConsensusPrediction(daysToAnalyze: number = 100): 
                 consensusMap.set(pick.number, { totalScore: 0, support: [], arguments: [] });
             }
             const data = consensusMap.get(pick.number)!;
+
+            // Influence scaling: support from multiple experts increases visibility
             data.totalScore += pick.score;
             data.support.push(p.id);
             if (pick.reasons.length > 0) data.arguments.push(`${p.name}: ${pick.reasons[0]}`);
         });
     });
 
-    // 2.5 DISSENT LOGIC (Gan Expert Audit)
+    // 2.5 DISSENT LOGIC & RISK AUDIT (Gan Expert Audit)
     const ganExpertID = 'gan_expert';
-    const ganPicks = expertPicks.get(ganExpertID) || [];
 
     consensusMap.forEach((data, num) => {
-        // Nếu số này không được chuyên gia Gan đề xuất nhưng các chuyên gia khác lại chọn -> Gan Expert sẽ kiểm tra rủi ro
         const isSupportedByGan = data.support.includes(ganExpertID);
         const ganInfo = loGan.find(g => g.number === num);
 
         if (!isSupportedByGan && data.support.length >= 2) {
             if (ganInfo && ganInfo.daysSince! > 15) {
-                // RỦI RO CAO: Số đang gan quá lâu
-                data.totalScore -= 20;
+                data.totalScore *= 0.5;
                 data.arguments.push(`Chuyên gia Gan: ⚠️ CẢNH BÁO ĐỎ! Số ${num} đang gan ${ganInfo.daysSince} ngày, cực kỳ rủi ro.`);
-            } else if (rng(parseInt(num)) < 0.2) {
-                // RỦI RO TIỀM ẨN: Dự báo có khả năng vào chu kỳ gan
-                data.totalScore -= 10;
-                data.arguments.push(`Chuyên gia Gan: ⚠️ Số ${num} có dấu hiệu "chớm gan", tôi đề nghị cẩn trọng.`);
             }
+        }
+
+        // Bonus for multi-expert consensus (Convergence)
+        if (data.support.length >= 3) {
+            data.totalScore *= 1.3;
         }
     });
 
-    // Generate Dialogue Logs
-    const topCandidates = Array.from(consensusMap.entries())
+    // 3. FINAL SELECTION & REVIEW PHASE
+    let topCandidates = Array.from(consensusMap.entries())
         .sort((a, b) => b[1].totalScore - a[1].totalScore)
-        .slice(0, 10);
+        .slice(0, 12); // Take 12 for the review phase
 
-    topCandidates.forEach(([num, data], idx) => {
+    // --- 🛡️ REVIEW PHASE (KPI Alignment) ---
+    logs.push({ speaker: 'Hệ thống', message: `🔍 Đang tiến hành giai đoạn Phản biện & Đối soát KPI...`, type: 'info' });
+
+    // Filter out banned numbers if they somehow slipped through
+    topCandidates = topCandidates.filter(([num]) => !tacticalAdvice?.banned_numbers?.includes(num));
+
+    // Ensure we have 5 VIPs
+    const finalNumbers = topCandidates.slice(0, 5).map(([num]) => num);
+
+    // Add additional logic logs for interesting candidates
+    topCandidates.slice(0, 10).forEach(([num, data]) => {
         if (data.support.length >= 3) {
             logs.push({
                 speaker: PERSONALITIES.find(p => p.id === data.support[0])?.name || 'Chuyên gia',
@@ -246,9 +277,8 @@ export async function generateConsensusPrediction(daysToAnalyze: number = 100): 
         }
     });
 
-    // 3. FINAL SELECTION (TOP 5)
-    const finalNumbers = topCandidates.slice(0, 5).map(([num]) => num);
-    logs.push({ speaker: 'Hệ thống', message: `✅ Hội đồng đã đạt được đồng thuận cuối cùng. Chốt 5 bộ số VIP.`, type: 'info' });
+    // 3. FINAL SELECTION (Done in review phase)
+    logs.push({ speaker: 'Hệ thống', message: `✅ Hội đồng đã đạt được đồng thuận cuối cùng. Chốt 5 bộ số VIP hướng tới KPI 2+ nháy.`, type: 'info' });
 
     // Format stages for UI components (simulating the funnel for backward compatibility)
     const stages: FunnelStage[] = [

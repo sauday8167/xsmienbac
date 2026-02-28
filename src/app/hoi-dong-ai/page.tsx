@@ -92,7 +92,7 @@ export default function DuDoanAI2Page() {
         if (!data.date) return '';
         const d = new Date(data.date);
         if (isNaN(d.getTime())) return data.date;
-        d.setDate(d.getDate() + 1); // next draw day
+        // API already returns target draw date now
         return d.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
     })();
 
@@ -125,7 +125,7 @@ export default function DuDoanAI2Page() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <span className="text-amber-300 text-xs font-black uppercase tracking-wider">Hội đồng chốt số lúc</span>
-                            <span className="text-white text-base font-black">17:30</span>
+                            <span className="text-white text-base font-black">08:00</span>
                             <span className="text-amber-300 text-xs font-black uppercase tracking-wider">hàng ngày</span>
                         </div>
                         <div className="w-px h-4 bg-amber-400/30"></div>
@@ -333,7 +333,7 @@ export default function DuDoanAI2Page() {
                                         <svg className="w-3 h-3 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
-                                        <span className="text-amber-300 text-[10px] font-black uppercase tracking-widest">Chốt số: 17:30 hàng ngày</span>
+                                        <span className="text-amber-300 text-[10px] font-black uppercase tracking-widest">Chốt số: 08:00 hàng ngày</span>
                                     </div>
                                 </div>
                                 <p className="text-white text-lg font-medium leading-relaxed italic">

@@ -30,7 +30,7 @@ export function linkify(content: string): string {
     };
 
     // Keep track of total replacements to avoid over-linking
-    const maxTotalLinks = 5;
+    const maxTotalLinks = 10;
     let currentTotalLinks = 0;
 
     for (const link of sortedLinks) {
@@ -58,14 +58,14 @@ export function linkify(content: string): string {
         // Use string replacement but be careful. 
         // Let's stick to a reasonably safe Regex for Vietnamese text.
 
-        const regex = new RegExp(`(?<!<[^>]*)\\b${escapeRegExp(keyword)}\\b(?![^<]*>|[^<>]*<\/a>)`, 'i');
+        const regex = new RegExp(`(?<![<][^>]*)\\b${escapeRegExp(keyword)}\\b(?![^<]*>|[^<>]*<\\/a>)`, 'i');
 
         if (regex.test(newContent)) {
             // Only replace the FIRST occurrence to look natural
             newContent = newContent.replace(regex, (match) => {
                 currentTotalLinks++;
                 // Check if we hit the limit inside the callback (rare case but good safety)
-                return `<a href="${url}" class="text-lottery-red-600 hover:underline font-medium" title="${match}">${match}</a>`;
+                return `<a href="${url}" class="text-lottery-red-600 hover:underline font-medium" title="${match}" rel="noopener">${match}</a>`;
             });
         }
     }

@@ -98,7 +98,8 @@ async function runTask() {
 // Every 2 minutes from 18:10 to 18:50 (Vietnam time usually results come 18:15-18:30)
 console.log('Cron worker started.');
 console.log('Schedules:');
-console.log(' - 17:30: AI Council Prediction (/hoi-dong-ai) - chốt số trước giờ quay');
+console.log(' - 07:00: AI Council Accuracy Learning');
+console.log(' - 08:00: AI Council Prediction (/hoi-dong-ai)');
 console.log(' - 18:15-18:45: Live Crawl (Every minute)');
 console.log(' - 18:52: 180 Days Analysis');
 console.log(' - 19:04: 365 Days Analysis');
@@ -154,17 +155,45 @@ cron.schedule('28 19 * * *', () => {
     runCalculation(1000);
 });
 
-// 6. 17:30 - AI Council Funnel Prediction (Hội Đồng AI - /hoi-dong-ai)
-cron.schedule('30 17 * * *', () => {
-    console.log(`[${new Date().toISOString()}] Triggering AI Council Funnel Prediction...`);
+// 6a. 07:00 - AI Council Accuracy Learning (Bước 1: Học tập)
+cron.schedule('0 7 * * *', () => {
+    console.log(`[${new Date().toISOString()}] Triggering AI Council Accuracy Learning (Mode: accuracy)...`);
     const { exec } = require('child_process');
-    exec('node scripts/run-council.js', (error, stdout, stderr) => {
+    exec('node scripts/run-council.js --mode=accuracy', (error, stdout, stderr) => {
         if (error) {
-            console.error(`[Council] Error: ${error.message}`);
+            console.error(`[Council Accuracy] Error: ${error.message}`);
             return;
         }
-        if (stderr) console.error(`[Council] Stderr: ${stderr}`);
-        console.log(`[Council] Done:\n${stdout}`);
+        if (stderr) console.error(`[Council Accuracy] Stderr: ${stderr}`);
+        console.log(`[Council Accuracy] Done:\n${stdout}`);
+    });
+});
+
+// 6b. 08:00 - AI Council Funnel Prediction (Bước 2: Chốt số)
+cron.schedule('0 8 * * *', () => {
+    console.log(`[${new Date().toISOString()}] Triggering AI Council Funnel Prediction (Mode: predict)...`);
+    const { exec } = require('child_process');
+    exec('node scripts/run-council.js --mode=predict', (error, stdout, stderr) => {
+        if (error) {
+            console.error(`[Council Predict] Error: ${error.message}`);
+            return;
+        }
+        if (stderr) console.error(`[Council Predict] Stderr: ${stderr}`);
+        console.log(`[Council Predict] Done:\n${stdout}`);
+    });
+});
+
+// 6c. 12:00 - AI Council Status Check (Kiểm tra lại nếu có lỗi)
+cron.schedule('0 12 * * *', () => {
+    console.log(`[${new Date().toISOString()}] Triggering AI Council Status Check (Mode: check)...`);
+    const { exec } = require('child_process');
+    exec('node scripts/run-council.js --mode=check', (error, stdout, stderr) => {
+        if (error) {
+            console.error(`[Council Check] Error: ${error.message}`);
+            return;
+        }
+        if (stderr) console.error(`[Council Check] Stderr: ${stderr}`);
+        console.log(`[Council Check] Done:\n${stdout}`);
     });
 });
 

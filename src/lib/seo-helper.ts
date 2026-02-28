@@ -85,6 +85,7 @@ export async function getPageMetadata(pathname: string): Promise<Metadata> {
 
 function formatMetadata(title: string, description?: string, siteUrl?: string, pathname?: string): Metadata {
     const canonicalUrl = siteUrl && pathname ? `${siteUrl}${pathname}` : undefined;
+    const defaultOgImage = siteUrl ? `${siteUrl}/logo-v5.png` : '/logo-v5.png';
     return {
         title,
         description: description || '',
@@ -97,12 +98,16 @@ function formatMetadata(title: string, description?: string, siteUrl?: string, p
             title,
             description: description || '',
             type: 'website',
+            siteName: 'XSMB 24h',
+            locale: 'vi_VN',
             ...(canonicalUrl && { url: canonicalUrl }),
+            images: [{ url: defaultOgImage, width: 1200, height: 630, alt: title }],
         },
         twitter: {
             card: 'summary_large_image',
             title,
             description: description || '',
+            images: [defaultOgImage],
         },
     };
 }
