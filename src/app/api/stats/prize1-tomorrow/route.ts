@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { getPrize1TomorrowStats } from '@/lib/prize1-tomorrow-stats';
 import { queryOne } from '@/lib/db';
