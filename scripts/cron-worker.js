@@ -100,6 +100,7 @@ console.log('Cron worker started.');
 console.log('Schedules:');
 console.log(' - 07:00: AI Council Accuracy Learning');
 console.log(' - 08:00: AI Council Prediction (/hoi-dong-ai)');
+console.log(' - 12:00: AI Council Status Check (Retry if failed)');
 console.log(' - 18:15-18:45: Live Crawl (Every minute)');
 console.log(' - 18:52: 180 Days Analysis');
 console.log(' - 19:04: 365 Days Analysis');
