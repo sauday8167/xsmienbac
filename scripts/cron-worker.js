@@ -140,5 +140,18 @@ cron.schedule('40 19 * * *', () => {
     });
 });
 
+// 8. 17:30 - Fetch Số Hot Trong Ngày
+cron.schedule('30 17 * * *', () => {
+    console.log(`[${new Date().toISOString()}] Triggering Fetch Số Hot Trong Ngày...`);
+    const { exec } = require('child_process');
+    // Use --env-file to ensure API keys are loaded
+    exec('npx tsx --env-file=.env scripts/fetch-so-hot.ts', (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Fetch Số Hot Error: ${error.message}`);
+            return;
+        }
+        console.log(`Fetch Số Hot Stdout: ${stdout}`);
+    });
+});
 
 

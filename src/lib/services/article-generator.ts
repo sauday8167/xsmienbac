@@ -2,6 +2,8 @@ import { query, queryOne } from '../db';
 import { GeminiClient } from '../ai/gemini-client';
 import { ClaudeClient } from '../ai/claude-client';
 import { ArticleInputBuilder } from './article-input-builder';
+import { pingGoogleIndexing } from './google-indexing';
+
 
 export class AutoArticleGenerator {
    static async generateDailyPost(targetDate: string) {
@@ -132,8 +134,8 @@ export class AutoArticleGenerator {
             {
                 "title": "${formattedDate} - Phân Tích & Dự Đoán Kết Quả XSMB",
                 "excerpt": "Phân tích thống kê và dự đoán kết quả XSMB ${formattedDate}... (100-150 ký tự)",
-                "meta_title": "Dự Đoán XSMB ${formattedDate} - Phân Tích Chính Xác (50-60 ký tự)",
-                "meta_description": "Phân tích thống kê chi tiết và dự đoán XSMB ${formattedDate}. Bạch thủ, song thủ, dàn đề tiềm năng dựa trên dữ liệu thực tế. (150-160 ký tự)"
+                "meta_title": "Dự Đoán Xổ Số Miền Bắc ${formattedDate} - Soi Cầu XSMB Hôm Nay",
+                "meta_description": "Dự Đoán Xổ Số Miền Bắc ${formattedDate}, Phân tích thống kê chi tiết và dự đoán XSMB hôm nay. Bạch thủ, song thủ, dàn đề tiềm năng dựa trên dữ liệu thực tế. (150-160 ký tự)"
             }
             
             ---HTML_START---
@@ -264,6 +266,14 @@ export class AutoArticleGenerator {
          }
 
          console.log(`Article "${article.title}" processed successfully!`);
+
+         // 6. Auto-ping Google Indexing API (async, no-throw)
+         const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://xosomienbac24h.com';
+         const articleUrl = `${siteUrl}/tin-tuc/${slug}`;
+         pingGoogleIndexing(articleUrl).catch((e) =>
+            console.warn('[GoogleIndexing] Ping error:', e)
+         );
+
          return article;
 
       } catch (error) {

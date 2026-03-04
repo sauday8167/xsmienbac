@@ -93,6 +93,16 @@ export async function generateMetadata(
             publishedTime: post.published_at || undefined,
             authors: ['XSMB'],
         },
+        robots: {
+            index: true,
+            follow: true,
+            googleBot: {
+                index: true,
+                follow: true,
+                'max-image-preview': 'large',
+                'max-snippet': -1,
+            },
+        },
     };
 }
 

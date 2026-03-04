@@ -47,6 +47,14 @@
       "seoDescription": "Công cụ tạo dàn số học xổ số miền Bắc bằng thuật toán mô phỏng ngẫu nhiên, chỉ dùng để tham khảo thông tin."
     },
     {
+      "id": "so-hot",
+      "href": "/so-hot-trong-ngay",
+      "label": "Số Hot Trong Ngày",
+      "description": "Tổng hợp số đẹp bằng AI",
+      "seoTitle": "Số Hot Trong Ngày - Dự Đoán XSMB Từ Website & Youtube",
+      "seoDescription": "AI tổng hợp dữ liệu từ Youtube và Website tìm ra các con số lô đề miền Bắc hot nhất hôm nay."
+    },
+    {
       "id": "7",
       "href": "/tin-tuc",
       "label": "Tin tức",
@@ -71,6 +79,14 @@
       "seoTitle": "Hội Đồng AI Dự Đoán Kết Quả XSMB – Phân Tích Loto Thông Minh",
       "seoDescription": "Hệ thống Hội Đồng AI dự đoán xổ số miền Bắc (XSMB) đa chiều. Ứng dụng trí tuệ nhân tạo phân tích xác suất loto chính xác cao.",
       "id": "1771944067718"
+    },
+    {
+      "label": "Số Hot Trong Ngày",
+      "href": "/so-hot-trong-ngay",
+      "description": "Tổng hợp số đẹp bằng AI",
+      "seoTitle": "Số Hot Trong Ngày - Dự Đoán XSMB Từ Website & Youtube",
+      "seoDescription": "AI tổng hợp dữ liệu từ Youtube và Website tìm ra các con số lô đề miền Bắc hot nhất hôm nay.",
+      "id": "so-hot-m"
     },
     {
       "id": "5",
@@ -119,14 +135,6 @@
       "seoTitle": "Thống Kê Kỷ Niệm XSMB Theo Ngày Trong Năm",
       "seoDescription": "Thống kê kết quả xổ số theo cùng một ngày, cùng một tháng xuyên suốt nhiều năm trong lịch sử. Tính năng xem lịch sử XSMB theo kỷ niệm.",
       "id": "1768578521296"
-    },
-    {
-      "label": "Quay Mô Phỏng",
-      "href": "/quay-mo-phong",
-      "description": "",
-      "seoTitle": "Quay Thử Xổ Số Miền Bắc Mô Phỏng – Dự Đoán XSMB Tự Động",
-      "seoDescription": "Hệ thống quay thử xổ số miền Bắc mô phỏng tự động hàng ngày. Tổng hợp tần suất loto xuất hiện nhiều nhất từ hàng chục lần quay giả lập để tìm cặp số may mắn.",
-      "id": "1768578521297"
     },
     {
       "label": "Phân tích bạch thủ",

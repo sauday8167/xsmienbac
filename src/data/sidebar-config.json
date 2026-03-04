@@ -16,6 +16,14 @@
     "id": "1771944147086"
   },
   {
+    "id": "so-hot",
+    "href": "/so-hot-trong-ngay",
+    "label": "Số Hot Trong Ngày",
+    "icon": "star",
+    "seoTitle": "Số Hot Trong Ngày - Dự Đoán XSMB Từ Website & Youtube",
+    "seoDescription": "AI tổng hợp dữ liệu từ Youtube và Website tìm ra các con số lô đề miền Bắc hot nhất hôm nay."
+  },
+  {
     "id": "s5",
     "href": "/du-doan",
     "label": "Tần Suất Loto",
@@ -70,14 +78,6 @@
     "icon": "calendar",
     "seoTitle": "Thống Kê Kỷ Niệm XSMB Theo Ngày Trong Năm",
     "seoDescription": "Thống kê kết quả xổ số theo cùng một ngày, cùng một tháng xuyên suốt nhiều năm trong lịch sử. Tính năng xem lịch sử XSMB theo kỷ niệm."
-  },
-  {
-    "id": "s9-quay-mo-phong",
-    "href": "/quay-mo-phong",
-    "label": "Quay Mô Phỏng",
-    "icon": "star",
-    "seoTitle": "Quay Thử Xổ Số Miền Bắc Mô Phỏng – Dự Đoán XSMB Tự Động",
-    "seoDescription": "Hệ thống quay thử xổ số miền Bắc mô phỏng tự động hàng ngày. Tổng hợp tần suất loto xuất hiện nhiều nhất từ hàng chục lần quay giả lập để tìm cặp số may mắn."
   },
   {
     "id": "1768323179769",

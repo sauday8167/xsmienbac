@@ -49,9 +49,11 @@ export function generateWebSiteSchema() {
 
 export function generateArticleSchema(post: Post) {
     const postUrl = `${SITE_URL}/tin-tuc/${post.slug}`;
-    const imageUrl = post.thumbnail
-        ? (post.thumbnail.startsWith('http') ? post.thumbnail : `${SITE_URL}${post.thumbnail}`)
-        : LOGO_URL;
+    const thumbSrc = (post as any).thumbnail_url || post.thumbnail;
+    const imageUrl = thumbSrc
+        ? (thumbSrc.startsWith('http') ? thumbSrc : `${SITE_URL}${thumbSrc}`)
+        : `${SITE_URL}/api/og?title=${encodeURIComponent(post.title)}`;
+
 
     return {
         '@context': 'https://schema.org',

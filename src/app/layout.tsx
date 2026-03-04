@@ -113,6 +113,17 @@ export async function generateMetadata(): Promise<Metadata> {
         alternates: {
             canonical: siteUrl,
         },
+        robots: {
+            index: true,
+            follow: true,
+            googleBot: {
+                index: true,
+                follow: true,
+                'max-image-preview': 'large',
+                'max-snippet': -1,
+                'max-video-preview': -1,
+            },
+        },
         icons: {
             icon: [
                 { url: '/favicon.png', type: 'image/png' },
