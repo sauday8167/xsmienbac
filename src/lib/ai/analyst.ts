@@ -39,13 +39,42 @@ export class AIAnalyst {
             );
 
             let historyContext = "Chưa có dữ liệu lịch sử.";
+            let recentHitRate = 100; // Mặc định tự tin ban đầu nếu chưa có sử
+
             if (historyRows.length > 0) {
+                let hitCount = 0;
                 historyContext = historyRows.map(row => {
                     const date = new Date(row.draw_date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
                     const status = row.is_correct === 1 ? 'TRÚNG' : 'TRƯỢT';
+                    if (row.is_correct === 1) hitCount++;
                     const note = row.accuracy_notes || '';
                     return `- Ngày ${date}: ${status} (${note})`;
                 }).join('\n');
+                recentHitRate = (hitCount / historyRows.length) * 100;
+            }
+
+            // 0.5.5 Lập Chiến Thuật Động (Dynamic Strategy) dựa trên Tỷ lệ Trúng
+            let dynamicInstructions = "";
+            if (recentHitRate >= 40) {
+                // Đang trong nhịp cầu trơn -> Đánh theo đám đông & cầu kèo phổ thông
+                dynamicInstructions = `
+[CHIẾN THUẬT HIỆN TẠI: ĐÁNH THEO NHỊP CẦU THUẬN]
+Phong độ của Hội đồng đang TỐT (Tỷ lệ thắng: ${recentHitRate}%). 
+HÃY ƯU TIÊN SỰ HỘI TỤ CỦA CÁC ĐƯỜNG CẦU PHỔ BIẾN:
+- Tập trung vào các loto có nhịp rơi ổn định theo Thống Kê Tần Suất.
+- Kế thừa Bạc Nhớ, Lô Rơi và Bạc Nhớ Khung 3 Ngày vì thị trường đang đi đúng quy luật.
+`;
+            } else {
+                // Đang bị gạch -> Bắt AI bẻ cầu, cấm đi theo lối mòn
+                dynamicInstructions = `
+[CHIẾN THUẬT HIỆN TẠI: CHỐT SỐ RỦI RO / BẺ CẦU - PHÁ LỐI MÒN]
+CẢNH BÁO ĐỎ: Phong độ của Hội đồng đang RẤT TỆ (Tỷ lệ thắng: ${recentHitRate}%, đang trượt nhiều ngày).
+Bạn ĐANG BỊ RƠI VÀO LỐI MÒN của các phương pháp cơ bản (Bạc nhớ thông thường đã GÃY). Mệnh lệnh cho ngày hôm nay:
+- TUYỆT ĐỐI KHÔNG đi theo đám đông. Bỏ qua các cầu loto quá lộ liễu.
+- HÃY TÌM KIẾM CÁC DẤU HIỆU ĐẢO CHIỀU: Tìm Lô Kép, Lô đi theo Đầu/Đuôi đang câm hôm qua, hoặc Loto nghịch.
+- Soi kỹ các dấu hiệu cực kỳ bất thường từ Giải Đặc Biệt. 
+- Hãy chọn ít nhất 2 loto mà các thuật toán cơ bản thường bỏ qua nhưng mang lại tiềm năng đột biến ngày hôm nay.
+`;
             }
 
             // 0.6. Get Latest Tactical Advice & Gan Stats
@@ -108,10 +137,12 @@ MỤC TIÊU KPI: Phải trúng ít nhất 2 nháy trở lên (Tỷ lệ chính x
 DỮ LIỆU ĐẦU VÀO:
 ${contextText}
 
-LỊCH SỬ DỰ ĐOÁN 3 NGÀY QUA:
+LỊCH SỬ DỰ ĐOÁN TẦM NHÌN 3 NGÀY QUA:
 ${historyContext}
 
-BÀI HỌC & CHIẾN THUẬT TỪ GEMINI CORE:
+${dynamicInstructions}
+
+BÀI HỌC & CHIẾN THUẬT QUYẾT ĐOÁN TỪ AI MENTOR:
 ${tacticalContext}
 
 CẢNH BÁO TỪ CHUYÊN GIA GAN (KIỂM SOÁT RỦI RO):
@@ -120,23 +151,24 @@ Danh sách loto Gan cực cao (CẤM DỰ ĐOÁN VÀO NHỮNG SỐ NÀY): ${ganL
 NHIỆM VỤ:
 1. TỔNG KẾT phong độ dựa trên lịch sử và áp dụng BÀI HỌC KINH NGHIỆM để điều chỉnh lựa chọn.
 2. Tuyệt đối KHÔNG chọn các số trong danh sách CẢNH BÁO TỪ CHUYÊN GIA GAN.
-3. Phân tích dữ liệu để tìm ra 5 cặp loto có khả năng nổ 2 nháy cao nhất.
-4. Ưu tiên sự hội tụ của nhiều phương pháp (Bạc nhớ + Tần suất + Loto rơi).
-5. Trình bày lý do chọn lựa sắc bén, mang tính chuyên sâu hơn.
+3. TUÂN THỦ NGHIÊM NGẶT [CHIẾN THUẬT HIỆN TẠI]: Nếu chiến thuật yêu cầu "BẺ CẦU", bạn PHẢI phân tích ngoài lề và cấm chọn số dễ dãi.
+4. Phân tích dữ liệu theo đúng chiến thuật và tìm ra 5 cặp loto nổ 2 nháy cao nhất.
+5. Cảnh báo: Lệnh của AI Bậc thầy là tối thượng, tuyệt đối không được chống lệnh (vd Bậc thầy bảo loại đầu 6 thì hãy dẹp hết đầu 6).
+6. Hãy chắc chắn rằng trong Json phần "top_evidence", bạn có CÂU TỰ SỰ GIẢI THÍCH (Ví dụ: "Hôm nay quyết định bẻ cầu không theo lối mòn cũ..." hoặc "Tiếp tục bám sát nhịp Bạc Nhớ đang ổn định...").
 
 ĐỊNH DẠNG ĐẦU RA (JSON):
-Trả về MỘT obect JSON duy nhất (không markdown wrapper nếu có thể, hoặc nằm trong block code json):
+Trình bày TỪNG LOTO CỤ THỂ, VÍ DỤ: "01", KHÔNG TRÌNH BÀY KIỂU "12, 21". Trả về MỘT obect JSON duy nhất (không markdown wrapper nếu có thể, hoặc nằm trong block code json):
 {
     "dan_loto": ["xx", "yy", "zz", "aa", "bb"],
     "confidence": 85,
     "analysis": {
-        "summary": "Đoạn văn tổng kết lịch sử 3 ngày qua và nhận định thị trường hôm nay. Ví dụ: 'Phong độ 3 ngày qua rất tốt với 2 ngày trúng. Hôm nay cầu đang chạy đều ở đầu 6...'",
+        "summary": "Đoạn văn tổng kết. Phải nhắc đến việc hôm nay sẽ Bẻ Cầu hay Đánh Thuận Cầu dựa trên tỷ lệ trúng vừa qua.",
         "top_evidence": [
-            "Lý do 1: Loto xx là loto rơi từ giải Đặc biệt hôm qua.",
-            "Lý do 2: Cặp yy-zz đang ở nhịp về nhiều.",
-            "Lý do 3: Theo bạc nhớ, khi có aa thì thường ra bb."
+            "Lý do 1: Sự thay đổi tư duy so với ngày hôm qua (Bẻ cầu / Bám cầu).",
+            "Lý do 2: Loto xx chọn vì (lý do khác biệt).",
+            "Lý do 3: Dấu hiệu dị thường (nếu có)."
         ],
-        "advice": "Lời khuyên ngắn gọn. Ví dụ: Nên vào tiền đều tay cho 3 loto đầu, lót nhẹ 2 loto sau."
+        "advice": "Lời khuyên ngắn gọn."
     }
 }
             `;
