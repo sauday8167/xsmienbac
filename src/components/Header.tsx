@@ -29,8 +29,10 @@ export default function Header() {
     const [banners, setBanners] = useState<Banner[]>([]);
     const [ads, setAds] = useState<Ad[]>([]);
     const [branding, setBranding] = useState<{ logo: string; siteName: string }>({ logo: '', siteName: '' });
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
+        setMounted(true);
         const fetchMenu = async () => {
             try {
                 const res = await fetch('/api/admin/menu');
@@ -157,8 +159,8 @@ export default function Header() {
                                     <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
                                     <p className="font-bold text-sm tracking-tight">Kết quả trực tiếp - Siêu nhanh</p>
                                 </div>
-                                <p className="text-[10px] mt-1 font-medium text-lottery-red-100 uppercase tracking-tighter">
-                                    {new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                <p className="text-[10px] mt-1 font-medium text-lottery-red-100 uppercase tracking-tighter min-h-[16px]">
+                                    {mounted ? new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}
                                 </p>
                             </div>
 
