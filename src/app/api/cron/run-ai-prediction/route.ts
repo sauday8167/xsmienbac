@@ -41,58 +41,64 @@ export async function GET(request: Request) {
         */
 
         // 4. Call the existing prediction API
-        // Try to get baseUrl from environment or request headers, default to 127.0.0.1 for VPS stability
-        const host = request.headers.get('host') || 'localhost:3000';
-        const protocol = host.includes('localhost') || host.includes('127.0.0.1') ? 'http' : 'https';
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`;
+        // On VPS, internal fetch to 127.0.0.1 might hit a generic web server block.
+        // We will try localhost:3000 which is where Next.js is bound according to logs.
+        const host = request.headers.get('host') || 'xosomienbac24h.com';
+        const internalUrl = `http://localhost:3000/api/admin/ai/run-prediction`;
 
-        // Internal calls on VPS are often more stable using 127.0.0.1 if localhost fails
-        const internalUrl = baseUrl.includes('localhost') || baseUrl.includes('xosomienbac24h.com')
-            ? 'http://127.0.0.1:3000/api/admin/ai/run-prediction'
-            : `${baseUrl}/api/admin/ai/run-prediction`;
-
-        console.log(`[CRON] Triggering analysis at: ${internalUrl}`);
-
-        const predictionResponse = await fetch(internalUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.CRON_SECRET}`
-            },
-            body: JSON.stringify({ targetDate: null }) // explicitly set targetDate null for today
-        });
-
-        const responseText = await predictionResponse.text();
-        let predictionData;
+        console.log(`[CRON] Internal Trigger: ${internalUrl} (Host: ${host})`);
 
         try {
-            predictionData = JSON.parse(responseText);
-        } catch (e) {
-            console.error(`[CRON] Failed to parse JSON. Status: ${predictionResponse.status}. Body starts with: ${responseText.substring(0, 100)}`);
+            const predictionResponse = await fetch(internalUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${process.env.CRON_SECRET}`,
+                    'Host': host // Pass the original host just in case middleware/proxy needs it
+                },
+                body: JSON.stringify({ targetDate: null }),
+                cache: 'no-store'
+            });
+
+            const responseText = await predictionResponse.text();
+
+            // Check if it's HTML (error page)
+            if (responseText.trim().toLowerCase().startsWith('<!doctype html') ||
+                responseText.trim().toLowerCase().startsWith('<html')) {
+                console.error(`[CRON] Received HTML instead of JSON. Status: ${predictionResponse.status}`);
+                return NextResponse.json({
+                    success: false,
+                    error: 'Server returned HTML error page instead of JSON',
+                    status: predictionResponse.status,
+                    preview: responseText.substring(0, 300).replace(/<\/?[^>]+(>|$)/g, "")
+                }, { status: 500 });
+            }
+
+            const predictionData = JSON.parse(responseText);
+
+            if (!predictionData.success) {
+                console.error('[CRON] Prediction API reported failure:', predictionData.error);
+                return NextResponse.json({
+                    success: false,
+                    error: predictionData.error || 'Prediction failed'
+                }, { status: 500 });
+            }
+
+            console.log('✅ Auto prediction completed successfully');
+            return NextResponse.json({
+                success: true,
+                message: 'Auto prediction completed',
+                data: predictionData.data
+            });
+
+        } catch (fetchError: any) {
+            console.error('[CRON] Fetch Failed:', fetchError.message);
             return NextResponse.json({
                 success: false,
-                error: 'Internal API returned non-JSON response',
-                status: predictionResponse.status,
-                preview: responseText.substring(0, 200)
+                error: 'Connection to internal API failed',
+                details: fetchError.message
             }, { status: 500 });
         }
-
-        if (!predictionData.success) {
-            console.error('[CRON] Prediction API reported failure:', predictionData.error);
-            return NextResponse.json({
-                success: false,
-                error: predictionData.error || 'Prediction failed'
-            }, { status: 500 });
-        }
-
-        console.log('✅ Auto prediction completed successfully');
-
-        return NextResponse.json({
-            success: true,
-            message: 'Auto prediction completed',
-            time: vnTime.toISOString(),
-            data: predictionData.data
-        });
 
     } catch (error: any) {
         console.error('Error in auto prediction cron:', error);
