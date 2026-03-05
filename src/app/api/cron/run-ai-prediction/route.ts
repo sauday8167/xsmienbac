@@ -28,6 +28,7 @@ export async function GET(request: Request) {
         const hour = vnTime.getHours();
         const minute = vnTime.getMinutes();
 
+        /*
         // 3. Verify time window (00:00 - 00:20)
         if (hour !== 0 || minute > 20) {
             return NextResponse.json({
@@ -37,6 +38,7 @@ export async function GET(request: Request) {
                 expectedTime: '00:00-00:20'
             }, { status: 400 });
         }
+        */
 
         // 4. Call the existing prediction API
         const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
