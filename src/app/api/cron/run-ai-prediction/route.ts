@@ -42,6 +42,8 @@ export async function GET(request: Request) {
 
         // 4. Call the existing prediction API
         const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        console.log(`[CRON] Calling internal API: ${baseUrl}/api/admin/ai/run-prediction`);
+
         const predictionResponse = await fetch(`${baseUrl}/api/admin/ai/run-prediction`, {
             method: 'POST',
             headers: {
@@ -50,6 +52,17 @@ export async function GET(request: Request) {
             },
             body: JSON.stringify({})
         });
+
+        const contentType = predictionResponse.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+            const errorText = await predictionResponse.text();
+            console.error(`[CRON] Internal API returned non-JSON response (${predictionResponse.status}):`, errorText.substring(0, 200));
+            return NextResponse.json({
+                success: false,
+                error: `Internal API returned ${predictionResponse.status}`,
+                details: errorText.substring(0, 100)
+            }, { status: 500 });
+        }
 
         const predictionData = await predictionResponse.json();
 
