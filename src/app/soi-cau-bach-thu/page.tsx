@@ -47,15 +47,15 @@ const BACH_THU_BREADCRUMBS = [
 ];
 
 const BACH_THU_SCHEMA = {
-    title: 'Soi Cau Bach Thu XSMB - Phan Tich Song Thu & Dan De Chuan',
-    description: 'Phan tich Bach Thu va Song Thu XSMB dua tren thuat toan thong ke. Du doan cac cap so co xac suat cao nhat hom nay.',
+    title: 'Soi Cầu Bạch Thủ Xổ Số Miền Bắc - Phân Tích Song Thủ & Dàn Đề Chuẩn',
+    description: 'Bạch Thủ Xổ Số Miền Bắc: Phân tích Bạch Thủ và Song Thủ dựa trên thuật toán thống kê xác suất cao nhất hôm nay.',
 };
 
 const BACH_THU_FAQS = [
-    { question: 'Bach thu la gi?', answer: 'Bach thu la cach choi xo so lo de dat cuoc vao duy nhat mot con so (2 chu so cuoi) trong ngay. Neu con so do ve trong bat ky giai nao cua bang ket qua XSMB, nguoi choi thang.' },
-    { question: 'Song thu khac bach thu nhu the nao?', answer: 'Song thu la chon 2 con so thay vi 1. Ty le thang cao hon vi co 2 co hoi ve, nhung von dau tu cung gap doi.' },
-    { question: 'Nen chon bien do phan tich bao nhieu ngay?', answer: 'Bien do 7-14 ngay thuong cho ket qua can bang. Bien do 3 ngay bat duoc tin hieu nong gan day, bien do 30 ngay cho cai nhin tong quan hon.' },
-    { question: 'Cau 3 cang la gi?', answer: 'Cau 3 cang la du doan chinh xac 3 chu so cuoi cua Giai Dac Biet. Giai thuong cao (1 an 600-900) nhung do kho lon. Can phan tich ky du lieu chu ky truoc khi danh.' },
+    { question: 'Bạch thủ là gì?', answer: 'Bạch thủ là cách chơi xổ số đặt cược vào duy nhất một con số (2 chữ số cuối) trong ngày. Nếu con số đó về trong bất kỳ giải nào của Xổ Số Miền Bắc, người chơi thắng.' },
+    { question: 'Song thủ khác bạch thủ như thế nào?', answer: 'Song thủ là chọn 2 con số thay vì 1. Tỷ lệ thắng cao hơn vì có 2 cơ hội về, nhưng vốn đầu tư cũng gấp đôi.' },
+    { question: 'Nên chọn biên độ phân tích bao nhiêu ngày?', answer: 'Biên độ 7-14 ngày thường cho kết quả cân bằng. Biên độ 3 ngày bắt được tín hiệu nóng gần đây.' },
+    { question: 'Cầu 3 càng là gì?', answer: 'Cầu 3 càng là dự đoán chính xác 3 chữ số cuối của Giải Đặc Biệt Xổ Số Miền Bắc. Giai thuong cao nhưng độ khó lớn.' },
 ];
 
 export default function SoiCauBachThuPage() {
@@ -388,19 +388,18 @@ export default function SoiCauBachThuPage() {
 
             {/* SEO Content */}
             <div className="mt-10 p-6 bg-gray-50 rounded-xl border border-gray-100 text-sm text-gray-700 leading-relaxed text-justify shadow-sm space-y-4">
-                <h2 className="text-lg font-bold text-gray-900">Phân Tích Bạch Thủ XSMB — Cách Chốt Số Chính Xác</h2>
+                <h2 className="text-lg font-bold text-gray-900">Phân Tích Bạch Thủ Xổ Số Miền Bắc — Cách Chốt Số Chính Xác</h2>
                 <p>
-                    <strong>Soi Cầu Bạch Thủ</strong> (hay <strong>Song Thủ</strong>) là phương pháp phân tích dữ liệu thống kê để xác định <em>một hoặc hai con số</em> có xác suất xuất hiện cao nhất trong kỳ quay XSMB tiếp theo.
-                    Công cụ được thiết kế dành riêng cho những người chơi yêu thích lối đánh &quot;nhất tiễn hạ song điêu&quot; — đặt ít, ăn nhiều, tối ưu vốn.
+                    <strong>Bạch Thủ Xổ Số Miền Bắc</strong> (hay Song Thủ) là phương pháp phân tích dữ liệu thống kê để xác định một hoặc hai con số có xác suất xuất hiện cao nhất trong kỳ quay tiếp theo.
                 </p>
                 <p>
                     Hệ thống tự động phân tích hàng nghìn biến thể cầu chạy trong quá khứ và cung cấp các loại phân tích:
                 </p>
                 <ul className="list-disc pl-5 space-y-1">
-                    <li><strong>Cầu Bạch Thủ Lô:</strong> Tìm 1 con số lô (2 chữ số cuối) có xác suất cao nhất sẽ về trong ngày mai</li>
-                    <li><strong>Song Thủ Lô:</strong> Chọn 2 con số lô có cơ hội về cao nhất — tăng tỷ lệ chiến thắng so với chỉ chơi 1 số</li>
-                    <li><strong>Cầu 3 Càng / 4 Càng:</strong> Phân tích và dự đoán bộ số 3 hoặc 4 chữ số — giải thưởng cao, độ khó lớn</li>
-                    <li><strong>Cầu Giải Đặc Biệt:</strong> Dự đoán 2 số cuối của Giải Đặc Biệt dựa trên chu kỳ lịch sử</li>
+                    <li><strong>Cầu Bạch Thủ Lô:</strong> Tìm 1 con số lô có xác suất cao nhất sẽ về trong ngày mai</li>
+                    <li><strong>Song Thủ Lô:</strong> Chọn 2 con số lô có cơ hội về cao nhất</li>
+                    <li><strong>Cầu 3 Càng / 4 Càng:</strong> Phân tích và dự đoán bộ số 3 hoặc 4 chữ số</li>
+                    <li><strong>Cầu Giải Đặc Biệt:</strong> Dự đoán 2 số cuối của Giải Đặc Biệt Xổ Số Miền Bắc</li>
                 </ul>
                 <p>
                     Bạn có thể <strong>tùy chỉnh biên độ ngày</strong> phân tích (3, 7, 14, 30 ngày) để phù hợp với chiến lược của mình.

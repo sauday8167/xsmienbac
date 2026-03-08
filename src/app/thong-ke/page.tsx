@@ -8,8 +8,8 @@ export async function generateMetadata() {
     if (metadata) return metadata;
 
     return {
-        title: 'Thống Kê Lô Tô Miền Bắc - Phân Tích Tần Suất, Nhịp Loto Chi Tiết',
-        description: 'Công cụ thống kê lô tô XSMB đầy đủ nhất: Thống kê loto gan, tần suất xuất hiện, đầu đuôi, loto rơi, và dự đoán giải đặc biệt ngày mai.'
+        title: 'Thống Kê Xổ Số Miền Bắc - Phân Tích Tần Suất Loto Chi Tiết',
+        description: 'Thống Kê Xổ Số Miền Bắc đầy đủ: Phân tích tần suất loto gan, nhịp lô tô, đầu đuôi và dự đoán giải đặc biệt ngày mai chính xác.'
     };
 }
 
@@ -24,8 +24,8 @@ export default function StatisticsPage() {
     ];
 
     const schemaArgs = {
-        title: 'Thống Kê Lô Tô Miền Bắc - Phân Tích Tần Suất Chi Tiết',
-        description: 'Công cụ thống kê loto gan, tần suất xuất hiện, đầu đuôi, và phân tích nhịp lô tô chính xác nhất xổ số miền Bắc.'
+        title: 'Thống Kê Xổ Số Miền Bắc - Phân Tích Tần Suất Loto Chi Tiết',
+        description: 'Thống Kê Xổ Số Miền Bắc: Công cụ thống kê loto gan, tần suất xuất hiện và phân tích nhịp lô tô chính xác nhất.'
     };
 
     return (
@@ -36,9 +36,9 @@ export default function StatisticsPage() {
             {/* Page H1 — visible to Google and users */}
             <div className="text-center md:text-left">
                 <h1 className="text-3xl md:text-4xl font-bold text-lottery-gray-800 mb-2">
-                    Thống Kê Xổ Số Miền Bắc (XSMB)
+                    Thống Kê Xổ Số Miền Bắc
                 </h1>
-                <p className="text-lottery-gray-600 text-sm">Phân tích tần suất, lô gan, đầu đuôi và chu kỳ số từ dữ liệu lịch sử XSMB</p>
+                <p className="text-lottery-gray-600 text-sm">Phân tích tần suất, lô gan, đầu đuôi và chu kỳ số từ dữ liệu lịch sử Xổ Số Miền Bắc</p>
                 <div className="w-20 h-1 bg-lottery-red-600 rounded-full mt-3 md:mx-0 mx-auto"></div>
             </div>
 

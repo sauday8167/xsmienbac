@@ -112,9 +112,9 @@ export default function PredictionPage() {
             {/* Header */}
             <div className="text-center">
                 <h1 className="text-4xl font-bold text-lottery-gray-800 mb-2">
-                    Tần Suất Loto
+                    Dự Đoán Xổ Số Miền Bắc
                 </h1>
-                <p className="text-lottery-gray-600">Phân tích thống kê và dự đoán dựa trên dữ liệu lịch sử</p>
+                <p className="text-lottery-gray-600">Phân tích thống kê và dự đoán Xổ Số Miền Bắc từ dữ liệu Big Data</p>
                 <div className="w-24 h-1 bg-purple-600 mx-auto rounded-full mt-4"></div>
             </div>
 
@@ -292,12 +292,10 @@ export default function PredictionPage() {
             </div>
             {/* SEO Content */}
             <div className="mt-10 p-6 bg-gray-50 rounded-xl border border-gray-100 text-sm text-gray-700 leading-relaxed text-justify shadow-sm">
-                <h2 className="text-lg font-bold text-gray-900 mb-3">Giới thiệu về Dự Đoán Xổ Số</h2>
+                <h2 className="text-lg font-bold text-gray-900 mb-3">Giới thiệu về Dự Đoán Xổ Số Miền Bắc</h2>
                 <p>
-                    Chuyên mục <strong>Dự Đoán Xổ Số</strong> là điểm đến tin cậy của cộng đồng người chơi đam mê những con số.
-                    Hàng ngày, đội ngũ chuyên gia giàu kinh nghiệm của chúng tôi tổng hợp, phân tích và đưa ra những nhận định sắc bén về cầu lô đẹp, bạch thủ, song thủ, và dàn đề có khả năng nổ cao.
-                    Không chỉ dừng lại ở ý kiến cá nhân, chuyên mục còn là nơi hội tụ trí tuệ của cộng đồng, nơi các cao thủ chia sẻ cầu kèo, kinh nghiệm xương máu.
-                    Hãy tham khảo các bài viết soi cầu chi tiết, được cập nhật liên tục vào khung giờ vàng buổi sáng để có thêm dữ liệu quan trọng cho quyết định chốt số của bạn.
+                    Chuyên mục <strong>Dự Đoán Xổ Số Miền Bắc</strong> là điểm đến tin cậy của cộng đồng người chơi đam mê những con số.
+                    Tại đây, chúng tôi tổng hợp phân tích từ AI và các chuyên gia để đưa ra nhận định về cầu lô đẹp, bạch thủ, song thủ, và dàn đề có khả năng nổ cao nhất trong ngày.
                 </p>
             </div>
         </div>

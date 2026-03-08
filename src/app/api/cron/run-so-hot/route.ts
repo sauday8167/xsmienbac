@@ -7,7 +7,7 @@ export const maxDuration = 120; // Allow 2 minutes for YouTube cào + AI process
  * Cron Endpoint: Run So Hot
  * GET /api/cron/run-so-hot
  * 
- * Schedule: 17:30 VN Time hàng ngày (qua crontab hoặc PM2 module)
+ * Schedule: 17:00 VN Time hàng ngày (qua crontab hoặc PM2 module)
  * Calls POST /api/admin/update-so-hot internally to update so-hot.json
  */
 export async function GET(request: Request) {

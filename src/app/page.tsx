@@ -212,7 +212,7 @@ export default function HomePage() {
                     items={[
                         {
                             question: "Xổ số miền Bắc quay thưởng lúc mấy giờ?",
-                            answer: "XSMB bắt đầu quay thưởng trực tiếp vào lúc <strong>18:15 hàng ngày</strong>. Quá trình quay số diễn ra liên tục từ giải Nhất đến giải Đặc biệt và kết thúc vào khoảng 18:30."
+                            answer: "Xổ Số Miền Bắc bắt đầu quay thưởng trực tiếp vào lúc <strong>18:15 hàng ngày</strong>. Quá trình quay số diễn ra liên tục từ giải Nhất đến giải Đặc biệt và kết thúc vào khoảng 18:30."
                         },
                         {
                             question: "Cơ cấu giải thưởng XSMB như thế nào?",
@@ -234,7 +234,7 @@ export default function HomePage() {
             <div className="mt-10 p-6 bg-gray-50 rounded-xl border border-gray-100 text-sm text-gray-700 leading-relaxed text-justify shadow-sm">
                 <h2 className="text-lg font-bold text-gray-900 mb-3">Giới thiệu về Trang Chủ Xổ Số Miền Bắc 24h</h2>
                 <p>
-                    Chào mừng bạn đến với <strong>Xổ Số Miền Bắc 24h</strong> – Trang thông tin tra cứu kết quả xổ số kiến thiết uy tín hàng đầu. Chúng tôi mang đến tốc độ cập nhật KQXS trực tiếp nhanh nhất, chính xác tuyệt đối ngay tại trường quay.
+                    <strong>Xổ Số Miền Bắc 24h</strong> – Chào mừng bạn đến với trang thông tin tra cứu kết quả xổ số kiến thiết uy tín hàng đầu. Chúng tôi mang đến tốc độ cập nhật kết quả xổ số miền bắc trực tiếp nhanh nhất, chính xác tuyệt đối ngay tại trường quay.
                     Bên cạnh bảng kết quả, website tích hợp bộ công cụ phân tích chuyên sâu gồm thống kê lô gan, soi cầu bạch thủ và dự đoán AI.
                     Hàng ngàn thành viên đã tin chọn chúng tôi để tìm kiếm vận may mỗi ngày qua các tính năng ưu việt và giao diện thân thiện.
                     Hãy truy cập thường xuyên để không bỏ lỡ những nhịp cầu vàng và cơ hội chiến thắng rực rỡ từ các chuyên gia hàng đầu.

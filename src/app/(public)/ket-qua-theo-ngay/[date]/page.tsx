@@ -27,8 +27,8 @@ export async function generateMetadata({ params }: Props) {
     const displayDate = date.replace(/-/g, '/');
 
     return {
-        title: `Kết quả xổ số Miền Bắc ngày ${displayDate} - Xổ Số Miền Bắc`,
-        description: `Xem kết quả xổ số Miền Bắc (XSMB) ngày ${displayDate}. Tường thuật trực tiếp KQXS Miền Bắc chính xác, nhanh nhất từ trường quay.`,
+        title: `Kết quả xổ số Miền Bắc ngày ${displayDate} - Xổ Số Miền Bắc 24h`,
+        description: `Xổ Số Miền Bắc ngày ${displayDate}: Xem kết quả xổ số (XSMB) nhanh nhất, chính xác 100% trực tiếp từ trường quay hôm nay.`,
         openGraph: {
             title: `Kết quả xổ số Miền Bắc ngày ${displayDate}`,
             description: `Kết quả XSMB ngày ${displayDate} chính xác 100%.`,

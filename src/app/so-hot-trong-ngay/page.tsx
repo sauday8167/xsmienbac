@@ -5,8 +5,8 @@ import { Metadata } from 'next';
 import { Calendar, Star, TrendingUp, Target, ShieldCheck } from 'lucide-react';
 
 export const metadata: Metadata = {
-    title: 'Số Hot Trong Ngày - Dự Đoán XSMB Từ Website & Youtube',
-    description: 'Tổng hợp phân tích tự động, tìm ra các con số lô đề miền Bắc hot nhất được đánh nhiều nhất hôm nay dựa trên Big Data từ Youtube và Web.',
+    title: 'Số Hot Trong Ngày - Dự Đoán Xổ Số Miền Bắc Từ Website & Youtube',
+    description: 'Xổ Số Miền Bắc hôm nay: Tổng hợp phân tích tự động, tìm ra các con số hot nhất dựa trên Big Data từ Youtube và Website.',
     alternates: {
         canonical: 'https://xosomienbac24h.com/so-hot-trong-ngay'
     },
@@ -42,7 +42,7 @@ export default async function SoHotTrongNgayPage() {
         return (
             <div className="container mx-auto px-4 py-8 max-w-4xl text-center">
                 <h1 className="text-2xl font-bold text-gray-800 mb-4">Số Hot Trong Ngày</h1>
-                <p className="text-gray-600">Dữ liệu tóm tắt chưa được phân tích cho ngày hôm nay. Thuật toán AI sẽ chạy tổng hợp lúc 17:30 hằng ngày.</p>
+                <p className="text-gray-600">Dữ liệu tóm tắt chưa được phân tích cho ngày hôm nay. Thuật toán AI sẽ chạy tổng hợp lúc 17:00 hằng ngày.</p>
             </div>
         );
     }
@@ -71,7 +71,7 @@ export default async function SoHotTrongNgayPage() {
                     </p>
                     <div className="mt-4 mb-2">
                         <span className="bg-yellow-400 text-yellow-900 px-4 py-1.5 rounded-lg text-sm md:text-base font-bold shadow-sm inline-block animate-pulse">
-                            ⏰ Thời gian chốt số: 17:30 Hằng Ngày
+                            ⏰ Thời gian chốt số: 17:00 Hằng Ngày
                         </span>
                     </div>
                     <div className="mt-4 text-xs text-red-100 flex items-center gap-1">

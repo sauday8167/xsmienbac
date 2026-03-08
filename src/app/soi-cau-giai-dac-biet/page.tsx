@@ -19,8 +19,8 @@ export default function GdbAnalysisPage() {
     ];
 
     const schemaArgs = {
-        title: 'Phân Tích Giải Đặc Biệt XSMB - Thống Kê Số Đầu, Đuôi, Tổng',
-        description: 'Thống kê và phân tích chuyên sâu Giải Đặc Biệt XSMB. Dự đoán số đầu, số đuôi, tổng giải ĐB dựa trên dữ liệu lịch sử.'
+        title: 'Phân Tích Giải Đặc Biệt Xổ Số Miền Bắc - Thống Kê Số Đầu, Đuôi, Tổng',
+        description: 'Giải Đặc Biệt Xổ Số Miền Bắc: Thống kê và phân tích chuyên sâu số đầu, số đuôi, tổng giải dựa trên dữ liệu lịch sử chính xác.'
     };
 
     useEffect(() => {
@@ -57,7 +57,7 @@ export default function GdbAnalysisPage() {
             {/* Page Header with H1 */}
             <div className="text-center md:text-left">
                 <h1 className="text-3xl md:text-4xl font-bold text-lottery-gray-800 mb-2">
-                    Phân Tích Giải Đặc Biệt XSMB
+                    Phân Tích Giải Đặc Biệt Xổ Số Miền Bắc
                 </h1>
                 <p className="text-lottery-gray-600">Thống kê và phân tích thuật toán dựa trên dữ liệu Giải Đặc Biệt lịch sử</p>
                 <div className="w-20 h-1 bg-lottery-red-600 rounded-full mt-3 md:mx-0 mx-auto"></div>
@@ -127,9 +127,9 @@ export default function GdbAnalysisPage() {
 
             {/* SEO Content Block */}
             <div className="mt-8 p-6 bg-gray-50 rounded-xl border border-gray-100 text-sm text-gray-700 leading-relaxed text-justify shadow-sm">
-                <h2 className="text-lg font-bold text-gray-900 mb-3">Phân Tích Giải Đặc Biệt XSMB Là Gì?</h2>
+                <h2 className="text-lg font-bold text-gray-900 mb-3">Phân Tích Giải Đặc Biệt Xổ Số Miền Bắc Là Gì?</h2>
                 <p className="mb-3">
-                    <strong>Giải Đặc Biệt</strong> là giải thưởng cao nhất trong mỗi kỳ quay xổ số miền Bắc (XSMB), gồm 5 chữ số. Đây là giải được người chơi quan tâm nhiều nhất bởi giá trị giải thưởng cao và tầm quan trọng trong việc tham chiếu cho dàn đề và cầu lô.
+                    <strong>Giải Đặc Biệt</strong> là giải thưởng cao nhất trong mỗi kỳ quay Xổ Số Miền Bắc, gồm 5 chữ số. Đây là giải được người chơi quan tâm nhiều nhất bởi giá trị giải thưởng cao.
                 </p>
                 <p className="mb-3">
                     Hệ thống <strong>Phân Tích Giải Đặc Biệt</strong> của chúng tôi cung cấp nhiều chiều phân tích chuyên sâu:
@@ -141,7 +141,7 @@ export default function GdbAnalysisPage() {
                     <li><strong>Chu kỳ lặp lại:</strong> Bao lâu một số đầu/đuôi xuất hiện lại một lần</li>
                 </ul>
                 <p>
-                    Thông qua việc theo dõi <strong>quy luật giải đặc biệt XSMB theo lịch sử</strong>, người chơi có thể rút ra những nhận định có cơ sở khoa học hơn.
+                    Thông qua việc theo dõi <strong>quy luật giải đặc biệt Xổ Số Miền Bắc theo lịch sử</strong>, người chơi có thể rút ra những nhận định có cơ sở khoa học hơn.
                     Mọi thông tin chỉ mang tính tham khảo thống kê, không đảm bảo kết quả trúng thưởng.
                 </p>
             </div>

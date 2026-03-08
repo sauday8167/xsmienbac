@@ -21,8 +21,8 @@ export default function SoiCauBacNhoPage() {
     ];
 
     const schemaArgs = {
-        title: 'Soi Cầu Bạc Nhớ - Dự Đoán KQXS Chính Xác',
-        description: 'Phương pháp soi cầu bạc nhớ lô đề miền Bắc chính xác nhất. Phân tích thống kê bạc nhớ theo giải đặc biệt, lô tô ra theo lô tô.'
+        title: "Soi Cầu Bạc Nhớ Xổ Số Miền Bắc – Dự Đoán KQXS Chính Xác",
+        description: "Bạc Nhớ Xổ Số Miền Bắc chính xác nhất: Phương pháp soi cầu lô đề miền Bắc dựa trên phân tích thống kê bạc nhớ theo giải đặc biệt."
     };
 
     return (
@@ -149,9 +149,9 @@ export default function SoiCauBacNhoPage() {
 
             {/* SEO Content */}
             <div className="mt-10 p-6 bg-gray-50 rounded-xl border border-gray-100 text-sm text-gray-700 leading-relaxed text-justify shadow-sm space-y-4">
-                <h2 className="text-lg font-bold text-gray-900">Soi Cầu Bạc Nhớ XSMB — Phương Pháp Phân Tích Khoa Học</h2>
+                <h2 className="text-lg font-bold text-gray-900">Soi Cầu Bạc Nhớ Xổ Số Miền Bắc — Phương Pháp Phân Tích Khoa Học</h2>
                 <p>
-                    Phương pháp <strong>Soi Cầu Bạc Nhớ</strong> (hay còn gọi là <strong>Bạc Nhớ Xổ Số Miền Bắc</strong>) là phương pháp phân tích dữ liệu thống kê dựa trên quy luật "bộ nhớ số" — tức là xu hướng lặp lại của các cặp số trong lịch sử kết quả XSMB.
+                    <strong>Bạc Nhớ Xổ Số Miền Bắc</strong> (hay còn gọi là Soi Cầu Bạc Nhớ) là phương pháp phân tích dữ liệu thống kê dựa trên quy luật "bộ nhớ số" — tức là xu hướng lặp lại của các cặp số trong lịch sử kết quả Xổ Số Miền Bắc.
                     Chúng tôi phân tích toàn bộ dữ liệu lịch sử để tìm ra chu kỳ lặp lại: <em>"Hôm nay về con này, ngày mai thường ra con gì?"</em>
                 </p>
                 <p>
@@ -164,7 +164,7 @@ export default function SoiCauBacNhoPage() {
                     <li><strong>Bạc Nhớ 2 Ngày:</strong> Phân tích khi số A xuất hiện ngày D-1 VÀ số B xuất hiện ngày D, số nào sẽ ra ngày D+1. Kết hợp xu hướng 2 ngày liên tiếp.</li>
                 </ul>
                 <p>
-                    Công cụ này giúp người chơi nắm bắt các <strong>quy luật bạc nhớ XSMB theo giải đặc biệt</strong>, <strong>bạc nhớ đầu đuôi câm</strong>, hay <strong>bạc nhớ theo các cặp lô hay đi cùng nhau</strong>.
+                    Công cụ này giúp người chơi nắm bắt các <strong>quy luật bạc nhớ Xổ Số Miền Bắc theo giải đặc biệt</strong>, <strong>bạc nhớ đầu đuôi câm</strong>, hay <strong>bạc nhớ theo các cặp lô hay đi cùng nhau</strong>.
                     Thay vì đoán mò cảm tính, hãy để dữ liệu lịch sử dẫn đường. Đây là phương pháp được cộng đồng cao thủ lô đề sử dụng để chốt số an toàn mỗi ngày.
                     <em>Lưu ý: Mọi thông tin chỉ mang tính tham khảo thống kê, không đảm bảo kết quả trúng thưởng.</em>
                 </p>

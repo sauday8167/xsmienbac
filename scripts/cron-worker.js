@@ -140,8 +140,8 @@ cron.schedule('40 19 * * *', () => {
     });
 });
 
-// 8. 17:30 - Fetch Số Hot Trong Ngày
-cron.schedule('30 17 * * *', () => {
+// 8. 17:00 - Fetch Số Hot Trong Ngày
+cron.schedule('0 17 * * *', () => {
     console.log(`[${new Date().toISOString()}] Triggering Fetch Số Hot Trong Ngày...`);
     const { exec } = require('child_process');
     // Use --env-file to ensure API keys are loaded

@@ -84,9 +84,9 @@ export async function generateMetadata(): Promise<Metadata> {
     return {
         metadataBase: new URL(siteUrl),
         // Homepage metadata (fallback for /)
-        title: 'XSMB - Kết Quả Xổ Số Miền Bắc Hôm Nay - SXMB Chính Xác',
-        description: 'Xem kết quả xổ số miền Bắc (XSMB) hôm nay nhanh nhất, chính xác nhất. Thống kê loto, soi cầu, phân tích chuyên sâu các cặp số đẹp hàng ngày.',
-        keywords: 'xsmb, xổ số miền bắc, sxmb, kqxs miền bắc, kết quả xổ số',
+        title: 'Xổ Số Miền Bắc - KQXS Miền Bắc Hôm Nay - Kết Quả SXMB Chính Xác',
+        description: 'Xổ Số Miền Bắc (KQXS Miền Bắc) hôm nay nhanh nhất, chính xác nhất. Xem thống kê loto, soi cầu và phân tích chuyên sâu các cặp số đẹp.',
+        keywords: 'xổ số miền bắc, xsmb, sxmb, kqxs miền bắc, kết quả xổ số',
         verification: {
             google: googleVerification || undefined,
         },
