@@ -38,22 +38,6 @@ export const PERSONALITIES: AIPersonality[] = [
         strengths: ['Lô Gan', 'Đột biến', 'Bạc nhớ']
     },
     {
-        id: 'mathematician',
-        name: 'Nhà Toán Học',
-        description: 'Tập trung vào các dãy số đặc biệt: Số nguyên tố, Fibonacci và Tỷ lệ vàng.',
-        motto: 'Toán học không bao giờ nói dối.',
-        debateStyle: 'Logic, chính xác, coi trọng các quy luật hình học.',
-        strengths: ['Toán học', 'Cầu 3D/4D', 'Tỷ lệ vàng']
-    },
-    {
-        id: 'intuitive',
-        name: 'Trực Giác',
-        description: 'Sử dụng thuật toán Entropy và lý thuyết hỗn mang để tìm kiếm điểm rơi.',
-        motto: 'Cảm hứng đến từ những điều ngẫu nhiên.',
-        debateStyle: 'Sáng tạo, linh cảm, nhạy bén với nhịp điệu mới.',
-        strengths: ['Lô rơi', 'Entropy', 'Nhịp sinh học']
-    },
-    {
         id: 'gan_expert',
         name: 'Chuyên Gia Gan',
         description: 'Chuyên gia quản trị rủi ro, chuyên nghiên cứu các số gan và dự báo nguy cơ gan.',

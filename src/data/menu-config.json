@@ -65,22 +65,6 @@
   ],
   "mobile": [
     {
-      "id": "ai-pred-2-m",
-      "href": "/hoi-dong-ai",
-      "label": "AI Phễu Lọc",
-      "description": "AI Tự học & Sàng lọc",
-      "seoTitle": "Hội Đồng AI Dự Đoán Kết Quả Xổ Số Miền Bắc – Phân Tích Loto",
-      "seoDescription": "Xổ Số Miền Bắc dự đoán bởi Hội Đồng AI đa chiều. Ứng dụng trí tuệ nhân tạo phân tích xác suất loto chính xác cao."
-    },
-    {
-      "label": "Hội Đồng AI",
-      "href": "/hoi-dong-ai",
-      "description": "Hội Đồng Dự Đoán AI",
-      "seoTitle": "Hội Đồng AI Dự Đoán Kết Quả Xổ Số Miền Bắc – Phân Tích Loto",
-      "seoDescription": "Xổ Số Miền Bắc được dự đoán bởi hệ thống Hội Đồng AI đa chiều. Ứng dụng trí tuệ nhân tạo phân tích xác suất loto chính xác cao.",
-      "id": "1771944067718"
-    },
-    {
       "label": "Số Hot Trong Ngày",
       "href": "/so-hot-trong-ngay",
       "description": "Tổng hợp số đẹp bằng AI",
