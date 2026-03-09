@@ -4,6 +4,9 @@ import path from 'path';
 import { Metadata } from 'next';
 import { Calendar, Star, TrendingUp, Target, ShieldCheck } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export const metadata: Metadata = {
     title: 'Số Hot Trong Ngày - Dự Đoán Xổ Số Miền Bắc Từ Website & Youtube',
     description: 'Xổ Số Miền Bắc hôm nay: Tổng hợp phân tích tự động, tìm ra các con số hot nhất dựa trên Big Data từ Youtube và Website.',
