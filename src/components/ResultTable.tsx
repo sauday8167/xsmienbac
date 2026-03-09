@@ -101,7 +101,7 @@ export default function ResultTable({ result, showPrintButton = false }: ResultT
                             <td className="py-2 md:py-3 border border-gray-300">
                                 <div className="grid grid-cols-3 gap-y-1 gap-x-1 md:gap-y-2 md:gap-x-12 max-w-2xl mx-auto items-center">
                                     {padArray(result.prize_3, 6).map((num, i) => (
-                                        <span key={i} className="font-bold text-xl md:text-2xl text-gray-800 tracking-wide">
+                                        <span key={i} className="font-bold text-lg md:text-2xl text-gray-800 tracking-wide">
                                             {num}
                                         </span>
                                     ))}

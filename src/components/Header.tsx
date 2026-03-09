@@ -178,8 +178,8 @@ export default function Header() {
                         </div>
                     </div>
 
-                    {/* Navigation */}
-                    <nav className={`${isMobileMenuOpen ? 'block' : 'hidden'} md:block py-3`}>
+                    {/* Navigation - Desktop Only */}
+                    <nav className="hidden md:block py-3">
                         <ul className="flex flex-col md:flex-row md:space-x-1 space-y-2 md:space-y-0 text-center md:text-left">
                             {navItems.map((item) => (
                                 <li key={item.href}>

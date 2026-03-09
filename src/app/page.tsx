@@ -119,6 +119,8 @@ export default function HomePage() {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-700">
+            <h1 className="sr-only">Xổ Số Miền Bắc - KQXS Miền Bắc Hôm Nay - Kết Quả SXMB Chính Xác</h1>
+
             {/* Latest Result Table */}
             <section className="bg-white rounded-2xl shadow-lg border border-slate-200 p-4 md:p-8 overflow-hidden">
                 {isLive ? (
