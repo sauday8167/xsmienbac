@@ -154,4 +154,17 @@ cron.schedule('0 17 * * *', () => {
     });
 });
 
+// 9. 18:50 - Verify Số Hot Results
+cron.schedule('50 18 * * *', () => {
+    console.log(`[${new Date().toISOString()}] Triggering Verify Số Hot Results (Post-Result)...`);
+    const { exec } = require('child_process');
+    exec('npx tsx scripts/verify-so-hot.ts', (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Verify Số Hot Error: ${error.message}`);
+            return;
+        }
+        console.log(`Verify Số Hot Stdout: ${stdout}`);
+    });
+});
+
 

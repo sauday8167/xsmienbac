@@ -119,6 +119,20 @@ async function migrate() {
         `);
         console.log('✅ statistics_cache table ready.');
 
+        // Create so_hot_history table
+        console.log('🛠️ Checking/Creating so_hot_history table...');
+        await query(`
+            CREATE TABLE IF NOT EXISTS so_hot_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                draw_date TEXT NOT NULL UNIQUE,
+                prediction_data TEXT NOT NULL, -- JSON
+                hit_details TEXT,             -- JSON (details of what hit)
+                is_verified INTEGER DEFAULT 0,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+        console.log('✅ so_hot_history table ready.');
+
     } catch (error) {
         console.error('❌ Migration Failed:', error);
         process.exit(1);
