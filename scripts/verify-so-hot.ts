@@ -1,4 +1,4 @@
-
+import 'dotenv/config';
 import { query, queryOne } from '../src/lib/db';
 
 async function verifySoHotResults() {
