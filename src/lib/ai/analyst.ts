@@ -77,16 +77,35 @@ Bạn ĐANG BỊ RƠI VÀO LỐI MÒN của các phương pháp cơ bản (Bạc
 `;
             }
 
-            // 0.6. Get Latest Tactical Advice & Gan Stats
+            // 0.6. Get Source Rules (v2) & Gan Stats
             const [tacticalAdvice, loGan50] = await Promise.all([
                 getLatestTacticalAdvice(),
                 calculateLoGan(50, 60) // High risk numbers
             ]);
 
             const ganList = loGan50.map((g: any) => g.number).join(', ');
-            const tacticalContext = tacticalAdvice
-                ? `BÀI HỌC KINH NGHIỆM: ${tacticalAdvice.advice}\nMỨC ĐỘ RỦI RO: ${tacticalAdvice.risk_level}`
-                : "Đang thu thập kinh nghiệm...";
+
+            // Build enhanced tactical context from source-comparison learning
+            let tacticalContext = "Đang thu thập kinh nghiệm từ các nguồn phân tích...";
+            if (tacticalAdvice) {
+                const weights = tacticalAdvice.weights || {};
+                const strongSources = Object.entries(weights)
+                    .filter(([_, w]) => (w as number) > 1.0)
+                    .map(([k]) => k)
+                    .join(', ');
+                const weakSources = Object.entries(weights)
+                    .filter(([_, w]) => (w as number) < 1.0)
+                    .map(([k]) => k)
+                    .join(', ');
+
+                tacticalContext = `
+QUY TẮC TỪ AI HỌC ĐƯỢC (15 NGÀY GẦN NHẤT):
+${tacticalAdvice.advice}
+NGUỒN ĐANG MẠNH: ${strongSources || 'Chưa xác định'}
+NGUỒN ĐANG YẾU: ${weakSources || 'Chưa xác định'}
+MỨC ĐỘ RỦI RO: ${tacticalAdvice.risk_level}
+NGUYÊN TẮC VÀNG: Ưu tiên số xuất hiện ở ít nhất 3+ nguồn cùng lúc (Consensus).`;
+            }
 
             // 1. Check if we already have a prediction for target date
             const existing = await queryOne(

@@ -151,6 +151,27 @@ async function migrate() {
         `);
         console.log('✅ bac_nho_history table ready.');
 
+        // Create ai_source_snapshots table (AI Learning Engine v2)
+        console.log('🛠️ Checking/Creating ai_source_snapshots table...');
+        await query(`
+            CREATE TABLE IF NOT EXISTS ai_source_snapshots (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                snapshot_date TEXT NOT NULL UNIQUE,
+                target_date TEXT NOT NULL,
+                bac_nho_numbers TEXT,
+                khung_3_ngay_numbers TEXT,
+                bach_thu_numbers TEXT,
+                thong_ke_thu_numbers TEXT,
+                thong_ke_ngay_numbers TEXT,
+                thong_ke_nam_numbers TEXT,
+                actual_numbers TEXT,
+                source_accuracy TEXT,
+                ai_rules TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+        console.log('✅ ai_source_snapshots table ready.');
+
     } catch (error) {
         console.error('❌ Migration Failed:', error);
         process.exit(1);

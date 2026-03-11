@@ -192,3 +192,33 @@ cron.schedule('0 19 * * *', () => {
         console.log(`Verify Bac Nho Stdout: ${stdout}`);
     });
 });
+
+// 12. 16:00 - AI Learning v2: Snapshot 6 nguồn phân tích (trước khi xổ số)
+cron.schedule('0 16 * * *', () => {
+    const { exec } = require('child_process');
+    const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Ho_Chi_Minh' }); // YYYY-MM-DD
+    console.log(`[${new Date().toISOString()}] AI Learning v2: Snapshot nguồn phân tích ngày ${today}...`);
+    exec(`npx tsx -e "
+        require('dotenv/config');
+        const { snapshotSourcePredictions } = require('./src/lib/ai-learning');
+        snapshotSourcePredictions('${today}').then(() => process.exit(0)).catch(e => { console.error(e); process.exit(1); });
+    "`, (error, stdout, stderr) => {
+        if (error) { console.error(`AI Snapshot Error: ${error.message}`); return; }
+        console.log(`AI Snapshot Done: ${stdout}`);
+    });
+});
+
+// 13. 19:10 - AI Learning v2: Verify và học quy tắc từ KQXS hôm nay
+cron.schedule('10 19 * * *', () => {
+    const { exec } = require('child_process');
+    const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Ho_Chi_Minh' });
+    console.log(`[${new Date().toISOString()}] AI Learning v2: Verify & Learn từ KQXS ngày ${today}...`);
+    exec(`npx tsx -e "
+        require('dotenv/config');
+        const { verifyAndLearnFromSources } = require('./src/lib/ai-learning');
+        verifyAndLearnFromSources('${today}').then(() => process.exit(0)).catch(e => { console.error(e); process.exit(1); });
+    "`, (error, stdout, stderr) => {
+        if (error) { console.error(`AI Learn Error: ${error.message}`); return; }
+        console.log(`AI Learn Done: ${stdout}`);
+    });
+});
