@@ -133,6 +133,24 @@ async function migrate() {
         `);
         console.log('✅ so_hot_history table ready.');
 
+        // Create bac_nho_history table
+        console.log('🛠️ Checking/Creating bac_nho_history table...');
+        await query(`
+            CREATE TABLE IF NOT EXISTS bac_nho_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                draw_date TEXT NOT NULL UNIQUE,
+                predicted_numbers TEXT NOT NULL,
+                score_breakdown TEXT,
+                hit_numbers TEXT,
+                hit_count INTEGER DEFAULT 0,
+                is_verified INTEGER DEFAULT 0,
+                ai_rules TEXT,
+                analysis_content TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+        console.log('✅ bac_nho_history table ready.');
+
     } catch (error) {
         console.error('❌ Migration Failed:', error);
         process.exit(1);
