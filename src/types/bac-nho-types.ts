@@ -151,3 +151,47 @@ export interface BacNho2NgayData {
     patterns: BacNho2NgayPattern[];
     todayPredictions: BacNho2NgayTodayPrediction[];
 }
+
+// ===== Bạc Nhớ 3 Ngày Types =====
+export interface BacNho3NgayPattern {
+    triggerTriple: [string, string, string]; // [A from D-2, B from D-1, C from D]
+    totalAppearances: number;
+    followNumbers: {
+        number: string;
+        hitCount: number;
+        correlationRate: number;
+    }[];
+    recentHits: {
+        dayDMinus2: string;
+        dayDMinus1: string;
+        dayD: string;
+        dayDPlus1: string;
+        hitNumbers: string[];
+    }[];
+    daysSinceLastHit: number | null;
+    lastHitDate: string | null;
+}
+
+export interface BacNho3NgayTodayPrediction {
+    triggerTriple: [string, string, string]; // Triple from (D-2, D-1, D)
+    predictions: {
+        number: string;
+        correlationRate: number;
+        hitCount: number;
+        totalAppearances: number;
+    }[];
+}
+
+export interface BacNho3NgayData {
+    overview: {
+        analyzedDays: number;
+        totalPatterns: number;
+        latestDate: string;
+        dataRange: {
+            from: string;
+            to: string;
+        };
+    };
+    patterns: BacNho3NgayPattern[];
+    todayPredictions: BacNho3NgayTodayPrediction[];
+}

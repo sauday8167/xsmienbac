@@ -67,7 +67,7 @@ export default async function SoHotTrongNgayPage() {
     return (
         <div className="min-h-screen bg-gray-50/50 pb-20">
             {/* 1. Hero Header - Ultra Modern */}
-            <div className="relative bg-slate-900 pt-12 pb-24 overflow-hidden border-b border-white/5">
+            <div className="relative bg-slate-900 pt-12 pb-28 md:pb-32 overflow-hidden border-b border-white/5">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_-20%,_var(--tw-gradient-stops))] from-red-600/20 via-transparent to-transparent"></div>
                 <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:32px_32px]"></div>
 
@@ -94,7 +94,7 @@ export default async function SoHotTrongNgayPage() {
                 </div>
             </div>
 
-            <div className="container mx-auto px-4 max-w-5xl -mt-12 space-y-8">
+            <div className="container mx-auto px-4 max-w-5xl -mt-4 md:-mt-12 space-y-8">
                 {/* 2. Top Consensus - The "Big Number" display */}
                 <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-red-900/10 border border-red-100 overflow-hidden">
                     <div className="p-8 md:p-12">
@@ -117,8 +117,8 @@ export default async function SoHotTrongNgayPage() {
                                         <div className="absolute -inset-4 bg-gradient-to-tr from-red-600 to-orange-600 rounded-full blur-xl opacity-0 group-hover:opacity-20 transition duration-500"></div>
                                         <div className="relative w-20 h-20 md:w-28 md:h-28 bg-white rounded-full flex items-center justify-center text-4xl md:text-5xl font-black text-slate-900 border-[6px] border-slate-50 shadow-xl group-hover:scale-110 group-hover:border-red-50 transition duration-300">
                                             {item.number}
-                                            {idx === 0 && (
-                                                <div className="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 text-[10px] font-black px-2 py-1 rounded-md rotate-12 shadow-lg border-2 border-white uppercase">TOP 1</div>
+                                             {idx === 0 && (
+                                                <div className="absolute -top-6 -right-2 md:-top-4 md:-right-4 bg-yellow-400 text-yellow-900 text-[10px] font-black px-2 py-1 rounded-md rotate-12 shadow-lg border-2 border-white uppercase z-20">TOP 1</div>
                                             )}
                                         </div>
                                     </div>

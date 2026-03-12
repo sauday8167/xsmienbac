@@ -163,6 +163,7 @@ export default function Sidebar() {
                         { href: '/thong-ke', label: 'Thống kê lô tô', icon: 'chart' },
                         { href: '/do-ve-so', label: 'Dò vé số', icon: 'check' },
                         { href: '/quay-thu', label: 'Quay thử số', icon: 'refresh' },
+                        { href: '/hoi-dong-de', label: 'Hội Đồng Đề', icon: 'check' },
                         { href: '/du-doan', label: 'Tần Suất Lô Tô', icon: 'bulb' },
                         { href: '/soi-cau-loto-roi', label: 'Soi Cầu Lô Rơi', icon: 'bulb' },
                         { href: '/du-doan-ai', label: 'Dự đoán AI', icon: 'bulb' }

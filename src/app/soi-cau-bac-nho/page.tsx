@@ -5,8 +5,10 @@ import SoDonTab from './components/SoDonTab';
 import Cap2Tab from './components/Cap2Tab';
 import Cap3Tab from './components/Cap3Tab';
 import BacNho2NgayTab from './components/BacNho2NgayTab';
+import BacNho3NgayTab from './components/BacNho3NgayTab';
 
-type TabType = 'so-don' | 'cap-2' | 'cap-3' | '2-ngay';
+type TabType = 'so-don' | 'cap-2' | 'cap-3' | '2-ngay' | '3-ngay';
+
 
 import JsonLd from '@/components/seo/JsonLd';
 import { generateManualArticleSchema, generateBreadcrumbSchema, generateFAQSchema } from '@/lib/schema-generator';
@@ -109,7 +111,23 @@ export default function SoiCauBacNhoPage() {
                                 Bạc Nhớ 2 Ngày
                             </span>
                         </button>
+                        <button
+                            onClick={() => setActiveTab('3-ngay')}
+                            className={`
+                                px-6 py-4 text-sm font-semibold border-b-2 transition-all whitespace-nowrap
+                                ${activeTab === '3-ngay'
+                                    ? 'border-lottery-red-600 text-lottery-red-600 bg-lottery-red-50/50'
+                                    : 'border-transparent text-lottery-gray-600 hover:text-lottery-red-600 hover:border-lottery-gray-300'
+                                }
+                            `}
+                        >
+                            <span className="flex items-center gap-2">
+                                <span className="text-lg">🗓️</span>
+                                Bạc Nhớ 3 Ngày
+                            </span>
+                        </button>
                     </nav>
+
                 </div>
 
                 {/* Tab Content */}
@@ -118,6 +136,8 @@ export default function SoiCauBacNhoPage() {
                     {activeTab === 'cap-2' && <Cap2Tab />}
                     {activeTab === 'cap-3' && <Cap3Tab />}
                     {activeTab === '2-ngay' && <BacNho2NgayTab />}
+                    {activeTab === '3-ngay' && <BacNho3NgayTab />}
+
                 </div>
             </div>
 
@@ -134,6 +154,8 @@ export default function SoiCauBacNhoPage() {
                             <li><strong>Bạc Nhớ Cặp 2:</strong> Phân tích khi cặp A+B cùng xuất hiện ở ngày D, số C nào sẽ xuất hiện ở ngày D+1</li>
                             <li><strong>Bạc Nhớ Cặp 3:</strong> Phân tích khi cặp A+B+C cùng xuất hiện ở ngày D, số D nào sẽ xuất hiện ở ngày D+1</li>
                             <li><strong>Bạc Nhớ 2 Ngày:</strong> Phân tích khi số A xuất hiện ở ngày D-1 VÀ số B xuất hiện ở ngày D, số nào sẽ xuất hiện ở ngày D+1</li>
+                            <li><strong>Bạc Nhớ 3 Ngày:</strong> Phân tích khi số A xuất hiện ở ngày D-2, số B ở ngày D-1 VÀ số C ở ngày D, số nào sẽ xuất hiện ở ngày D+1</li>
+
                             <li><strong>Tỷ lệ %:</strong> Tính bằng (Số lần xuất hiện / Tổng số lần trigger) × 100%</li>
                             <li className="text-red-600 font-bold uppercase mt-2">Miễn trừ trách nhiệm:</li>
                             <li className="text-red-600 italic">Đây là phân tích thuật toán dựa trên dữ liệu quá khứ, không có giá trị cam kết hoặc đảm bảo kết quả trúng thưởng trong tương lai.</li>

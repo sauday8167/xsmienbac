@@ -5,8 +5,9 @@ import SoDonTab from './components/SoDonTab';
 import Cap2Tab from './components/Cap2Tab';
 import Cap3Tab from './components/Cap3Tab';
 import BacNho2NgayTab from './components/BacNho2NgayTab';
+import BacNho3NgayTab from './components/BacNho3NgayTab';
 
-type TabType = 'so-don' | 'cap-2' | 'cap-3' | '2-ngay';
+type TabType = 'so-don' | 'cap-2' | 'cap-3' | '2-ngay' | '3-ngay';
 
 export default function BacNhoKhung3NgayPage() {
     const [activeTab, setActiveTab] = useState<TabType>('so-don');
@@ -87,6 +88,21 @@ export default function BacNhoKhung3NgayPage() {
                                 Bạc Nhớ 2 Ngày
                             </span>
                         </button>
+                        <button
+                            onClick={() => setActiveTab('3-ngay')}
+                            className={`
+                                px-6 py-4 text-sm font-semibold border-b-2 transition-all whitespace-nowrap
+                                ${activeTab === '3-ngay'
+                                    ? 'border-lottery-red-600 text-lottery-red-600 bg-lottery-red-50/50'
+                                    : 'border-transparent text-lottery-gray-600 hover:text-lottery-red-600 hover:border-lottery-gray-300'
+                                }
+                            `}
+                        >
+                            <span className="flex items-center gap-2">
+                                <span className="text-lg">🗓️</span>
+                                Bạc Nhớ 3 Ngày
+                            </span>
+                        </button>
                     </nav>
                 </div>
 
@@ -96,6 +112,7 @@ export default function BacNhoKhung3NgayPage() {
                     {activeTab === 'cap-2' && <Cap2Tab />}
                     {activeTab === 'cap-3' && <Cap3Tab />}
                     {activeTab === '2-ngay' && <BacNho2NgayTab />}
+                    {activeTab === '3-ngay' && <BacNho3NgayTab />}
                 </div>
             </div>
 
@@ -108,10 +125,10 @@ export default function BacNhoKhung3NgayPage() {
                     <div>
                         <h4 className="font-bold text-blue-900 mb-2">Hướng dẫn nuôi khung 3 ngày:</h4>
                         <ul className="text-sm text-blue-800 space-y-1">
-                            <li><strong>Khung 3 Ngày:</strong> Phân tích khi số A về, số B nào sẽ về trong 3 ngày tới (D+1, D+2, hoặc D+3).</li>
-                            <li><strong>Tỷ lệ %:</strong> Số lần số B xuất hiện trong khung / Tổng số lần số A xuất hiện.</li>
-                            <li><strong>Mặc định lọc &gt; 80%:</strong> Chỉ hiển thị những cặp số có tỷ lệ về trong khung rất cao.</li>
-                            <li><strong>Lưu ý:</strong> Bạc nhớ khung 3 ngày có độ tin cậy cao hơn chơi trong ngày, nhưng cần vốn nuôi.</li>
+                            <li><strong>Khung 3 Ngày:</strong> Phân tích khi các số trigger xuất hiện (A, B, C), những số nào sẽ về trong 3 ngày tới (D+1, D+2, hoặc D+3).</li>
+                            <li><strong>Bạc Nhớ 3 Ngày:</strong> Xét bộ 3 ngày liên tiếp làm trigger để dự đoán khung 3 ngày. Độ chính xác cực cao do quy luật chặt chẽ.</li>
+                            <li><strong>Tỷ lệ %:</strong> Số lần con số xuất hiện ít nhất 1 lần trong khung 3 ngày / Tổng số lần bộ trigger xuất hiện.</li>
+                            <li><strong>Mặc định lọc &gt; 60%:</strong> Đối với Bạc Nhớ 3 Ngày, chúng tôi lọc các quy luật có tỷ lệ tin cậy cao trên 60%.</li>
                         </ul>
                     </div>
                 </div>
