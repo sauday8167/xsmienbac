@@ -15,11 +15,12 @@ async function main() {
     // 1. Cap 3
     console.log('\n--- Warming CAP 3 ---');
     for (const days of TIMEFRAMES) {
+        const key = days === 100 ? 'cap-3' : `cap-3-${days}`;
         process.stdout.write(`👉 Processing Cap 3 - ${days} days... `);
         const startTime = Date.now();
         try {
             await getOrUpdateBacNhoData(
-                `cap-3-${days}`,
+                key,
                 async (d) => await analyzeBacNhoCap3(d),
                 days
             );
@@ -33,11 +34,12 @@ async function main() {
     // 2. 2 Ngay
     console.log('\n--- Warming 2 NGAY ---');
     for (const days of TIMEFRAMES) {
+        const key = days === 100 ? '2-ngay' : `2-ngay-${days}`;
         process.stdout.write(`👉 Processing 2 Ngay - ${days} days... `);
         const startTime = Date.now();
         try {
             await getOrUpdateBacNhoData(
-                `2-ngay-${days}`,
+                key,
                 async (d) => await analyzeBacNho2Ngay(d),
                 days
             );
@@ -51,11 +53,12 @@ async function main() {
     // 3. Nuoi (Khung 3 Ngay Cap 3)
     console.log('\n--- Warming NUOI (Khung 3 Ngay) ---');
     for (const days of TIMEFRAMES) {
+        const key = days === 100 ? 'cap-3-khung-3-ngay' : `cap-3-khung-3-ngay-${days}`;
         process.stdout.write(`👉 Processing Nuoi - ${days} days... `);
         const startTime = Date.now();
         try {
             await getOrUpdateBacNhoData(
-                `cap-3-khung-3-ngay-${days}`,
+                key,
                 async (d) => await analyzeBacNhoCap3Khung3Ngay(d),
                 days
             );

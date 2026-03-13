@@ -1,7 +1,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import { queryOne } from './db';
+import { query, queryOne } from './db';
 
 const DATA_DIR = path.join(process.cwd(), 'src', 'data');
 
@@ -16,7 +16,30 @@ interface CachedData<T> {
 }
 
 /**
- * Get data from cache or recalculate if stale
+ * Cleanup old records in statistics_cache, keeping only the most recent 30 days per type
+ */
+async function cleanupOldRecords(type: string) {
+    try {
+        // Find the date for the 30th record (ordered by stat_key DESC which is YYYY-MM-DD)
+        const thirtyDaysAgoRecord = await queryOne<{ stat_key: string }>(
+            'SELECT stat_key FROM statistics_cache WHERE stat_type = ? ORDER BY stat_key DESC LIMIT 1 OFFSET 30',
+            [type]
+        );
+
+        if (thirtyDaysAgoRecord) {
+            await query(
+                'DELETE FROM statistics_cache WHERE stat_type = ? AND stat_key < ?',
+                [type, thirtyDaysAgoRecord.stat_key]
+            );
+            console.log(`[BacNhoCache] Cleaned up records for ${type} older than ${thirtyDaysAgoRecord.stat_key}`);
+        }
+    } catch (e) {
+        console.error(`[BacNhoCache] Cleanup failed for ${type}`, e);
+    }
+}
+
+/**
+ * Get data from DB cache or recalculate if stale
  * @param key Filename key (e.g., 'so-don', 'cap-2')
  * @param calculateFn Function to calculate data if cache is stale
  * @param days Number of days to analyze
@@ -26,69 +49,76 @@ export async function getOrUpdateBacNhoData<T>(
     calculateFn: (days: number) => Promise<T>,
     days: number = 100
 ): Promise<T> {
-    const filePath = path.join(DATA_DIR, `bac-nho-${key}.json`);
-
-    // 1. Get latest date from DB
-    // Use a fast query to just get the latest draw date
+    const statType = `bac-nho-${key}`;
+    
+    // 1. Get latest date from results DB to check freshness
     const latestResult = await queryOne<{ draw_date: string }>(
         'SELECT draw_date FROM xsmb_results ORDER BY draw_date DESC LIMIT 1'
     );
-
-    // Default to today if DB is empty (unlikely)
     const dbLatestDate = latestResult?.draw_date || new Date().toISOString().split('T')[0];
 
-    // 2. Check cache
-    let shouldRecalculate = true;
-    let cachedData: CachedData<T> | null = null;
+    // 2. Check DB Cache
+    try {
+        const cachedRow = await queryOne<{ stat_value: string }>(
+            'SELECT stat_value FROM statistics_cache WHERE stat_type = ? AND stat_key = ?',
+            [statType, dbLatestDate]
+        );
 
+        if (cachedRow) {
+            try {
+                const parsed = JSON.parse(cachedRow.stat_value);
+                // The stored value is the raw 'data' property if we want consistency with JSON format
+                return parsed;
+            } catch (e) {
+                console.error(`[BacNhoCache] JSON Parse error for DB cache ${key}`, e);
+            }
+        }
+    } catch (dbErr) {
+        console.error(`[BacNhoCache] DB query error for ${key}`, dbErr);
+    }
+
+    // 3. Fallback to JSON file if DB fails or is empty for this date
+    const filePath = path.join(DATA_DIR, `bac-nho-${key}.json`);
     if (fs.existsSync(filePath)) {
         try {
             const fileContent = fs.readFileSync(filePath, 'utf-8');
-            cachedData = JSON.parse(fileContent);
-
-            // Check if cached data contains the latest date info
-            // The cached data structure usually has `overview.latestDate` or we check `lastUpdated`
-            // But checking the actual latest analyzed date inside the data is safer.
-            // Let's assume T has an overview field or similar, or we just trust the timestamp if it was updated recently.
-            // A better approach: The cache wrapper stores `lastUpdated` timestamp, but that doesn't tell us if it includes Today's result.
-            // So we really need to check if the cached analysis *covered* dbLatestDate.
-
-            // NOTE: Our calculate scripts store: { lastUpdated: string, data: ... }
-            // And inside data (BacNhoData), there is overview.latestDate
-
-            if (cachedData && (cachedData.data as any).overview?.latestDate === dbLatestDate) {
-                shouldRecalculate = false;
-            } else {
-                console.log(`[BacNhoCache] Cache stale for ${key}. DB: ${dbLatestDate}, Cache: ${(cachedData?.data as any)?.overview?.latestDate}`);
+            const cachedJson: CachedData<T> = JSON.parse(fileContent);
+            if ((cachedJson.data as any).overview?.latestDate === dbLatestDate) {
+                return cachedJson.data;
             }
-
         } catch (e) {
-            console.error(`[BacNhoCache] Error reading cache for ${key}, forcing refresh.`, e);
-        }
-    } else {
-        console.log(`[BacNhoCache] No cache for ${key}, calculating...`);
-    }
-
-    // 3. Recalculate if needed
-    if (shouldRecalculate) {
-        console.log(`[BacNhoCache] 🔄 Recalculating ${key} for ${days} days...`);
-        try {
-            const newData = await calculateFn(days);
-            const cachePayload: CachedData<T> = {
-                lastUpdated: new Date().toISOString(),
-                data: newData
-            };
-
-            fs.writeFileSync(filePath, JSON.stringify(cachePayload, null, 2));
-            console.log(`[BacNhoCache] ✅ Updated ${key} cache.`);
-            return newData;
-        } catch (error) {
-            console.error(`[BacNhoCache] Calculation failed for ${key}`, error);
-            // If recalc fails, try to return stale cache if available
-            if (cachedData) return cachedData.data;
-            throw error;
+            // Ignore JSON read errors
         }
     }
 
-    return cachedData!.data;
+    // 4. Recalculate
+    console.log(`[BacNhoCache] 🔄 Recalculating ${key} for ${days} days...`);
+    try {
+        const newData = await calculateFn(days);
+        
+        // Save to DB
+        await query(
+            `INSERT INTO statistics_cache (stat_type, stat_key, stat_value, expires_at, updated_at) 
+             VALUES (?, ?, ?, datetime('now', '+30 days'), CURRENT_TIMESTAMP)
+             ON CONFLICT(stat_type, stat_key) DO UPDATE SET
+             stat_value=excluded.stat_value, updated_at=CURRENT_TIMESTAMP`,
+            [statType, dbLatestDate, JSON.stringify(newData)]
+        );
+
+        // Backup to JSON (Optional, good for safety)
+        const cachePayload: CachedData<T> = {
+            lastUpdated: new Date().toISOString(),
+            data: newData
+        };
+        fs.writeFileSync(filePath, JSON.stringify(cachePayload, null, 2));
+
+        // Cleanup old DB records
+        await cleanupOldRecords(statType);
+
+        console.log(`[BacNhoCache] ✅ Updated ${key} cache in DB and JSON.`);
+        return newData;
+    } catch (error) {
+        console.error(`[BacNhoCache] Calculation failed for ${key}`, error);
+        throw error;
+    }
 }

@@ -64,5 +64,6 @@ tmp/
 temp/
 
 # Large data files (generated on server)
-src/data/bac-nho-stats.json
+src/data/bac-nho-*.json
+src/data/cache/*.json
 google-indexing-key.json

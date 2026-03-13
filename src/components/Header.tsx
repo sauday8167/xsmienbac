@@ -50,12 +50,12 @@ export default function Header() {
                         { href: '/thong-ke', label: 'Thống kê' },
                         { href: '/soi-cau-bac-nho', label: 'Soi Cầu Bạc Nhớ' },
                         { href: '/bac-nho-khung-3-ngay', label: 'Bạc Nhớ Khung 3 Ngày' },
-                        { href: '/hoi-dong-de', label: 'Hội Đồng Đề' },
                         { href: '/tin-tuc', label: 'Tin tức' },
                         { href: '/quay-thu', label: 'Quay thử' },
                         { href: '/do-ve-so', label: 'Dò vé số' },
                         { href: '/soi-cau-loto-roi', label: 'Soi Cầu Lô Rơi' },
                         { href: '/du-doan-ai', label: 'Dự đoán AI' },
+                        { href: '/bac-nho-dac-biet', label: 'Bạc Nhớ Đặc Biệt' },
                     ]);
                 }
             } catch (error) {
@@ -65,7 +65,6 @@ export default function Header() {
                     { href: '/thong-ke', label: 'Thống kê' },
                     { href: '/soi-cau-bac-nho', label: 'Soi Cầu Bạc Nhớ' },
                     { href: '/bac-nho-khung-3-ngay', label: 'Bạc Nhớ Khung 3 Ngày' },
-                    { href: '/hoi-dong-de', label: 'Hội Đồng Đề' },
                     { href: '/tin-tuc', label: 'Tin tức' },
                     { href: '/quay-thu', label: 'Quay thử' },
                     { href: '/do-ve-so', label: 'Dò vé số' },

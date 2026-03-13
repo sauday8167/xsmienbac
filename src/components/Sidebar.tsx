@@ -163,10 +163,10 @@ export default function Sidebar() {
                         { href: '/thong-ke', label: 'Thống kê lô tô', icon: 'chart' },
                         { href: '/do-ve-so', label: 'Dò vé số', icon: 'check' },
                         { href: '/quay-thu', label: 'Quay thử số', icon: 'refresh' },
-                        { href: '/hoi-dong-de', label: 'Hội Đồng Đề', icon: 'check' },
                         { href: '/du-doan', label: 'Tần Suất Lô Tô', icon: 'bulb' },
                         { href: '/soi-cau-loto-roi', label: 'Soi Cầu Lô Rơi', icon: 'bulb' },
-                        { href: '/du-doan-ai', label: 'Dự đoán AI', icon: 'bulb' }
+                        { href: '/du-doan-ai', label: 'Dự đoán AI', icon: 'bulb' },
+                        { href: '/bac-nho-dac-biet', label: 'Bạc Nhớ Đặc Biệt', icon: 'bulb' }
                     ].map((item, idx) => (
                         <Link key={idx} href={item.href} className="flex items-center p-3 rounded-lg hover:bg-lottery-red-50 transition-colors group">
                             <svg className="w-5 h-5 mr-3 text-lottery-red-600 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">

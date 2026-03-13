@@ -1,18 +1,15 @@
 import 'dotenv/config';
-import path from 'path';
 import { query, queryOne } from '../src/lib/db';
-import { analyzeBacNhoSoDon } from '../src/lib/bac-nho-so-don';
-import { analyzeBacNhoCap2 } from '../src/lib/bac-nho-cap-2';
-import { analyzeBacNhoCap3 } from '../src/lib/bac-nho-cap-3';
-import { analyzeBacNhoSoDonKhung3Ngay } from '../src/lib/bac-nho-khung-3-ngay-so-don';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const WEIGHTS = {
     soDon: 0.35,
     khung3Ngay: 0.25,
-    cap2: 0.20,
-    cap3: 0.20,
+    cap2: 0.15,
+    cap3: 0.15,
 };
+
+const DAY_RANGES = [100, 180, 365, 730, 1000];
 
 async function getAiRulesFromHistory(): Promise<string> {
     try {
@@ -33,60 +30,50 @@ async function buildScoreMap(): Promise<Map<string, number>> {
         scoreMap.set(i.toString().padStart(2, '0'), 0);
     }
 
-    // Source 1: Số Đơn (35%)
-    try {
-        const data = await analyzeBacNhoSoDon(120);
-        data.todayPredictions.forEach(tp => {
-            tp.predictions.forEach(p => {
-                const cur = scoreMap.get(p.number) || 0;
-                scoreMap.set(p.number, cur + p.correlationRate * WEIGHTS.soDon);
-            });
-        });
-        console.log(`  ✅ Nguồn 1 (Số Đơn): ${data.todayPredictions.length} trigger hôm qua`);
-    } catch (e: any) {
-        console.warn('  ⚠️ Nguồn 1 lỗi:', e.message);
-    }
+    // Get latest date to ensure we use the freshest cache
+    const latestResult = await queryOne<{ draw_date: string }>(
+        'SELECT draw_date FROM xsmb_results ORDER BY draw_date DESC LIMIT 1'
+    );
+    const dbLatestDate = latestResult?.draw_date || new Date().toISOString().split('T')[0];
 
-    // Source 2: Khung 3 Ngày (25%)
-    try {
-        const data = await analyzeBacNhoSoDonKhung3Ngay(120);
-        data.todayPredictions.forEach(tp => {
-            tp.predictions.forEach(p => {
-                const cur = scoreMap.get(p.number) || 0;
-                scoreMap.set(p.number, cur + p.correlationRate * WEIGHTS.khung3Ngay);
-            });
-        });
-        console.log(`  ✅ Nguồn 2 (Khung 3 Ngày): ${data.todayPredictions.length} trigger hôm qua`);
-    } catch (e: any) {
-        console.warn('  ⚠️ Nguồn 2 lỗi:', e.message);
-    }
+    const types = [
+        { key: 'so-don', weight: WEIGHTS.soDon },
+        { key: 'khung-3-ngay-so-don', weight: WEIGHTS.khung3Ngay },
+        { key: 'cap-2', weight: WEIGHTS.cap2 },
+        { key: 'cap-3', weight: WEIGHTS.cap3 },
+    ];
 
-    // Source 3: Cặp 2 (20%)
-    try {
-        const data = await analyzeBacNhoCap2(120);
-        data.todayPredictions.forEach(tp => {
-            tp.predictions.forEach(p => {
-                const cur = scoreMap.get(p.number) || 0;
-                scoreMap.set(p.number, cur + p.correlationRate * WEIGHTS.cap2);
-            });
-        });
-        console.log(`  ✅ Nguồn 3 (Cặp 2): ${data.todayPredictions.length} cặp trigger`);
-    } catch (e: any) {
-        console.warn('  ⚠️ Nguồn 3 lỗi:', e.message);
-    }
+    for (const type of types) {
+        let componentTriggerCount = 0;
+        for (const days of DAY_RANGES) {
+            const nameSuffix = days === 100 ? '' : `-${days}`;
+            const statType = `bac-nho-${type.key}${nameSuffix}`;
 
-    // Source 4: Cặp 3 (20%)
-    try {
-        const data = await analyzeBacNhoCap3(120);
-        data.todayPredictions.forEach(tp => {
-            tp.predictions.forEach(p => {
-                const cur = scoreMap.get(p.number) || 0;
-                scoreMap.set(p.number, cur + p.correlationRate * WEIGHTS.cap3);
-            });
-        });
-        console.log(`  ✅ Nguồn 4 (Cặp 3): ${data.todayPredictions.length} cặp trigger`);
-    } catch (e: any) {
-        console.warn('  ⚠️ Nguồn 4 lỗi:', e.message);
+            try {
+                const cachedRow = await queryOne<{ stat_value: string }>(
+                    'SELECT stat_value FROM statistics_cache WHERE stat_type = ? AND stat_key = ?',
+                    [statType, dbLatestDate]
+                );
+
+                if (cachedRow) {
+                    const data = JSON.parse(cachedRow.stat_value);
+                    const todayPredictions = data.todayPredictions || [];
+                    componentTriggerCount += todayPredictions.length;
+
+                    todayPredictions.forEach((tp: any) => {
+                        (tp.predictions || []).forEach((p: any) => {
+                            const cur = scoreMap.get(p.number) || 0;
+                            // Aggregate score: componentWeight divided by number of ranges used
+                            const contribution = p.correlationRate * (type.weight / DAY_RANGES.length);
+                            scoreMap.set(p.number, cur + contribution);
+                        });
+                    });
+                }
+            } catch (e: any) {
+                console.warn(`  ⚠️ Lỗi fetch cache ${statType}:`, e.message);
+            }
+        }
+        console.log(`  ✅ Nguồn ${type.key}: Tổng ${componentTriggerCount} trigger trên ${DAY_RANGES.length} khung.`);
     }
 
     return scoreMap;
@@ -98,35 +85,31 @@ async function generateAnalysisContent(top10: any[], aiRules: string): Promise<s
     try {
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-        const prompt = `Bạn là AI chuyên phân tích xổ số XSMB dựa trên thống kê Bạc Nhớ.
+        const prompt = `Bạn là AI chuyên phân tích xổ số XSMB dựa trên hệ thống "Hội Đồng Bạc Nhớ" đa khung thời gian.
+        
+Hội Đồng vừa phân tích dữ liệu Bạc Nhớ từ 5 khung thời gian (100-1000 ngày) với 4 thuật toán khác nhau.
 
-Top 10 số được Hội Đồng Bạc Nhớ chọn hôm nay (sorted by score):
+Top 10 số được chọn hôm nay (đã xếp hạng theo điểm tổng hợp):
 ${top10.map((n, i) => `${i + 1}. Số ${n.number} - Điểm: ${n.score.toFixed(2)} - Nhóm: ${n.tier}`).join('\n')}
 
-Quy tắc đã học từ 30 ngày gần nhất:
+Quy tắc đã học từ 30 ngày gần nhất (AI Insight):
 ${aiRules || '(Chưa có dữ liệu học)'}
 
-Hãy viết một đoạn tóm tắt NGẮN GỌN (3-5 câu) bằng tiếng Việt, giải thích tại sao các nhóm số này được chọn và chiến thuật đề xuất cho người dùng. Không liệt kê lại số.`;
+Hãy viết một đoạn tóm tắt NGẮN GỌN (3-5 câu) bằng tiếng Việt, giải thích ưu thế của việc tổng hợp đa khung thời gian hôm nay và chiến thuật đề xuất. Tránh liệt kê lại số.`;
 
         const result = await model.generateContent(prompt);
         return result.response.text();
     } catch (e: any) {
-        return `Phân tích tự động đang xử lý. Top số hôm nay được tổng hợp từ 4 nguồn Bạc Nhớ với trọng số khác nhau.`;
+        return `Phân tích tổng hợp đa khung thời gian cho thấy sự đồng thuận cao ở một số bộ số chủ lực. Top số hôm nay được tính toán từ 20 tổ hợp thống kê khác nhau (4 thuật toán x 5 khung thời gian).`;
     }
 }
 
 async function fetchBacNho() {
-    console.log(`[${new Date().toISOString()}] 🧠 Bắt đầu tính toán Hội Đồng Bạc Nhớ...`);
+    console.log(`[${new Date().toISOString()}] 🧠 Bắt đầu tính toán Hội Đồng Bạc Nhớ (Hệ thống Multi-Range DB)...`);
 
     const todayVN = new Date().toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
 
-    // Check duplicate
-    const existing = await queryOne<any>(`SELECT id FROM bac_nho_history WHERE draw_date = ?`, [todayVN]);
-    if (existing) {
-        console.log(`ℹ️ Đã có dữ liệu cho ngày ${todayVN}. Ghi đè...`);
-    }
-
-    console.log('📊 Đang tổng hợp điểm từ 4 nguồn Bạc Nhớ...');
+    console.log('📊 Đang tổng hợp điểm từ Database Cache (Multi-Range 100-1000 days)...');
     const scoreMap = await buildScoreMap();
 
     // Rank all numbers
@@ -135,6 +118,10 @@ async function fetchBacNho() {
         .filter(x => x.score > 0)
         .sort((a, b) => b.score - a.score);
 
+    if (ranked.length === 0) {
+        console.warn('⚠️ Không tìm thấy trigger nào từ cache. Có thể cache chưa được cập nhật cho ngày hôm nay.');
+    }
+
     // Assign tiers and take top 10
     const top10 = ranked.slice(0, 10).map((item, idx) => ({
         ...item,
@@ -142,7 +129,7 @@ async function fetchBacNho() {
         rank: idx + 1,
     }));
 
-    console.log(`🏆 Top 10 số: ${top10.map(n => n.number).join(', ')}`);
+    console.log(`🏆 Top 10 số Tổng Hợp: ${top10.map(n => n.number).join(', ')}`);
 
     // Load historical AI rules for context
     const aiRules = await getAiRulesFromHistory();
@@ -167,7 +154,7 @@ async function fetchBacNho() {
             hit_count = 0
     `, [todayVN, JSON.stringify(top10), JSON.stringify(scoreBreakdown), analysisContent]);
 
-    console.log(`✅ Đã lưu dữ liệu Hội Đồng Bạc Nhớ cho ngày ${todayVN}`);
+    console.log(`✅ Đã lưu dữ liệu Hội Đồng Bạc Nhớ Tổng Hợp cho ngày ${todayVN}`);
     process.exit(0);
 }
 

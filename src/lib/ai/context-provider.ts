@@ -1,14 +1,5 @@
 import { query, queryOne } from '@/lib/db';
 import { calculateLoGan, calculateFrequent } from '@/lib/statistics';
-import { analyzeBacNhoSoDon } from '@/lib/bac-nho-so-don';
-import { analyzeBacNhoCap2 } from '@/lib/bac-nho-cap-2';
-import { analyzeBacNhoCap3 } from '@/lib/bac-nho-cap-3';
-import { analyzeBacNho2Ngay } from '@/lib/bac-nho-2-ngay';
-// Temporarily disabled - export names don't match
-// import { analyzeBacNhoKhung3SoDon } from '@/lib/bac-nho-khung-3-ngay-so-don';
-// import { analyzeBacNhoKhung3Cap2 } from '@/lib/bac-nho-khung-3-ngay-cap-2';
-// import { analyzeBacNhoKhung3Cap3 } from '@/lib/bac-nho-khung-3-ngay-cap-3';
-import { analyzeBacNho2NgayKhung3Ngay } from '@/lib/bac-nho-khung-3-ngay-2-ngay';
 import { analyzeLotoRoi } from '@/lib/loto-roi';
 import { analyzeAntigravityGdb } from '@/lib/gdb-analysis';
 import { getDbTomorrowStats } from '@/lib/db-tomorrow-stats';
@@ -46,31 +37,42 @@ export class ContextProvider {
             const hotLotos = await calculateFrequent(20, 30);
             const coldLotos = await calculateLoGan(20, 50);
 
-            // 3. BAC NHO (Silver Memory) - All 4 types
-            console.log('  - Running Bạc Nhớ analysis...');
-            const bacNhoSoDonResult = await analyzeBacNhoSoDon(100, yesterdayStr);
-            const bacNhoCap2Result = await analyzeBacNhoCap2(100, yesterdayStr);
-            const bacNhoCap3Result = await analyzeBacNhoCap3(100, yesterdayStr);
-            const bacNho2NgayResult = await analyzeBacNho2Ngay(100, yesterdayStr);
+            // 3. BAC NHO (Silver Memory) - Aggregated from Multi-Range DB Cache
+            console.log('  - Running Bạc Nhớ analysis (Multi-Range DB)...');
+            const DAY_RANGES = [100, 180, 365, 730, 1000];
+            
+            const getAggregatedBacNho = async (key: string) => {
+                const aggregated: any[] = [];
+                for (const days of DAY_RANGES) {
+                    const nameSuffix = days === 100 ? '' : `-${days}`;
+                    const statType = `bac-nho-${key}${nameSuffix}`;
+                    const cached = await queryOne<{ stat_value: string }>(
+                        'SELECT stat_value FROM statistics_cache WHERE stat_type = ? AND stat_key = ?',
+                        [statType, yesterdayStr]
+                    );
+                    if (cached) {
+                        try {
+                            const data = JSON.parse(cached.stat_value);
+                            if (data.todayPredictions) {
+                                aggregated.push(...data.todayPredictions.map((p: any) => ({ ...p, range: days })));
+                            }
+                        } catch (e) { }
+                    }
+                }
+                return aggregated;
+            };
 
-            // Extract predictions from results
-            const bacNhoSoDon = bacNhoSoDonResult.todayPredictions;
-            const bacNhoCap2 = bacNhoCap2Result.todayPredictions;
-            const bacNhoCap3 = bacNhoCap3Result.todayPredictions;
-            const bacNho2Ngay = bacNho2NgayResult.todayPredictions;
+            const bacNhoSoDon = await getAggregatedBacNho('so-don');
+            const bacNhoCap2 = await getAggregatedBacNho('cap-2');
+            const bacNhoCap3 = await getAggregatedBacNho('cap-3');
+            const bacNho2Ngay = await getAggregatedBacNho('2-ngay');
 
-            // 4. BAC NHO KHUNG 3 NGAY - Temporarily disabled due to import errors
-            console.log('  - Running Bạc Nhớ Khung 3 Ngày...');
-            // const bacNhoK3SoDonResult = await analyzeBacNhoKhung3SoDon(100, yesterdayStr);
-            // const bacNhoK3Cap2Result = await analyzeBacNhoKhung3Cap2(100, yesterdayStr);
-            // const bacNhoK3Cap3Result = await analyzeBacNhoKhung3Cap3(100, yesterdayStr);
-            const bacNhoK3_2NgayResult = await analyzeBacNho2NgayKhung3Ngay(100, yesterdayStr);
-
-            // Extract predictions
-            const bacNhoK3SoDon = null; // bacNhoK3SoDonResult.todayPredictions;
-            const bacNhoK3Cap2 = null; // bacNhoK3Cap2Result.todayPredictions;
-            const bacNhoK3Cap3 = null; // bacNhoK3Cap3Result.todayPredictions;
-            const bacNhoK3_2Ngay = bacNhoK3_2NgayResult.todayPredictions;
+            // 4. BAC NHO KHUNG 3 NGÀY - Aggregated from Multi-Range DB Cache
+            console.log('  - Running Bạc Nhớ Khung 3 Ngày (Multi-Range DB)...');
+            const bacNhoK3SoDon = await getAggregatedBacNho('khung-3-ngay-so-don');
+            const bacNhoK3Cap2 = await getAggregatedBacNho('khung-3-ngay-cap-2');
+            const bacNhoK3Cap3 = await getAggregatedBacNho('khung-3-ngay-cap-3');
+            const bacNhoK3_2Ngay = await getAggregatedBacNho('khung-3-ngay-2-ngay');
 
             // 5. LOTO ROI ALGORITHM
             console.log('  - Running Loto Rơi algorithm...');
