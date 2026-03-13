@@ -1,75 +1,44 @@
 import { analyzeBacNhoCap3 } from '../src/lib/bac-nho-cap-3';
-import { analyzeBacNho2Ngay } from '../src/lib/bac-nho-2-ngay';
-import { analyzeBacNhoCap3Khung3Ngay } from '../src/lib/bac-nho-khung-3-ngay-cap-3';
+import { analyzeBacNhoCap2 } from '../src/lib/bac-nho-cap-2';
+import { analyzeBacNhoSoDon } from '../src/lib/bac-nho-so-don';
+import { analyzeBacNhoSoDonKhung3Ngay } from '../src/lib/bac-nho-khung-3-ngay-so-don';
 import { getOrUpdateBacNhoData } from '../src/lib/bac-nho-cache-service';
-
-// Mock DB connection setup if needed by imports (usually db.ts handles it)
-// But since we are running as a script with tsx, need to ensure paths work.
-// db.ts uses process.cwd() which should be fine if run from root.
 
 const TIMEFRAMES = [100, 180, 365, 730, 1000];
 
 async function main() {
-    console.log('🚀 Starting Bac Nho Stats Cache Warming...');
+    console.log('🚀 Starting Comprehensive Bac Nho Stats Cache Warming...');
 
-    // 1. Cap 3
-    console.log('\n--- Warming CAP 3 ---');
-    for (const days of TIMEFRAMES) {
-        const key = days === 100 ? 'cap-3' : `cap-3-${days}`;
-        process.stdout.write(`👉 Processing Cap 3 - ${days} days... `);
-        const startTime = Date.now();
-        try {
-            await getOrUpdateBacNhoData(
-                key,
-                async (d) => await analyzeBacNhoCap3(d),
-                days
-            );
-            const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-            console.log(`✅ Done in ${duration}s`);
-        } catch (error) {
-            console.error(`❌ Failed:`, error);
-        }
-    }
+    const tasks = [
+        { label: 'SO DON', key: 'so-don', fn: analyzeBacNhoSoDon },
+        { label: 'KHUNG 3 NGAY SO DON', key: 'khung-3-ngay-so-don', fn: analyzeBacNhoSoDonKhung3Ngay },
+        { label: 'CAP 2', key: 'cap-2', fn: analyzeBacNhoCap2 },
+        { label: 'CAP 3', key: 'cap-3', fn: analyzeBacNhoCap3 },
+    ];
 
-    // 2. 2 Ngay
-    console.log('\n--- Warming 2 NGAY ---');
-    for (const days of TIMEFRAMES) {
-        const key = days === 100 ? '2-ngay' : `2-ngay-${days}`;
-        process.stdout.write(`👉 Processing 2 Ngay - ${days} days... `);
-        const startTime = Date.now();
-        try {
-            await getOrUpdateBacNhoData(
-                key,
-                async (d) => await analyzeBacNho2Ngay(d),
-                days
-            );
-            const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-            console.log(`✅ Done in ${duration}s`);
-        } catch (error) {
-            console.error(`❌ Failed:`, error);
-        }
-    }
-
-    // 3. Nuoi (Khung 3 Ngay Cap 3)
-    console.log('\n--- Warming NUOI (Khung 3 Ngay) ---');
-    for (const days of TIMEFRAMES) {
-        const key = days === 100 ? 'cap-3-khung-3-ngay' : `cap-3-khung-3-ngay-${days}`;
-        process.stdout.write(`👉 Processing Nuoi - ${days} days... `);
-        const startTime = Date.now();
-        try {
-            await getOrUpdateBacNhoData(
-                key,
-                async (d) => await analyzeBacNhoCap3Khung3Ngay(d),
-                days
-            );
-            const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-            console.log(`✅ Done in ${duration}s`);
-        } catch (error) {
-            console.error(`❌ Failed:`, error);
+    for (const task of tasks) {
+        console.log(`\n--- Warming ${task.label} ---`);
+        for (const days of TIMEFRAMES) {
+            const cacheKey = days === 100 ? task.key : `${task.key}-${days}`;
+            process.stdout.write(`👉 Processing ${task.label} - ${days} days... `);
+            const startTime = Date.now();
+            try {
+                await getOrUpdateBacNhoData(
+                    cacheKey,
+                    async (d) => await task.fn(d),
+                    days
+                );
+                const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+                console.log(`✅ Done in ${duration}s`);
+            } catch (error) {
+                console.error(`❌ Failed:`, error);
+            }
         }
     }
 
     console.log('\n✨ All Done!');
 }
+
+main().catch(console.error);
 
 main().catch(console.error);
