@@ -37,7 +37,16 @@ export function initCronJobs(): void {
         });
     }, { timezone: "Asia/Ho_Chi_Minh" });
 
-    console.log('✅ Cron jobs scheduled: 18:45 (Warm) & 19:00 (Predict)');
+    // 3. Fetch Số Hot Trong Ngày at 17:01 (YouTube usually has videos by then)
+    cron.schedule('1 17 * * *', () => {
+        console.log('[Cron] 🔥 Starting Scheduled So Hot update...');
+        exec('npx tsx scripts/fetch-so-hot.ts', (error, stdout, stderr) => {
+            if (error) console.error('[Cron] ❌ So Hot update failed:', error);
+            else console.log('[Cron] ✅ So Hot update completed.');
+        });
+    }, { timezone: "Asia/Ho_Chi_Minh" });
+
+    console.log('✅ Cron jobs scheduled: 17:01 (So Hot), 18:45 (Warm) & 19:00 (Predict)');
 }
 
 // Manual trigger for testing
