@@ -211,6 +211,6 @@ export async function analyzeBacNhoCap3Khung3Ngay(days: number = 100, toDate?: s
             dataRange: { from: oldestDate, to: latestDate }
         },
         patterns: optimizedPatterns,
-        todayPredictions
+        todayPredictions: todayPredictions.slice(0, 200)
     };
 }

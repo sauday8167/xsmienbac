@@ -133,9 +133,10 @@ export async function analyzeBacNho3NgayKhung3Ngay(days: number = 100, toDate?: 
         });
     }
 
-    // --- PHASE 2: Discovery for All Patterns (Limited Scope) ---
+    // --- PHASE 2: Discovery for All Patterns (EXTREMELY Limited to prevent OOM) ---
     const allPatterns: BacNho3NgayPattern[] = [];
-    const discoveryResults = results.slice(-(MAX_DISCOVERY_DAYS + 5)); 
+    const DISCOVERY_LIMIT = 40; 
+    const discoveryResults = results.slice(-(DISCOVERY_LIMIT + 5)); 
     
     if (discoveryResults.length >= 6) {
         const patternsMap = new Map<string, BacNho3NgayPattern>();
@@ -190,7 +191,7 @@ export async function analyzeBacNho3NgayKhung3Ngay(days: number = 100, toDate?: 
                     hitCount,
                     correlationRate: (hitCount / pattern.totalAppearances) * 100
                 }))
-                .filter(p => p.correlationRate >= 60) // High threshold for "Khung" All Patterns
+                .filter(p => p.correlationRate >= 60) 
                 .sort((a, b) => b.correlationRate - a.correlationRate)
                 .slice(0, 50);
 
@@ -216,6 +217,6 @@ export async function analyzeBacNho3NgayKhung3Ngay(days: number = 100, toDate?: 
             }
         },
         patterns: allPatterns.slice(0, 500), 
-        todayPredictions
+        todayPredictions: todayPredictions.slice(0, 200) // Optimization: Limit predictions
     };
 }

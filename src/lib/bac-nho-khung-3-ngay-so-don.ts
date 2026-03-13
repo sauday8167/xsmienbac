@@ -219,7 +219,7 @@ export async function analyzeBacNhoSoDonKhung3Ngay(days: number = 100, toDate?: 
                 to: latestDate
             }
         },
-        patterns: allPatterns,
-        todayPredictions
+        patterns: allPatterns.slice(0, 1000),
+        todayPredictions: todayPredictions.slice(0, 200)
     };
 }

@@ -224,7 +224,7 @@ export async function analyzeBacNho2NgayKhung3Ngay(days: number = 100, toDate?: 
                 }
             },
             patterns: allPatterns,
-            todayPredictions
+            todayPredictions: todayPredictions.slice(0, 200)
         };
     }
 

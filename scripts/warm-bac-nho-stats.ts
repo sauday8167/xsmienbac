@@ -4,6 +4,10 @@ import { analyzeBacNhoSoDon } from '../src/lib/bac-nho-so-don';
 import { analyzeBacNhoSoDonKhung3Ngay } from '../src/lib/bac-nho-khung-3-ngay-so-don';
 import { analyzeBacNho2Ngay } from '../src/lib/bac-nho-2-ngay';
 import { analyzeBacNho3Ngay } from '../src/lib/bac-nho-3-ngay';
+import { analyzeBacNho2NgayKhung3Ngay } from '../src/lib/bac-nho-khung-3-ngay-2-ngay';
+import { analyzeBacNho3NgayKhung3Ngay } from '../src/lib/bac-nho-khung-3-ngay-3-ngay';
+import { analyzeBacNhoCap2Khung3Ngay } from '../src/lib/bac-nho-khung-3-ngay-cap-2';
+import { analyzeBacNhoCap3Khung3Ngay } from '../src/lib/bac-nho-khung-3-ngay-cap-3';
 import { getOrUpdateBacNhoData } from '../src/lib/bac-nho-cache-service';
 
 const TIMEFRAMES = [100, 180, 365, 730, 1000];
@@ -18,6 +22,10 @@ async function main() {
         { label: 'CAP 3', key: 'cap-3', fn: analyzeBacNhoCap3 },
         { label: '2 NGAY', key: '2-ngay', fn: analyzeBacNho2Ngay },
         { label: '3 NGAY', key: '3-ngay', fn: analyzeBacNho3Ngay },
+        { label: 'KHUNG 3 NGAY 2 NGAY', key: 'khung-3-ngay-2-ngay', fn: analyzeBacNho2NgayKhung3Ngay },
+        { label: 'KHUNG 3 NGAY 3 NGAY', key: 'khung-3-ngay-3-ngay', fn: analyzeBacNho3NgayKhung3Ngay },
+        { label: 'KHUNG 3 NGAY CAP 2', key: 'khung-3-ngay-cap-2', fn: analyzeBacNhoCap2Khung3Ngay },
+        { label: 'KHUNG 3 NGAY CAP 3', key: 'khung-3-ngay-cap-3', fn: analyzeBacNhoCap3Khung3Ngay },
     ];
 
     for (const task of tasks) {
@@ -42,7 +50,5 @@ async function main() {
 
     console.log('\n✨ All Done!');
 }
-
-main().catch(console.error);
 
 main().catch(console.error);
