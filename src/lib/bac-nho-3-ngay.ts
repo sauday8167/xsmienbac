@@ -137,9 +137,10 @@ export async function analyzeBacNho3Ngay(days: number = 100, toDate?: string): P
         });
     }
 
-    // --- PHASE 2: Discovery for All Patterns (Limited Scope) ---
+    // --- PHASE 2: Discovery for All Patterns (EXTREMELY Limited to prevent OOM) ---
     const allPatterns: BacNho3NgayPattern[] = [];
-    const discoveryResults = results.slice(-MAX_DISCOVERY_DAYS);
+    const DISCOVERY_LIMIT = 40; // Only look at last 40 days for the general discovery table
+    const discoveryResults = results.slice(-DISCOVERY_LIMIT);
     
     if (discoveryResults.length >= 4) {
         const patternsMap = new Map<string, BacNho3NgayPattern>();
