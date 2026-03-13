@@ -213,7 +213,7 @@ export async function analyzeBacNho2Ngay(days: number = 100, toDate?: string): P
                 }
             },
             patterns: allPatterns,
-            todayPredictions
+            todayPredictions: todayPredictions.slice(0, 200)
         };
     }
 

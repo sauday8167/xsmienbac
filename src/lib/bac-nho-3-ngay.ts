@@ -217,6 +217,6 @@ export async function analyzeBacNho3Ngay(days: number = 100, toDate?: string): P
             }
         },
         patterns: allPatterns.slice(0, 1000), // Safety cap
-        todayPredictions
+        todayPredictions: todayPredictions.slice(0, 200) // Huge optimization
     };
 }
