@@ -5,6 +5,9 @@ async function updateLotteryResults(): Promise<void> {
     console.log('Lottery result update job skipped (Live Crawler removed).');
 }
 
+import { exec } from 'child_process';
+import path from 'path';
+
 // Initialize cron jobs
 export function initCronJobs(): void {
     const enableCron = process.env.ENABLE_CRON !== 'false';
@@ -14,7 +17,27 @@ export function initCronJobs(): void {
         return;
     }
 
-    console.log('Cron initialized but no active jobs are configured.');
+    console.log('🚀 Initializing Bạc Nhớ automated tasks...');
+
+    // 1. Warm Cache at 18:45 (after 18:30 draw)
+    cron.schedule('45 18 * * *', () => {
+        console.log('[Cron] 🔄 Starting Scheduled Cache Warming...');
+        exec('npx tsx scripts/warm-bac-nho-stats.ts', (error, stdout, stderr) => {
+            if (error) console.error('[Cron] ❌ Cache warming failed:', error);
+            else console.log('[Cron] ✅ Cache warming completed.');
+        });
+    }, { timezone: "Asia/Ho_Chi_Minh" });
+
+    // 2. Fetch Hội Đồng Bạc Nhớ at 19:00
+    cron.schedule('0 19 * * *', () => {
+        console.log('[Cron] 🧠 Starting Scheduled Hội Đồng Bạc Nhớ calculation...');
+        exec('npx tsx scripts/fetch-bac-nho.ts', (error, stdout, stderr) => {
+            if (error) console.error('[Cron] ❌ Prediction calculation failed:', error);
+            else console.log('[Cron] ✅ Prediction calculation completed.');
+        });
+    }, { timezone: "Asia/Ho_Chi_Minh" });
+
+    console.log('✅ Cron jobs scheduled: 18:45 (Warm) & 19:00 (Predict)');
 }
 
 // Manual trigger for testing
