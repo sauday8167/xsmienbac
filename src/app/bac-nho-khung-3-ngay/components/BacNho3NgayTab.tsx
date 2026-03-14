@@ -56,19 +56,7 @@ export default function BacNho3NgayTab({ }: Props) {
 
     const tripleToKey = (triple: [string, string, string]) => `${triple[0]}-${triple[1]}-${triple[2]}`;
 
-    if (loading) {
-        return (
-            <div className="flex justify-center items-center min-h-[400px]">
-                <div className="spinner"></div>
-            </div>
-        );
-    }
-
-    if (!data) {
-        return <div className="text-center text-lottery-gray-600">Không có dữ liệu</div>;
-    }
-
-    // Optimized processing with useMemo
+    // Optimized processing with useMemo - MUST BE AT TOP LEVEL
     const processedData = useMemo(() => {
         if (!data) return { patterns: [], predictions: [] };
 
@@ -100,6 +88,18 @@ export default function BacNho3NgayTab({ }: Props) {
 
         return { patterns, predictions };
     }, [data, filterRate, viewMode]);
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center min-h-[400px]">
+                <div className="spinner"></div>
+            </div>
+        );
+    }
+
+    if (!data) {
+        return <div className="text-center text-lottery-gray-600">Không có dữ liệu</div>;
+    }
 
     const displayedPredictions = processedData.predictions;
     const filteredPatterns = processedData.patterns;

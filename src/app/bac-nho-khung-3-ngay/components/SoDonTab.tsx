@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import type { BacNhoSoDonData } from '@/types/bac-nho-types';
 
 interface Props {
@@ -51,6 +51,40 @@ export default function SoDonTab({ }: Props) {
         return 'bg-gray-400';
     };
 
+    // Optimized processing with useMemo - MUST BE AT TOP LEVEL
+    const processedData = useMemo(() => {
+        if (!data) return { patterns: [], predictions: [] };
+
+        // Filter patterns
+        const patterns = data.patterns
+            .map(p => ({
+                ...p,
+                followNumbers: p.followNumbers.filter(fn => !filterRate || fn.correlationRate > filterRate)
+            }))
+            .filter(p => p.totalTriggerAppearances > 0 && p.followNumbers.length > 0)
+            .sort((a, b) => b.totalTriggerAppearances - a.totalTriggerAppearances);
+
+        // Filter Predictions
+        const predictions = data.todayPredictions
+            .map(p => ({
+                ...p,
+                predictions: p.predictions
+                    .filter(pred => !filterRate || pred.correlationRate > filterRate)
+                    .sort((a, b) => viewMode === 'percentage' 
+                        ? b.correlationRate - a.correlationRate 
+                        : b.hitCount - a.hitCount
+                    )
+            }))
+            .filter(p => p.predictions.length > 0)
+            .sort((a, b) => {
+                const valA = viewMode === 'percentage' ? (a.predictions[0]?.correlationRate || 0) : (a.predictions[0]?.hitCount || 0);
+                const valB = viewMode === 'percentage' ? (b.predictions[0]?.correlationRate || 0) : (b.predictions[0]?.hitCount || 0);
+                return valB - valA;
+            });
+
+        return { patterns, predictions };
+    }, [data, filterRate, viewMode]);
+
     if (loading) {
         return (
             <div className="flex justify-center items-center min-h-[400px]">
@@ -63,49 +97,8 @@ export default function SoDonTab({ }: Props) {
         return <div className="text-center text-lottery-gray-600">Không có dữ liệu</div>;
     }
 
-    // Filter patterns
-    const filteredPatterns = data.patterns
-        .map(p => ({
-            ...p,
-            followNumbers: p.followNumbers.filter(fn => !filterRate || fn.correlationRate > filterRate)
-        }))
-        .filter(p => p.totalTriggerAppearances > 0 && p.followNumbers.length > 0)
-        .sort((a, b) => b.totalTriggerAppearances - a.totalTriggerAppearances);
-
-    // Sorted by percentage (existing)
-    const filteredTodayPredictions = data.todayPredictions
-        .map(p => ({
-            ...p,
-            predictions: p.predictions
-                .filter(pred => !filterRate || pred.correlationRate > filterRate)
-                .sort((a, b) => b.correlationRate - a.correlationRate)
-        }))
-        .filter(p => p.predictions.length > 0)
-        .sort((a, b) => {
-            const maxA = a.predictions[0]?.correlationRate || 0;
-            const maxB = b.predictions[0]?.correlationRate || 0;
-            return maxB - maxA;
-        });
-
-    // Sorted by hit count (new)
-    const sortedByHitCount = data.todayPredictions
-        .map(p => ({
-            ...p,
-            predictions: p.predictions
-                .filter(pred => !filterRate || pred.correlationRate > filterRate)
-                .sort((a, b) => b.hitCount - a.hitCount)
-        }))
-        .filter(p => p.predictions.length > 0)
-        .sort((a, b) => {
-            const maxHitA = a.predictions[0]?.hitCount || 0;
-            const maxHitB = b.predictions[0]?.hitCount || 0;
-            return maxHitB - maxHitA;
-        });
-
-    // Select which list to display based on viewMode
-    const displayedPredictions = viewMode === 'percentage'
-        ? filteredTodayPredictions
-        : sortedByHitCount;
+    const displayedPredictions = processedData.predictions;
+    const filteredPatterns = processedData.patterns;
 
     return (
         <div className="space-y-6">
@@ -142,7 +135,7 @@ export default function SoDonTab({ }: Props) {
             </div>
 
             {/* Today's Predictions with Toggle */}
-            {(filteredTodayPredictions.length > 0 || sortedByHitCount.length > 0) && (
+            {processedData.predictions.length > 0 && (
                 <div className="bg-gradient-to-br from-yellow-50 to-orange-50 border-l-4 border-orange-500 p-6 rounded-lg">
                     {/* Toggle Buttons */}
                     <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
