@@ -77,21 +77,7 @@ export async function getOrUpdateBacNhoData<T>(
         console.error(`[BacNhoCache] DB query error for ${key}`, dbErr);
     }
 
-    // 3. Fallback to JSON file if DB fails or is empty for this date
-    const filePath = path.join(DATA_DIR, `bac-nho-${key}.json`);
-    if (fs.existsSync(filePath)) {
-        try {
-            const fileContent = fs.readFileSync(filePath, 'utf-8');
-            const cachedJson: CachedData<T> = JSON.parse(fileContent);
-            if ((cachedJson.data as any).overview?.latestDate === dbLatestDate) {
-                return cachedJson.data;
-            }
-        } catch (e) {
-            // Ignore JSON read errors
-        }
-    }
-
-    // 4. Recalculate
+    // 3. Recalculate
     console.log(`[BacNhoCache] 🔄 Recalculating ${key} for ${days} days...`);
     try {
         const newData = await calculateFn(days);
@@ -105,17 +91,10 @@ export async function getOrUpdateBacNhoData<T>(
             [statType, dbLatestDate, JSON.stringify(newData)]
         );
 
-        // Backup to JSON (Optional, good for safety)
-        const cachePayload: CachedData<T> = {
-            lastUpdated: new Date().toISOString(),
-            data: newData
-        };
-        fs.writeFileSync(filePath, JSON.stringify(cachePayload, null, 2));
-
         // Cleanup old DB records
         await cleanupOldRecords(statType);
 
-        console.log(`[BacNhoCache] ✅ Updated ${key} cache in DB and JSON.`);
+        console.log(`[BacNhoCache] ✅ Updated ${key} cache in DB.`);
         return newData;
     } catch (error) {
         console.error(`[BacNhoCache] Calculation failed for ${key}`, error);

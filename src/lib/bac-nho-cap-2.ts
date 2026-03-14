@@ -165,7 +165,7 @@ export async function analyzeBacNhoCap2(days: number = 100, toDate?: string): Pr
     }
 
     // Build followNumbers arrays with correlation rates
-    const allPatterns: BacNhoCap2Pattern[] = [];
+    let allPatterns: BacNhoCap2Pattern[] = [];
 
     patterns.forEach(pattern => {
         // Pruning for performance scale
@@ -187,9 +187,9 @@ export async function analyzeBacNhoCap2(days: number = 100, toDate?: string): Pr
                 });
             });
 
-            // Sort by correlation rate descending
+            // Sort by correlation rate descending and LIMIT to save memory
             followNumbers.sort((a, b) => b.correlationRate - a.correlationRate);
-            pattern.followNumbers = followNumbers;
+            pattern.followNumbers = followNumbers.slice(0, 50);
         }
 
         if (pattern.lastHitDate) {
@@ -199,8 +199,9 @@ export async function analyzeBacNhoCap2(days: number = 100, toDate?: string): Pr
         allPatterns.push(pattern);
     });
 
-    // Sort patterns by total appearances
+    // Sort patterns by total appearances and LIMIT to keep JSON size sane
     allPatterns.sort((a, b) => b.totalTriggerAppearances - a.totalTriggerAppearances);
+    allPatterns = allPatterns.slice(0, 1000); 
 
     // Get yesterday's pairs for today's predictions
     const yesterdayNumbers = Array.from(extractUniqueNumbers(results[results.length - 1]));

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import type { BacNho3NgayData, BacNho3NgayPattern } from '@/types/bac-nho-types';
 
 interface Props {
@@ -68,47 +68,41 @@ export default function BacNho3NgayTab({ }: Props) {
         return <div className="text-center text-lottery-gray-600">Không có dữ liệu</div>;
     }
 
-    // Filter patterns
-    const filteredPatterns = data.patterns
-        .map(p => ({
-            ...p,
-            followNumbers: p.followNumbers.filter(fn => !filterRate || fn.correlationRate >= filterRate)
-        }))
-        .filter(p => p.totalAppearances > 0 && p.followNumbers.length > 0);
+    // Optimized processing with useMemo
+    const processedData = useMemo(() => {
+        if (!data) return { patterns: [], predictions: [] };
 
-    // Sorted by percentage
-    const filteredTodayPredictions = data.todayPredictions
-        .map(p => ({
-            ...p,
-            predictions: p.predictions
-                .filter(pred => !filterRate || pred.correlationRate >= filterRate)
-                .sort((a, b) => b.correlationRate - a.correlationRate)
-        }))
-        .filter(p => p.predictions.length > 0)
-        .sort((a, b) => {
-            const maxA = a.predictions[0]?.correlationRate || 0;
-            const maxB = b.predictions[0]?.correlationRate || 0;
-            return maxB - maxA;
-        });
+        // Filter patterns
+        const patterns = data.patterns
+            .map(p => ({
+                ...p,
+                followNumbers: p.followNumbers.filter(fn => !filterRate || fn.correlationRate >= filterRate)
+            }))
+            .filter(p => p.totalAppearances > 0 && p.followNumbers.length > 0);
 
-    // Sorted by hit count
-    const sortedByHitCount = data.todayPredictions
-        .map(p => ({
-            ...p,
-            predictions: p.predictions
-                .filter(pred => !filterRate || pred.correlationRate >= filterRate)
-                .sort((a, b) => b.hitCount - a.hitCount)
-        }))
-        .filter(p => p.predictions.length > 0)
-        .sort((a, b) => {
-            const maxHitA = a.predictions[0]?.hitCount || 0;
-            const maxHitB = b.predictions[0]?.hitCount || 0;
-            return maxHitB - maxHitA;
-        });
+        // Filter Predictions
+        const predictions = data.todayPredictions
+            .map(p => ({
+                ...p,
+                predictions: p.predictions
+                    .filter(pred => !filterRate || pred.correlationRate >= filterRate)
+                    .sort((a, b) => viewMode === 'percentage' 
+                        ? b.correlationRate - a.correlationRate 
+                        : b.hitCount - a.hitCount
+                    )
+            }))
+            .filter(p => p.predictions.length > 0)
+            .sort((a, b) => {
+                const valA = viewMode === 'percentage' ? (a.predictions[0]?.correlationRate || 0) : (a.predictions[0]?.hitCount || 0);
+                const valB = viewMode === 'percentage' ? (b.predictions[0]?.correlationRate || 0) : (b.predictions[0]?.hitCount || 0);
+                return valB - valA;
+            });
 
-    const displayedPredictions = viewMode === 'percentage'
-        ? filteredTodayPredictions
-        : sortedByHitCount;
+        return { patterns, predictions };
+    }, [data, filterRate, viewMode]);
+
+    const displayedPredictions = processedData.predictions;
+    const filteredPatterns = processedData.patterns;
 
     // Pagination
     const totalPages = Math.ceil(filteredPatterns.length / itemsPerPage);
@@ -154,7 +148,7 @@ export default function BacNho3NgayTab({ }: Props) {
                 <div className="bg-gradient-to-br from-pink-50 to-red-50 border-l-4 border-red-500 p-6 rounded-lg shadow-sm">
                     <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
                         <h2 className="text-2xl font-bold text-red-700">
-                            🔥 Dự Đoán Khung 3 Ngày (Dựa Vào 3 Ngày: Dân, Thân, Tỵ)
+                            🔥 Dự Đoán Khung 3 Ngày (Phân tích ngày: {new Date(data.overview.latestDate).toLocaleDateString('vi-VN')})
                         </h2>
                         <div className="flex gap-2">
                             <button

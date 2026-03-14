@@ -87,19 +87,12 @@ async function calculateAll() {
                 continue;
             }
 
-            // Helper to write file and DB
+            // Helper to write to DB
             const saveStats = async (name: string, content: any) => {
-                // Key logic to match frontend expectations:
-                // 100 days -> 'so-don'
-                // other days -> 'so-don-180'
                 const nameSuffix = days === 100 ? '' : `-${days}`;
                 const statType = `bac-nho-${name}${nameSuffix}`;
                 
-                // 1. Save to JSON for backward compatibility
-                const filePath = path.join(dataDir, `${statType}.json`);
-                fs.writeFileSync(filePath, JSON.stringify({ lastUpdated: new Date().toISOString(), data: content }, null, 2));
-                
-                // 2. Save to Database
+                // Save to Database
                 await query(
                     `INSERT INTO statistics_cache (stat_type, stat_key, stat_value, expires_at, updated_at) 
                      VALUES (?, ?, ?, datetime('now', '+30 days'), CURRENT_TIMESTAMP)
@@ -108,10 +101,10 @@ async function calculateAll() {
                     [statType, dbLatestDate, JSON.stringify(content)]
                 );
 
-                // 3. Cleanup old records in DB
+                // Cleanup old records in DB
                 await cleanupOldRecords(statType);
 
-                console.log(`[${days}] Saved ${name} to DB and JSON`);
+                console.log(`[${days}] Saved ${name} to DB`);
             };
 
             await saveStats('standard', standard);

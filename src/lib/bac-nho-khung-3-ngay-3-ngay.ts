@@ -182,7 +182,7 @@ export async function analyzeBacNho3NgayKhung3Ngay(days: number = 100, toDate?: 
         }
 
         patternsMap.forEach((pattern, key) => {
-            if (pattern.totalAppearances < 1) return;
+            if (pattern.totalAppearances < 3) return; // Ignore rare patterns
             
             const followTracker = followMap.get(key)!;
             pattern.followNumbers = Array.from(followTracker.entries())
@@ -191,9 +191,9 @@ export async function analyzeBacNho3NgayKhung3Ngay(days: number = 100, toDate?: 
                     hitCount,
                     correlationRate: (hitCount / pattern.totalAppearances) * 100
                 }))
-                .filter(p => p.correlationRate >= 60) 
+                .filter(p => p.correlationRate >= 75) // High threshold for database storage
                 .sort((a, b) => b.correlationRate - a.correlationRate)
-                .slice(0, 50);
+                .slice(0, 30); // Reduced slices
 
             if (pattern.followNumbers.length > 0) {
                 if (pattern.lastHitDate) {
@@ -203,7 +203,11 @@ export async function analyzeBacNho3NgayKhung3Ngay(days: number = 100, toDate?: 
             }
         });
 
-        allPatterns.sort((a, b) => b.totalAppearances - a.totalAppearances);
+        allPatterns.sort((a, b) => {
+            const maxRateA = a.followNumbers[0]?.correlationRate || 0;
+            const maxRateB = b.followNumbers[0]?.correlationRate || 0;
+            return maxRateB - maxRateA;
+        });
     }
 
     return {
@@ -216,7 +220,7 @@ export async function analyzeBacNho3NgayKhung3Ngay(days: number = 100, toDate?: 
                 to: latestDate
             }
         },
-        patterns: allPatterns.slice(0, 500), 
-        todayPredictions: todayPredictions.slice(0, 200) // Optimization: Limit predictions
+        patterns: allPatterns.slice(0, 300), // Reduced safety cap
+        todayPredictions: todayPredictions.slice(0, 100) // Optimization: Limit predictions
     };
 }

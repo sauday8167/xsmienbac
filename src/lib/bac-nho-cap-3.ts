@@ -200,7 +200,7 @@ export async function analyzeBacNhoCap3(days: number = 100, toDate?: string): Pr
 
     // Sort all patterns by total appearances and LIMIT to keep JSON size sane
     allPatterns.sort((a, b) => b.totalTriggerAppearances - a.totalTriggerAppearances);
-    allPatterns = allPatterns.slice(0, 2000); // 2000 patterns is plenty for a UI
+    allPatterns = allPatterns.slice(0, 1000); 
 
     // Get yesterday's triples for today's predictions
     const yesterdayNumbers = Array.from(extractUniqueNumbers(results[results.length - 1]));
