@@ -48,76 +48,48 @@ async function calculateAll() {
             console.log(`\n>>> ANALYZING RANGE: ${days} DAYS <<<`);
             const rangeStartTime = Date.now();
 
-            console.log(`[${days}] 1. Standard...`);
-            const standard = await analyzeBacNho(days);
-
-            console.log(`[${days}] 2. 2 Ngay...`);
-            const haiNgay = await analyzeBacNho2Ngay(days);
-
-            console.log(`[${days}] 3. 3 Ngay...`);
-            const baNgay = await analyzeBacNho3Ngay(days);
-
-            console.log(`[${days}] 4. So Don...`);
-            const soDon = await analyzeBacNhoSoDon(days);
-
-            console.log(`[${days}] 5. Cap 2...`);
-            const cap2 = await analyzeBacNhoCap2(days);
-
-            console.log(`[${days}] 6. Cap 3...`);
-            const cap3 = await analyzeBacNhoCap3(days);
-
-            console.log(`[${days}] 7. Khung 3 Ngay - 2 Ngay...`);
-            const k3n2n = await analyzeBacNho2NgayKhung3Ngay(days);
-
-            console.log(`[${days}] 8. Khung 3 Ngay - 3 Ngay...`);
-            const k3n3n = await analyzeBacNho3NgayKhung3Ngay(days);
-
-            console.log(`[${days}] 9. Khung 3 Ngay - Cap 2...`);
-            const k3nCap2 = await analyzeBacNhoCap2Khung3Ngay(days);
-
-            console.log(`[${days}] 10. Khung 3 Ngay - Cap 3...`);
-            const k3nCap3 = await analyzeBacNhoCap3Khung3Ngay(days);
-
-            console.log(`[${days}] 11. Khung 3 Ngay - So Don...`);
-            const k3nSoDon = await analyzeBacNhoSoDonKhung3Ngay(days);
-
-            const dbLatestDate = (standard as any).overview?.latestDate;
+            // Helper to determine latest date from a standard sample
+            const sample = await analyzeBacNho(30);
+            const dbLatestDate = (sample as any).overview?.latestDate;
             if (!dbLatestDate) {
                 console.error(`[${days}] Could not determine latest date.`);
                 continue;
             }
 
-            // Helper to write to DB
-            const saveStats = async (name: string, content: any) => {
+            // Function to run analysis, save, and CLEAR memory immediately
+            const runAndSave = async (label: string, name: string, analyzer: (d: number) => Promise<any>) => {
+                console.log(`[${days}] ${label}...`);
+                let result: any = await analyzer(days);
+                
                 const nameSuffix = days === 100 ? '' : `-${days}`;
                 const statType = `bac-nho-${name}${nameSuffix}`;
                 
-                // Save to Database
                 await query(
                     `INSERT INTO statistics_cache (stat_type, stat_key, stat_value, expires_at, updated_at) 
                      VALUES (?, ?, ?, datetime('now', '+30 days'), CURRENT_TIMESTAMP)
                      ON CONFLICT(stat_type, stat_key) DO UPDATE SET
                      stat_value=excluded.stat_value, updated_at=CURRENT_TIMESTAMP`,
-                    [statType, dbLatestDate, JSON.stringify(content)]
+                    [statType, dbLatestDate, JSON.stringify(result)]
                 );
-
-                // Cleanup old records in DB
                 await cleanupOldRecords(statType);
-
                 console.log(`[${days}] Saved ${name} to DB`);
+                
+                // Explicitly clear memory
+                result = null;
+                if (global.gc) global.gc();
             };
 
-            await saveStats('standard', standard);
-            await saveStats('2-ngay', haiNgay);
-            await saveStats('3-ngay', baNgay);
-            await saveStats('so-don', soDon);
-            await saveStats('cap-2', cap2);
-            await saveStats('cap-3', cap3);
-            await saveStats('khung-3-ngay-2-ngay', k3n2n);
-            await saveStats('khung-3-ngay-3-ngay', k3n3n);
-            await saveStats('khung-3-ngay-cap-2', k3nCap2);
-            await saveStats('khung-3-ngay-cap-3', k3nCap3);
-            await saveStats('khung-3-ngay-so-don', k3nSoDon);
+            await runAndSave('1. Standard', 'standard', analyzeBacNho);
+            await runAndSave('2. 2 Ngay', '2-ngay', analyzeBacNho2Ngay);
+            await runAndSave('3. 3 Ngay', '3-ngay', analyzeBacNho3Ngay);
+            await runAndSave('4. So Don', 'so-don', analyzeBacNhoSoDon);
+            await runAndSave('5. Cap 2', 'cap-2', analyzeBacNhoCap2);
+            await runAndSave('6. Cap 3', 'cap-3', analyzeBacNhoCap3);
+            await runAndSave('7. Khung 3 Ngay - 2 Ngay', 'khung-3-ngay-2-ngay', analyzeBacNho2NgayKhung3Ngay);
+            await runAndSave('8. Khung 3 Ngay - 3 Ngay', 'khung-3-ngay-3-ngay', analyzeBacNho3NgayKhung3Ngay);
+            await runAndSave('9. Khung 3 Ngay - Cap 2', 'khung-3-ngay-cap-2', analyzeBacNhoCap2Khung3Ngay);
+            await runAndSave('10. Khung 3 Ngay - Cap 3', 'khung-3-ngay-cap-3', analyzeBacNhoCap3Khung3Ngay);
+            await runAndSave('11. Khung 3 Ngay - So Don', 'khung-3-ngay-so-don', analyzeBacNhoSoDonKhung3Ngay);
 
             console.log(`[${days}] Range completed in ${(Date.now() - rangeStartTime) / 1000}s`);
         }

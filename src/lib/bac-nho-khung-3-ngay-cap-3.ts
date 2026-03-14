@@ -75,7 +75,7 @@ export async function analyzeBacNhoCap3Khung3Ngay(days: number = 100, toDate?: s
     const oldestDate = results[0].draw_date;
     const patterns = new Map<string, BacNhoCap3Pattern>();
     const followMap = new Map<string, Uint16Array>();
-    const MAX_DISCOVERY_DAYS = 200;
+    const MAX_DISCOVERY_DAYS = 50;
     const discoveryLimit = Math.min(results.length, MAX_DISCOVERY_DAYS);
     const discoveryResults = results.slice(-discoveryLimit);
 

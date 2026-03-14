@@ -27,7 +27,7 @@ function daysBetween(date1: string, date2: string): number {
  * Logic: When A (D-2), B (D-1), C (D) appear, what numbers appear in the 3-day frame (D+1, D+2, D+3)?
  */
 export async function analyzeBacNho3NgayKhung3Ngay(days: number = 100, toDate?: string): Promise<BacNho3NgayData> {
-    const MAX_DISCOVERY_DAYS = 200; 
+    const MAX_DISCOVERY_DAYS = 50; 
     
     // Get results + 10 days buffer for frame
     let queryStr = 'SELECT * FROM xsmb_results ';
