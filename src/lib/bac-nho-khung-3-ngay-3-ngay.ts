@@ -135,8 +135,8 @@ export async function analyzeBacNho3NgayKhung3Ngay(days: number = 100, toDate?: 
 
     // --- PHASE 2: Discovery for All Patterns (EXTREMELY Limited to prevent OOM) ---
     const allPatterns: BacNho3NgayPattern[] = [];
-    const DISCOVERY_LIMIT = 40; 
-    const discoveryResults = results.slice(-(DISCOVERY_LIMIT + 5)); 
+    const discoveryLimit = Math.min(results.length, MAX_DISCOVERY_DAYS);
+    const discoveryResults = results.slice(-discoveryLimit);
     
     if (discoveryResults.length >= 6) {
         const patternsMap = new Map<string, BacNho3NgayPattern>();

@@ -60,41 +60,36 @@ export async function analyzeBacNho2NgayKhung3Ngay(days: number = 100, toDate?: 
     const latestDate = results[results.length - 1].draw_date;
     const oldestDate = results[0].draw_date;
 
-    // Map to store patterns: pairKey -> pattern data
     const patterns = new Map<string, BacNho2NgayPattern>();
-    // Map to track follow numbers for each pair
     const followMap = new Map<string, Map<string, number>>();
+    let allPatterns: BacNho2NgayPattern[] = [];
+    const MAX_DISCOVERY_DAYS = 200;
+    const discoveryLimit = Math.min(results.length, MAX_DISCOVERY_DAYS);
+    const discoveryResults = results.slice(-discoveryLimit);
 
     // Analyze consecutive days (i, i+1, i+2, i+3, i+4)
-    // We need i+4 to exist for full frame, so we iterate up to length - 4
-    for (let i = 0; i < results.length - 4; i++) {
-        const dayI = results[i];      // Day with A
-        const dayI1 = results[i + 1];  // Day with B
+    for (let i = 0; i < discoveryResults.length - 4; i++) {
+        const dayI = discoveryResults[i];
+        const dayI1 = discoveryResults[i + 1];
 
-        // Frame: days i+2, i+3, i+4
         const frameDays: LotteryResultRaw[] = [];
-        if (i + 2 < results.length) frameDays.push(results[i + 2]);
-        if (i + 3 < results.length) frameDays.push(results[i + 3]);
-        if (i + 4 < results.length) frameDays.push(results[i + 4]);
+        if (i + 2 < discoveryResults.length) frameDays.push(discoveryResults[i + 2]);
+        if (i + 3 < discoveryResults.length) frameDays.push(discoveryResults[i + 3]);
+        if (i + 4 < discoveryResults.length) frameDays.push(discoveryResults[i + 4]);
 
         if (frameDays.length === 0) continue;
 
         const numbersI = Array.from(extractUniqueLotoNumbers(dayI));
         const numbersI1 = Array.from(extractUniqueLotoNumbers(dayI1));
 
-        // Collect all unique numbers from the frame
         const frameNumbers = new Set<string>();
-        frameDays.forEach(fd => {
-            extractUniqueLotoNumbers(fd).forEach(n => frameNumbers.add(n));
-        });
+        frameDays.forEach(fd => extractUniqueLotoNumbers(fd).forEach(n => frameNumbers.add(n)));
 
-        // Create all AB pairs (A from day i, B from day i+1)
         for (const numA of numbersI) {
             for (const numB of numbersI1) {
                 const pair: [string, string] = [numA, numB];
                 const pairKey = pairToKey(pair);
 
-                // Initialize pattern if not exists
                 if (!patterns.has(pairKey)) {
                     patterns.set(pairKey, {
                         triggerPair: pair,
@@ -110,7 +105,6 @@ export async function analyzeBacNho2NgayKhung3Ngay(days: number = 100, toDate?: 
                 const pattern = patterns.get(pairKey)!;
                 pattern.totalAppearances++;
 
-                // Track which numbers appear in the frame (i+2 to i+4)
                 const hitNumbers = Array.from(frameNumbers);
                 const followTracker = followMap.get(pairKey)!;
 
@@ -118,17 +112,15 @@ export async function analyzeBacNho2NgayKhung3Ngay(days: number = 100, toDate?: 
                     followTracker.set(followNumber, (followTracker.get(followNumber) || 0) + 1);
                 });
 
-                // Record this occurrence
                 if (hitNumbers.length > 0) {
-                    pattern.lastHitDate = frameDays[0].draw_date; // Use first frame day as reference
+                    pattern.lastHitDate = frameDays[0].draw_date;
                     pattern.recentHits.push({
                         dayDMinus1: dayI.draw_date,
                         dayD: dayI1.draw_date,
-                        dayDPlus1: frameDays[0].draw_date, // Reference to frame start
-                        hitNumbers: hitNumbers.slice(0, 20) // Limit to reduce memory
+                        dayDPlus1: frameDays[0].draw_date,
+                        hitNumbers: hitNumbers.slice(0, 20)
                     });
 
-                    // Keep only last 10 hits
                     if (pattern.recentHits.length > 10) {
                         pattern.recentHits.shift();
                     }
@@ -138,7 +130,6 @@ export async function analyzeBacNho2NgayKhung3Ngay(days: number = 100, toDate?: 
     }
 
     // Build followNumbers arrays with correlation rates
-    let allPatterns: BacNho2NgayPattern[] = [];
 
     // Filter patterns below threshold before heavy calculation
     const relevantPatterns = Array.from(patterns.values()).filter(p => p.totalAppearances >= minAppearances);
@@ -152,23 +143,20 @@ export async function analyzeBacNho2NgayKhung3Ngay(days: number = 100, toDate?: 
 
             followTracker.forEach((hitCount, number) => {
                 const correlationRate = (hitCount / pattern.totalAppearances) * 100;
-                followNumbers.push({
-                    number,
-                    hitCount,
-                    correlationRate
-                });
+                followNumbers.push({ number, hitCount, correlationRate });
             });
 
-            // Sort by correlation rate descending and limit to top 50
             followNumbers.sort((a, b) => b.correlationRate - a.correlationRate);
-            pattern.followNumbers = followNumbers.slice(0, 50);
+            pattern.followNumbers = followNumbers.filter(f => f.correlationRate >= 75).slice(0, 30);
         }
 
         if (pattern.lastHitDate) {
             pattern.daysSinceLastHit = daysBetween(pattern.lastHitDate, latestDate);
         }
-
-        allPatterns.push(pattern);
+        
+        if (pattern.followNumbers.length > 0) {
+            allPatterns.push(pattern);
+        }
     });
 
     // Sort by total appearances and limit to 2000 patterns
@@ -184,34 +172,56 @@ export async function analyzeBacNho2NgayKhung3Ngay(days: number = 100, toDate?: 
         const numbersD = Array.from(extractUniqueLotoNumbers(dayD));
 
         const todayPredictions: BacNho2NgayData['todayPredictions'] = [];
+        const yesterdayPairsSet = new Set(numbersDMinus1.flatMap(a => numbersD.map(b => `${a}-${b}`)));
+        const todayPatternsMap = new Map<string, { pair: [string, string], total: number, follows: Map<string, number> }>();
 
-        // Create all pairs from (D-1, D)
-        for (const numA of numbersDMinus1) {
-            for (const numB of numbersD) {
-                const pair: [string, string] = [numA, numB];
-                const pairKey = pairToKey(pair);
-                const pattern = patterns.get(pairKey);
+        // Scan FULL history ONLY for patterns matching yesterday's trigger
+        for (let i = 0; i < results.length - 4; i++) {
+            const d0 = extractUniqueLotoNumbers(results[i]);
+            const d1 = extractUniqueLotoNumbers(results[i+1]);
+            
+            const frameNumbers = new Set<string>();
+            [results[i+2], results[i+3], results[i+4]].forEach(res => extractUniqueLotoNumbers(res).forEach(n => frameNumbers.add(n)));
 
-                if (pattern && pattern.followNumbers.length > 0) {
-                    todayPredictions.push({
-                        yesterdayPair: pair,
-                        predictions: pattern.followNumbers.slice(0, 10).map(fn => ({
-                            number: fn.number,
-                            correlationRate: fn.correlationRate,
-                            hitCount: fn.hitCount,
-                            totalAppearances: pattern.totalAppearances
-                        }))
-                    });
+            const match0 = Array.from(d0).filter(n => numbersDMinus1.includes(n));
+            const match1 = Array.from(d1).filter(n => numbersD.includes(n));
+
+            if (match0.length > 0 && match1.length > 0) {
+                for (const a of match0) {
+                    for (const b of match1) {
+                        const key = `${a}-${b}`;
+                        if (!todayPatternsMap.has(key)) {
+                            todayPatternsMap.set(key, { pair: [a, b], total: 0, follows: new Map() });
+                        }
+                        const entry = todayPatternsMap.get(key)!;
+                        entry.total++;
+                        frameNumbers.forEach(fn => entry.follows.set(fn, (entry.follows.get(fn) || 0) + 1));
+                    }
                 }
             }
         }
 
-        // Sort predictions by highest correlation rate
-        todayPredictions.sort((a, b) => {
-            const maxA = a.predictions[0]?.correlationRate || 0;
-            const maxB = b.predictions[0]?.correlationRate || 0;
-            return maxB - maxA;
+        todayPatternsMap.forEach(entry => {
+            const preds = Array.from(entry.follows.entries())
+                .map(([number, hitCount]) => ({
+                    number,
+                    hitCount,
+                    correlationRate: (hitCount / entry.total) * 100,
+                    totalAppearances: entry.total
+                }))
+                .filter(p => p.correlationRate >= 50)
+                .sort((a, b) => b.correlationRate - a.correlationRate)
+                .slice(0, 10);
+
+            if (preds.length > 0) {
+                todayPredictions.push({
+                    yesterdayPair: entry.pair,
+                    predictions: preds
+                });
+            }
         });
+
+        todayPredictions.sort((a, b) => (b.predictions[0]?.correlationRate || 0) - (a.predictions[0]?.correlationRate || 0));
 
         return {
             overview: {

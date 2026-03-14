@@ -92,36 +92,33 @@ export async function analyzeBacNhoSoDonKhung3Ngay(days: number = 100, toDate?: 
     // For each `i` (Day D), we look ahead up to 3 days (D+1, D+2, D+3).
     // If D+1 exists, check. If D+2 exists, check.
 
-    for (let i = 0; i < results.length - 1; i++) {
-        const dayD = results[i];
+    const MAX_DISCOVERY_DAYS = 200;
+    const discoveryLimit = Math.min(results.length, MAX_DISCOVERY_DAYS);
+    const discoveryResults = results.slice(-discoveryLimit);
 
-        // Days to check in the frame
+    for (let i = 0; i < discoveryResults.length - 1; i++) {
+        const dayD = discoveryResults[i];
+
         const frameDays: LotteryResultRaw[] = [];
-        if (i + 1 < results.length) frameDays.push(results[i + 1]);
-        if (i + 2 < results.length) frameDays.push(results[i + 2]);
-        if (i + 3 < results.length) frameDays.push(results[i + 3]);
+        if (i + 1 < discoveryResults.length) frameDays.push(discoveryResults[i + 1]);
+        if (i + 2 < discoveryResults.length) frameDays.push(discoveryResults[i + 2]);
+        if (i + 3 < discoveryResults.length) frameDays.push(discoveryResults[i + 3]);
 
         if (frameDays.length === 0) continue;
 
         const numbersD = extractUniqueNumbers(dayD);
 
-        // Union of all numbers appearing in the next 1-3 days
         const frameNumbers = new Set<string>();
         frameDays.forEach(fd => {
             extractUniqueNumbers(fd).forEach(n => frameNumbers.add(n));
         });
 
-        // For each trigger number on day D
         numbersD.forEach(triggerNumber => {
             const pattern = patterns.get(triggerNumber);
             if (!pattern) return;
 
-            // Only count as a "trigger case" if we have at least 1 day of future data to check?
-            // Or should we always count?
-            // Let's count it.
             pattern.totalTriggerAppearances++;
 
-            // Track which numbers appear in the frame (D+1...D+3)
             const hitNumbers: string[] = [];
             frameNumbers.forEach(followNumber => {
                 const followTracker = followMap.get(triggerNumber);
@@ -131,20 +128,14 @@ export async function analyzeBacNhoSoDonKhung3Ngay(days: number = 100, toDate?: 
                 hitNumbers.push(followNumber);
             });
 
-            // Record this occurrence if there were hits
             if (hitNumbers.length > 0) {
-                // Approximate last hit date as the first day of the frame or the last day? 
-                // Let's use the first day of frame (D+1) for reference
                 pattern.lastHitDate = frameDays[0].draw_date;
-
-                // We'll store a simplified hit record
                 pattern.recentHits.push({
                     triggerDate: dayD.draw_date,
-                    hitDate: frameDays[0].draw_date, // Just marking the start of frame
+                    hitDate: frameDays[0].draw_date,
                     hitNumbers
                 });
 
-                // Keep only last 10 hits
                 if (pattern.recentHits.length > 10) {
                     pattern.recentHits.shift();
                 }
@@ -171,33 +162,59 @@ export async function analyzeBacNhoSoDonKhung3Ngay(days: number = 100, toDate?: 
 
             // Sort by correlation rate descending
             followNumbers.sort((a, b) => b.correlationRate - a.correlationRate);
-            pattern.followNumbers = followNumbers;
+            pattern.followNumbers = followNumbers.filter(f => f.correlationRate >= 75).slice(0, 30);
         }
 
         if (pattern.lastHitDate) {
             pattern.daysSinceLastHit = daysBetween(pattern.lastHitDate, latestDate);
         }
 
-        allPatterns.push(pattern);
+        if (pattern.followNumbers.length > 0) {
+            allPatterns.push(pattern);
+        }
     });
 
     // Get yesterday's numbers for today's predictions
     // If today is T, we predict for T, T+1, T+2 based on T-1 (Yesterday).
     // Actually, "Bạc Nhớ" usually implies: "Today is Day T, results from T-1 triggers T".
+    // PHASE 2: Today's Predictions (Scan FULL history only for yesterday's numbers)
     const yesterdayNumbers = extractUniqueNumbers(results[results.length - 1]);
     const todayPredictions: BacNhoSoDonData['todayPredictions'] = [];
 
-    yesterdayNumbers.forEach(num => {
-        const pattern = patterns.get(num);
-        if (pattern && pattern.followNumbers.length > 0) {
+    const todayPatternsMap = new Map<string, { total: number, follows: Map<string, number> }>();
+    
+    for (let i = 0; i < results.length - 4; i++) {
+        const d0 = extractUniqueNumbers(results[i]);
+        const frameNumbers = new Set<string>();
+        [results[i+1], results[i+2], results[i+3]].forEach(res => extractUniqueNumbers(res).forEach(n => frameNumbers.add(n)));
+
+        const match = Array.from(d0).filter(n => yesterdayNumbers.has(n));
+        match.forEach(num => {
+            if (!todayPatternsMap.has(num)) {
+                todayPatternsMap.set(num, { total: 0, follows: new Map() });
+            }
+            const entry = todayPatternsMap.get(num)!;
+            entry.total++;
+            frameNumbers.forEach(fn => entry.follows.set(fn, (entry.follows.get(fn) || 0) + 1));
+        });
+    }
+
+    todayPatternsMap.forEach((entry, num) => {
+        const preds = Array.from(entry.follows.entries())
+            .map(([number, hitCount]) => ({
+                number,
+                hitCount,
+                correlationRate: (hitCount / entry.total) * 100,
+                totalAppearances: entry.total
+            }))
+            .filter(p => p.correlationRate >= 50)
+            .sort((a, b) => b.correlationRate - a.correlationRate)
+            .slice(0, 10);
+
+        if (preds.length > 0) {
             todayPredictions.push({
                 yesterdayNumber: num,
-                predictions: pattern.followNumbers.slice(0, 10).map(fn => ({
-                    number: fn.number,
-                    correlationRate: fn.correlationRate,
-                    hitCount: fn.hitCount,
-                    totalAppearances: pattern.totalTriggerAppearances
-                }))
+                predictions: preds
             });
         }
     });

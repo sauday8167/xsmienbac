@@ -71,14 +71,18 @@ export async function analyzeBacNhoCap2Khung3Ngay(days: number = 100, toDate?: s
     const oldestDate = results[0].draw_date;
     const patterns = new Map<string, BacNhoCap2Pattern>();
     const followMap = new Map<string, Map<string, number>>();
+    const allPatterns: BacNhoCap2Pattern[] = [];
+    const MAX_DISCOVERY_DAYS = 200;
+    const discoveryLimit = Math.min(results.length, MAX_DISCOVERY_DAYS);
+    const discoveryResults = results.slice(-discoveryLimit);
 
-    for (let i = 0; i < results.length - 1; i++) {
-        const dayD = results[i];
+    for (let i = 0; i < discoveryResults.length - 3; i++) {
+        const dayD = discoveryResults[i];
 
         const frameDays: LotteryResultRaw[] = [];
-        if (i + 1 < results.length) frameDays.push(results[i + 1]);
-        if (i + 2 < results.length) frameDays.push(results[i + 2]);
-        if (i + 3 < results.length) frameDays.push(results[i + 3]);
+        if (i + 1 < discoveryResults.length) frameDays.push(discoveryResults[i + 1]);
+        if (i + 2 < discoveryResults.length) frameDays.push(discoveryResults[i + 2]);
+        if (i + 3 < discoveryResults.length) frameDays.push(discoveryResults[i + 3]);
 
         if (frameDays.length === 0) continue;
 
@@ -124,10 +128,9 @@ export async function analyzeBacNhoCap2Khung3Ngay(days: number = 100, toDate?: s
         });
     }
 
-    const allPatterns: BacNhoCap2Pattern[] = [];
     patterns.forEach(pattern => {
         // Pruning for performance
-        if (pattern.totalTriggerAppearances < minAppearances) {
+        if (pattern.totalTriggerAppearances < 3) {
             return;
         }
 
@@ -140,30 +143,61 @@ export async function analyzeBacNhoCap2Khung3Ngay(days: number = 100, toDate?: s
                 followNumbers.push({ number, hitCount, correlationRate });
             });
             followNumbers.sort((a, b) => b.correlationRate - a.correlationRate);
-            pattern.followNumbers = followNumbers;
+            pattern.followNumbers = followNumbers.filter(f => f.correlationRate >= 75).slice(0, 30);
         }
         if (pattern.lastHitDate) pattern.daysSinceLastHit = daysBetween(pattern.lastHitDate, latestDate);
-        allPatterns.push(pattern);
+        if (pattern.followNumbers.length > 0) {
+            allPatterns.push(pattern);
+        }
     });
 
-    allPatterns.sort((a, b) => b.totalTriggerAppearances - a.totalTriggerAppearances);
+    allPatterns.sort((a, b) => (b.followNumbers[0]?.correlationRate || 0) - (a.followNumbers[0]?.correlationRate || 0));
 
+    // --- PHASE 2: Today's Predictions (Scan FULL history only for relevant pairs) ---
     const yesterdayNumbers = Array.from(extractUniqueNumbers(results[results.length - 1]));
     const yesterdayPairs = generatePairs(yesterdayNumbers);
     const todayPredictions: BacNhoCap2Data['todayPredictions'] = [];
 
-    yesterdayPairs.forEach(pair => {
-        const pairKey = pairToKey(pair);
-        const pattern = patterns.get(pairKey);
-        if (pattern && pattern.followNumbers.length > 0) {
+    const yesterdayPairsSet = new Set(yesterdayPairs.map(p => pairToKey(p)));
+    const todayPatternsMap = new Map<string, { pair: [string, string], total: number, follows: Map<string, number> }>();
+
+    for (let i = 0; i < results.length - 4; i++) {
+        const d = results[i];
+        const nums = Array.from(extractUniqueNumbers(d));
+        const pairs = generatePairs(nums);
+        
+        const frameNumbers = new Set<string>();
+        [results[i+1], results[i+2], results[i+3]].forEach(res => extractUniqueNumbers(res).forEach(n => frameNumbers.add(n)));
+
+        pairs.forEach(p => {
+            const key = pairToKey(p);
+            if (yesterdayPairsSet.has(key)) {
+                if (!todayPatternsMap.has(key)) {
+                    todayPatternsMap.set(key, { pair: p, total: 0, follows: new Map<string, number>() });
+                }
+                const entry = todayPatternsMap.get(key)!;
+                entry.total++;
+                frameNumbers.forEach(fn => entry.follows.set(fn, (entry.follows.get(fn) || 0) + 1));
+            }
+        });
+    }
+
+    todayPatternsMap.forEach(entry => {
+        const preds = Array.from(entry.follows.entries())
+            .map(([number, hitCount]) => ({
+                number,
+                hitCount,
+                correlationRate: (hitCount / entry.total) * 100,
+                totalAppearances: entry.total
+            }))
+            .filter(p => p.correlationRate >= 50)
+            .sort((a, b) => b.correlationRate - a.correlationRate)
+            .slice(0, 10);
+
+        if (preds.length > 0) {
             todayPredictions.push({
-                yesterdayPair: pair,
-                predictions: pattern.followNumbers.slice(0, 10).map(fn => ({
-                    number: fn.number,
-                    correlationRate: fn.correlationRate,
-                    hitCount: fn.hitCount,
-                    totalAppearances: pattern.totalTriggerAppearances
-                }))
+                yesterdayPair: entry.pair,
+                predictions: preds
             });
         }
     });
@@ -177,7 +211,7 @@ export async function analyzeBacNhoCap2Khung3Ngay(days: number = 100, toDate?: s
             latestDate,
             dataRange: { from: oldestDate, to: latestDate }
         },
-        patterns: allPatterns.slice(0, 1000),
-        todayPredictions: todayPredictions.slice(0, 200)
+        patterns: allPatterns.slice(0, 500),
+        todayPredictions: todayPredictions.slice(0, 100)
     };
 }
