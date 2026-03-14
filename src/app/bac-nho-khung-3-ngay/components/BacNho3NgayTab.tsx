@@ -12,9 +12,10 @@ export default function BacNho3NgayTab({ }: Props) {
     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
     const [filterRate, setFilterRate] = useState<number>(60);
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 20;
     const [selectedDays, setSelectedDays] = useState<number>(100);
     const [viewMode, setViewMode] = useState<'percentage' | 'hitCount'>('percentage');
+
+    const itemsPerPage = 20;
 
     useEffect(() => {
         fetchData();
@@ -28,9 +29,12 @@ export default function BacNho3NgayTab({ }: Props) {
 
             if (result.success && result.data) {
                 setData(result.data);
+            } else {
+                setData(null); // Explicitly set to null if no data or not successful
             }
         } catch (error) {
             console.error('Error fetching Bạc Nhớ 3 Ngày Khung:', error);
+            setData(null); // Set to null on error
         } finally {
             setLoading(false);
         }
@@ -56,9 +60,9 @@ export default function BacNho3NgayTab({ }: Props) {
 
     const tripleToKey = (triple: [string, string, string]) => `${triple[0]}-${triple[1]}-${triple[2]}`;
 
-    // Optimized processing with useMemo - MUST BE AT TOP LEVEL
+    // Optimized processing with useMemo - ALWAYS CALLED AT TOP LEVEL
     const processedData = useMemo(() => {
-        if (!data) return { patterns: [], predictions: [] };
+        if (!data) return { patterns: [], predictions: [], overview: null };
 
         // Filter patterns
         const patterns = data.patterns
@@ -74,8 +78,8 @@ export default function BacNho3NgayTab({ }: Props) {
                 ...p,
                 predictions: p.predictions
                     .filter(pred => !filterRate || pred.correlationRate >= filterRate)
-                    .sort((a, b) => viewMode === 'percentage' 
-                        ? b.correlationRate - a.correlationRate 
+                    .sort((a, b) => viewMode === 'percentage'
+                        ? b.correlationRate - a.correlationRate
                         : b.hitCount - a.hitCount
                     )
             }))
@@ -86,329 +90,337 @@ export default function BacNho3NgayTab({ }: Props) {
                 return valB - valA;
             });
 
-        return { patterns, predictions };
+        return { patterns, predictions, overview: data.overview };
     }, [data, filterRate, viewMode]);
 
-    if (loading) {
-        return (
-            <div className="flex justify-center items-center min-h-[400px]">
-                <div className="spinner"></div>
-            </div>
-        );
-    }
-
-    if (!data) {
-        return <div className="text-center text-lottery-gray-600">Không có dữ liệu</div>;
-    }
-
+    // Derived states (NOT HOOKS)
     const displayedPredictions = processedData.predictions;
     const filteredPatterns = processedData.patterns;
-
-    // Pagination
     const totalPages = Math.ceil(filteredPatterns.length / itemsPerPage);
     const startIdx = (currentPage - 1) * itemsPerPage;
     const paginatedPatterns = filteredPatterns.slice(startIdx, startIdx + itemsPerPage);
 
+    // Main render
     return (
         <div className="space-y-6">
-            {/* Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-gradient-to-br from-green-50 to-green-100 border-l-4 border-green-600 p-4 rounded-lg">
-                    <div className="text-sm text-lottery-gray-600 mb-1">Ngày phân tích mới nhất</div>
-                    <div className="text-2xl font-bold text-green-600">
-                        {new Date(data.overview.latestDate).toLocaleDateString('vi-VN')}
-                    </div>
-                </div>
-                <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 border-l-4 border-indigo-600 p-4 rounded-lg">
-                    <label className="text-sm text-lottery-gray-600 mb-2 block">Phân tích dữ liệu</label>
-                    <select
-                        value={selectedDays}
-                        onChange={(e) => setSelectedDays(Number(e.target.value))}
-                        className="input w-full font-bold text-indigo-600"
-                    >
-                        <option value={100}>100 Ngày</option>
-                        <option value={180}>180 Ngày</option>
-                        <option value={365}>365 Ngày</option>
-                        <option value={730}>730 Ngày</option>
-                        <option value={1000}>1000 Ngày</option>
-                    </select>
-                </div>
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 border-l-4 border-blue-600 p-4 rounded-lg">
-                    <div className="text-sm text-lottery-gray-600 mb-1">Số ngày phân tích</div>
-                    <div className="text-2xl font-bold text-blue-600">{data.overview.analyzedDays} ngày</div>
-                </div>
-                <div className="bg-gradient-to-br from-purple-50 to-purple-100 border-l-4 border-purple-600 p-4 rounded-lg">
-                    <div className="text-sm text-lottery-gray-600 mb-1">Tổng patterns</div>
-                    <div className="text-2xl font-bold text-purple-600">{data.overview.totalPatterns}</div>
-                </div>
-            </div>
-
-            {/* Today's Predictions */}
-            {displayedPredictions.length > 0 && (
-                <div className="bg-gradient-to-br from-pink-50 to-red-50 border-l-4 border-red-500 p-6 rounded-lg shadow-sm">
-                    <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-                        <h2 className="text-2xl font-bold text-red-700">
-                            🔥 Dự Đoán Khung 3 Ngày (Phân tích ngày: {new Date(data.overview.latestDate).toLocaleDateString('vi-VN')})
-                        </h2>
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => setViewMode('percentage')}
-                                className={`px-4 py-2 rounded-lg font-semibold transition-all ${viewMode === 'percentage'
-                                    ? 'bg-red-600 text-white shadow-md'
-                                    : 'bg-white text-red-600 border-2 border-red-200 hover:border-red-400'
-                                    }`}
-                            >
-                                📊 Tỷ Lệ % Cao
-                            </button>
-                            <button
-                                onClick={() => setViewMode('hitCount')}
-                                className={`px-4 py-2 rounded-lg font-semibold transition-all ${viewMode === 'hitCount'
-                                    ? 'bg-purple-600 text-white shadow-md'
-                                    : 'bg-white text-purple-600 border-2 border-purple-200 hover:border-purple-400'
-                                    }`}
-                            >
-                                ⭐ Số Lần Nhiều
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {displayedPredictions.slice(0, 9).map(({ triggerTriple, predictions }) => (
-                            <div
-                                key={tripleToKey(triggerTriple)}
-                                className={`bg-white rounded-xl p-5 shadow-sm border-2 transition-all hover:shadow-md ${viewMode === 'percentage'
-                                    ? 'border-red-100 hover:border-red-300'
-                                    : 'border-purple-100 hover:border-purple-300'
-                                    }`}
-                            >
-                                <div className="text-xs font-bold text-gray-400 uppercase mb-2">Bộ 3 ngày trigger</div>
-                                <div className="flex items-center gap-2 mb-4">
-                                    <span className="stats-number w-10 h-10 bg-gray-100 flex items-center justify-center rounded-lg text-lg font-bold text-gray-700">
-                                        {triggerTriple[0]}
-                                    </span>
-                                    <span className="text-gray-300">→</span>
-                                    <span className="stats-number w-10 h-10 bg-gray-100 flex items-center justify-center rounded-lg text-lg font-bold text-gray-700">
-                                        {triggerTriple[1]}
-                                    </span>
-                                    <span className="text-gray-300">→</span>
-                                    <span className="stats-number w-10 h-10 bg-gray-100 flex items-center justify-center rounded-lg text-lg font-bold text-gray-700 border-2 border-red-500 text-red-600">
-                                        {triggerTriple[2]}
-                                    </span>
-                                </div>
-
-                                <div className="space-y-4">
-                                    {predictions.slice(0, 3).map((pred, idx) => (
-                                        <div key={pred.number}>
-                                            <div className="flex justify-between items-center mb-1">
-                                                <span className={`font-bold text-lg ${viewMode === 'percentage' ? 'text-red-600' : 'text-purple-600'}`}>
-                                                    Số {pred.number}
-                                                </span>
-                                                <span className="text-sm font-bold text-gray-600">
-                                                    {viewMode === 'percentage' ? `${pred.correlationRate.toFixed(1)}%` : `${pred.hitCount} lần`}
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <div className="flex-1 bg-gray-100 rounded-full h-2">
-                                                    <div
-                                                        className={`h-2 rounded-full transition-all duration-500 ${viewMode === 'percentage' ? getCorrelationColor(pred.correlationRate) : 'bg-purple-500'}`}
-                                                        style={{ width: `${Math.min(pred.correlationRate, 100)}%` }}
-                                                    ></div>
-                                                </div>
-                                                <span className="text-[10px] text-gray-400 font-mono">{pred.hitCount}/{pred.totalAppearances}</span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+            {/* Loading State */}
+            {loading && (
+                <div className="flex justify-center items-center min-h-[400px]">
+                    <div className="spinner"></div>
                 </div>
             )}
 
-            {/* Patterns Table */}
-            <div className="card p-6">
-                <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-                    <h2 className="text-2xl font-bold text-lottery-gray-800">Tất Cả Quy Luật (Trigger 3 Ngày)</h2>
-                    <div className="flex items-center gap-3">
-                        <span className="text-sm text-gray-500">Lọc tỷ lệ:</span>
-                        <select
-                            value={filterRate}
-                            onChange={(e) => setFilterRate(Number(e.target.value))}
-                            className="input w-auto min-w-[120px]"
-                        >
-                            <option value={0}>Tất cả</option>
-                            <option value={90}>≥ 90%</option>
-                            <option value={80}>≥ 80%</option>
-                            <option value={60}>≥ 60%</option>
-                            <option value={40}>≥ 40%</option>
-                        </select>
+            {/* No Data State */}
+            {!loading && !data && (
+                <div className="text-center text-lottery-gray-600 py-20 bg-white rounded-xl shadow-sm border border-gray-100">
+                    <div className="text-4xl mb-4">🔍</div>
+                    <p>Không có dữ liệu cho khoảng thời gian này</p>
+                </div>
+            )}
+
+            {/* Main Content */}
+            {!loading && data && (
+                <>
+                    {/* Overview */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div className="bg-gradient-to-br from-green-50 to-green-100 border-l-4 border-green-600 p-4 rounded-lg">
+                            <div className="text-sm text-lottery-gray-600 mb-1">Ngày phân tích mới nhất</div>
+                            <div className="text-2xl font-bold text-green-600">
+                                {new Date(data.overview.latestDate).toLocaleDateString('vi-VN')}
+                            </div>
+                        </div>
+                        <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 border-l-4 border-indigo-600 p-4 rounded-lg">
+                            <label className="text-sm text-lottery-gray-600 mb-2 block">Phân tích dữ liệu</label>
+                            <select
+                                value={selectedDays}
+                                onChange={(e) => setSelectedDays(Number(e.target.value))}
+                                className="input w-full font-bold text-indigo-600"
+                            >
+                                <option value={100}>100 Ngày</option>
+                                <option value={180}>180 Ngày</option>
+                                <option value={365}>365 Ngày</option>
+                                <option value={730}>730 Ngày</option>
+                                <option value={1000}>1000 Ngày</option>
+                            </select>
+                        </div>
+                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 border-l-4 border-blue-600 p-4 rounded-lg">
+                            <div className="text-sm text-lottery-gray-600 mb-1">Số ngày phân tích</div>
+                            <div className="text-2xl font-bold text-blue-600">{data.overview.analyzedDays} ngày</div>
+                        </div>
+                        <div className="bg-gradient-to-br from-purple-50 to-purple-100 border-l-4 border-purple-600 p-4 rounded-lg">
+                            <div className="text-sm text-lottery-gray-600 mb-1">Tổng patterns</div>
+                            <div className="text-2xl font-bold text-purple-600">{data.overview.totalPatterns}</div>
+                        </div>
                     </div>
-                </div>
 
-                <div className="hidden md:block overflow-x-auto">
-                    <table className="w-full">
-                        <thead className="bg-gray-50 border-b border-gray-100">
-                            <tr>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Bộ 3 Ngày (D-2 → D-1 → D)</th>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Xuất hiện</th>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Dự đoán Khung 3 Ngày</th>
-                                <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Chi tiết</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-50">
-                            {paginatedPatterns.map((pattern, index) => {
-                                const tripleKey = tripleToKey(pattern.triggerTriple);
-                                return (
-                                    <React.Fragment key={tripleKey}>
-                                        <tr
-                                            className={`hover:bg-blue-50/30 transition-colors cursor-pointer ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}`}
-                                            onClick={() => toggleRow(tripleKey)}
-                                        >
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-2 font-mono font-bold text-gray-700">
-                                                    <span className="px-2 py-1 bg-gray-100 rounded">{pattern.triggerTriple[0]}</span>
-                                                    <span className="text-gray-300">→</span>
-                                                    <span className="px-2 py-1 bg-gray-100 rounded">{pattern.triggerTriple[1]}</span>
-                                                    <span className="text-gray-300">→</span>
-                                                    <span className="px-2 py-1 bg-red-100 text-red-600 rounded border border-red-200">{pattern.triggerTriple[2]}</span>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className="font-semibold text-gray-600">{pattern.totalAppearances} lần</span>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex flex-wrap gap-2">
-                                                    {pattern.followNumbers.slice(0, 5).map((fn) => (
-                                                        <div key={fn.number} className="flex items-center gap-1.5 px-2 py-1 rounded bg-white border border-gray-100 shadow-sm">
-                                                            <span className="font-bold text-blue-600 text-sm">{fn.number}</span>
-                                                            <span className="text-[10px] font-bold text-gray-400">{fn.correlationRate.toFixed(0)}%</span>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 text-center">
-                                                <span className={`inline-block transition-transform duration-200 ${expandedRows.has(tripleKey) ? 'rotate-90' : ''}`}>
-                                                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                                    </svg>
-                                                </span>
-                                            </td>
-                                        </tr>
-                                        {expandedRows.has(tripleKey) && (
-                                            <tr className="bg-blue-50/50">
-                                                <td colSpan={4} className="px-6 py-6 border-t border-blue-100">
-                                                    <div className="text-sm">
-                                                        <div className="flex items-center gap-2 mb-4">
-                                                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                                            <strong className="text-blue-900 uppercase tracking-wide text-xs">Phân tích chi tiết số sẽ về trong khung:</strong>
-                                                        </div>
-                                                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                                                            {pattern.followNumbers.map((fn) => (
-                                                                <div key={fn.number} className="bg-white p-3 rounded-lg border border-blue-100 shadow-sm hover:border-blue-300 transition-all">
-                                                                    <div className="font-bold text-lg text-red-600 mb-1">{fn.number}</div>
-                                                                    <div className="flex justify-between items-center text-[10px] font-bold text-gray-500 mb-2">
-                                                                        <span>{fn.hitCount} lần</span>
-                                                                        <span>{fn.correlationRate.toFixed(1)}%</span>
-                                                                    </div>
-                                                                    <div className="w-full bg-gray-100 rounded-full h-1.5">
-                                                                        <div
-                                                                            className={`h-1.5 rounded-full ${getCorrelationColor(fn.correlationRate)}`}
-                                                                            style={{ width: `${Math.min(fn.correlationRate, 100)}%` }}
-                                                                        ></div>
-                                                                    </div>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </React.Fragment>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
+                    {/* Today's Predictions */}
+                    {displayedPredictions.length > 0 && (
+                        <div className="bg-gradient-to-br from-pink-50 to-red-50 border-l-4 border-red-500 p-6 rounded-lg shadow-sm">
+                            <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+                                <h2 className="text-2xl font-bold text-red-700">
+                                    🔥 Dự Đoán Khung 3 Ngày (Phân tích ngày: {new Date(data.overview.latestDate).toLocaleDateString('vi-VN')})
+                                </h2>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => setViewMode('percentage')}
+                                        className={`px-4 py-2 rounded-lg font-semibold transition-all ${viewMode === 'percentage'
+                                            ? 'bg-red-600 text-white shadow-md'
+                                            : 'bg-white text-red-600 border-2 border-red-200 hover:border-red-400'
+                                            }`}
+                                    >
+                                        📊 Tỷ Lệ % Cao
+                                    </button>
+                                    <button
+                                        onClick={() => setViewMode('hitCount')}
+                                        className={`px-4 py-2 rounded-lg font-semibold transition-all ${viewMode === 'hitCount'
+                                            ? 'bg-purple-600 text-white shadow-md'
+                                            : 'bg-white text-purple-600 border-2 border-purple-200 hover:border-purple-400'
+                                            }`}
+                                    >
+                                        ⭐ Số Lần Nhiều
+                                    </button>
+                                </div>
+                            </div>
 
-                {/* Mobile View */}
-                <div className="md:hidden space-y-4">
-                    {paginatedPatterns.map((pattern) => {
-                        const tripleKey = tripleToKey(pattern.triggerTriple);
-                        return (
-                            <div key={tripleKey} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                                <div className="p-4 bg-gray-50/50 cursor-pointer" onClick={() => toggleRow(tripleKey)}>
-                                    <div className="text-[10px] font-bold text-gray-400 uppercase mb-2">Trigger {pattern.totalAppearances} lần</div>
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2 font-bold text-gray-700">
-                                            <span className="w-8 h-8 bg-white rounded shadow-sm flex items-center justify-center border border-gray-100">{pattern.triggerTriple[0]}</span>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {displayedPredictions.slice(0, 9).map(({ triggerTriple, predictions }) => (
+                                    <div
+                                        key={tripleToKey(triggerTriple)}
+                                        className={`bg-white rounded-xl p-5 shadow-sm border-2 transition-all hover:shadow-md ${viewMode === 'percentage'
+                                            ? 'border-red-100 hover:border-red-300'
+                                            : 'border-purple-100 hover:border-purple-300'
+                                            }`}
+                                    >
+                                        <div className="text-xs font-bold text-gray-400 uppercase mb-2">Bộ 3 ngày trigger</div>
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <span className="stats-number w-10 h-10 bg-gray-100 flex items-center justify-center rounded-lg text-lg font-bold text-gray-700">
+                                                {triggerTriple[0]}
+                                            </span>
                                             <span className="text-gray-300">→</span>
-                                            <span className="w-8 h-8 bg-white rounded shadow-sm flex items-center justify-center border border-gray-100">{pattern.triggerTriple[1]}</span>
+                                            <span className="stats-number w-10 h-10 bg-gray-100 flex items-center justify-center rounded-lg text-lg font-bold text-gray-700">
+                                                {triggerTriple[1]}
+                                            </span>
                                             <span className="text-gray-300">→</span>
-                                            <span className="w-8 h-8 bg-red-50 text-red-600 rounded shadow-sm flex items-center justify-center border border-red-100 font-black">{pattern.triggerTriple[2]}</span>
+                                            <span className="stats-number w-10 h-10 bg-gray-100 flex items-center justify-center rounded-lg text-lg font-bold text-gray-700 border-2 border-red-500 text-red-600">
+                                                {triggerTriple[2]}
+                                            </span>
                                         </div>
-                                        <svg className={`w-5 h-5 text-gray-400 transition-transform ${expandedRows.has(tripleKey) ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                        </svg>
-                                    </div>
-                                </div>
-                                <div className="p-4 border-t border-gray-50">
-                                    <div className="flex flex-wrap gap-2">
-                                        {pattern.followNumbers.slice(0, 3).map(fn => (
-                                            <div key={fn.number} className="px-3 py-1.5 bg-blue-50 rounded-lg text-center border border-blue-100">
-                                                <div className="text-lg font-bold text-blue-700">{fn.number}</div>
-                                                <div className="text-[10px] font-bold text-blue-400">{fn.correlationRate.toFixed(0)}%</div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                                {expandedRows.has(tripleKey) && (
-                                    <div className="p-4 bg-gray-50 border-t border-gray-100 animate-fade-in">
-                                        <div className="grid grid-cols-3 gap-2">
-                                            {pattern.followNumbers.map(fn => (
-                                                <div key={fn.number} className="bg-white p-2 rounded-lg text-center shadow-sm border border-gray-100">
-                                                    <div className="text-base font-bold text-red-600">{fn.number}</div>
-                                                    <div className="text-[10px] font-bold text-gray-400">{fn.correlationRate.toFixed(0)}%</div>
+
+                                        <div className="space-y-4">
+                                            {predictions.slice(0, 3).map((pred) => (
+                                                <div key={pred.number}>
+                                                    <div className="flex justify-between items-center mb-1">
+                                                        <span className={`font-bold text-lg ${viewMode === 'percentage' ? 'text-red-600' : 'text-purple-600'}`}>
+                                                            Số {pred.number}
+                                                        </span>
+                                                        <span className="text-sm font-bold text-gray-600">
+                                                            {viewMode === 'percentage' ? `${pred.correlationRate.toFixed(1)}%` : `${pred.hitCount} lần`}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="flex-1 bg-gray-100 rounded-full h-2">
+                                                            <div
+                                                                className={`h-2 rounded-full transition-all duration-500 ${viewMode === 'percentage' ? getCorrelationColor(pred.correlationRate) : 'bg-purple-500'}`}
+                                                                style={{ width: `${Math.min(pred.correlationRate, 100)}%` }}
+                                                            ></div>
+                                                        </div>
+                                                        <span className="text-[10px] text-gray-400 font-mono">{pred.hitCount}/{pred.totalAppearances}</span>
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
-                                )}
+                                ))}
                             </div>
-                        );
-                    })}
-                </div>
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                    <div className="flex justify-center items-center gap-4 mt-8 pt-6 border-t border-gray-100">
-                        <button
-                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                            disabled={currentPage === 1}
-                            className="p-2 rounded-lg bg-gray-100 text-gray-500 disabled:opacity-50 hover:bg-red-600 hover:text-white transition-all shadow-sm"
-                        >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                            </svg>
-                        </button>
-                        <div className="flex items-center gap-2">
-                            <span className="w-10 h-10 bg-red-600 text-white flex items-center justify-center rounded-lg font-bold shadow-md">
-                                {currentPage}
-                            </span>
-                            <span className="text-gray-400 font-bold">/</span>
-                            <span className="text-gray-600 font-bold">{totalPages}</span>
                         </div>
-                        <button
-                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                            disabled={currentPage === totalPages}
-                            className="p-2 rounded-lg bg-gray-100 text-gray-500 disabled:opacity-50 hover:bg-red-600 hover:text-white transition-all shadow-sm"
-                        >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                        </button>
+                    )}
+
+                    {/* Patterns Table */}
+                    <div className="card p-6">
+                        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+                            <h2 className="text-2xl font-bold text-lottery-gray-800">Tất Cả Quy Luật (Trigger 3 Ngày)</h2>
+                            <div className="flex items-center gap-3">
+                                <span className="text-sm text-gray-500">Lọc tỷ lệ:</span>
+                                <select
+                                    value={filterRate}
+                                    onChange={(e) => setFilterRate(Number(e.target.value))}
+                                    className="input w-auto min-w-[120px]"
+                                >
+                                    <option value={0}>Tất cả</option>
+                                    <option value={90}>≥ 90%</option>
+                                    <option value={80}>≥ 80%</option>
+                                    <option value={60}>≥ 60%</option>
+                                    <option value={40}>≥ 40%</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="hidden md:block overflow-x-auto">
+                            <table className="w-full">
+                                <thead className="bg-gray-50 border-b border-gray-100">
+                                    <tr>
+                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Bộ 3 Ngày (D-2 → D-1 → D)</th>
+                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Xuất hiện</th>
+                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Dự đoán Khung 3 Ngày</th>
+                                        <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Chi tiết</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-50">
+                                    {paginatedPatterns.map((pattern, index) => {
+                                        const tripleKey = tripleToKey(pattern.triggerTriple);
+                                        return (
+                                            <React.Fragment key={tripleKey}>
+                                                <tr
+                                                    className={`hover:bg-blue-50/30 transition-colors cursor-pointer ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}`}
+                                                    onClick={() => toggleRow(tripleKey)}
+                                                >
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex items-center gap-2 font-mono font-bold text-gray-700">
+                                                            <span className="px-2 py-1 bg-gray-100 rounded">{pattern.triggerTriple[0]}</span>
+                                                            <span className="text-gray-300">→</span>
+                                                            <span className="px-2 py-1 bg-gray-100 rounded">{pattern.triggerTriple[1]}</span>
+                                                            <span className="text-gray-300">→</span>
+                                                            <span className="px-2 py-1 bg-red-100 text-red-600 rounded border border-red-200">{pattern.triggerTriple[2]}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <span className="font-semibold text-gray-600">{pattern.totalAppearances} lần</span>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {pattern.followNumbers.slice(0, 5).map((fn) => (
+                                                                <div key={fn.number} className="flex items-center gap-1.5 px-2 py-1 rounded bg-white border border-gray-100 shadow-sm">
+                                                                    <span className="font-bold text-blue-600 text-sm">{fn.number}</span>
+                                                                    <span className="text-[10px] font-bold text-gray-400">{fn.correlationRate.toFixed(0)}%</span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-center">
+                                                        <span className={`inline-block transition-transform duration-200 ${expandedRows.has(tripleKey) ? 'rotate-90' : ''}`}>
+                                                            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                            </svg>
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                                {expandedRows.has(tripleKey) && (
+                                                    <tr className="bg-blue-50/50">
+                                                        <td colSpan={4} className="px-6 py-6 border-t border-blue-100">
+                                                            <div className="text-sm">
+                                                                <div className="flex items-center gap-2 mb-4">
+                                                                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                                                    <strong className="text-blue-900 uppercase tracking-wide text-xs">Phân tích chi tiết số sẽ về trong khung:</strong>
+                                                                </div>
+                                                                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                                                                    {pattern.followNumbers.map((fn) => (
+                                                                        <div key={fn.number} className="bg-white p-3 rounded-lg border border-blue-100 shadow-sm hover:border-blue-300 transition-all">
+                                                                            <div className="font-bold text-lg text-red-600 mb-1">{fn.number}</div>
+                                                                            <div className="flex justify-between items-center text-[10px] font-bold text-gray-500 mb-2">
+                                                                                <span>{fn.hitCount} lần</span>
+                                                                                <span>{fn.correlationRate.toFixed(1)}%</span>
+                                                                            </div>
+                                                                            <div className="w-full bg-gray-100 rounded-full h-1.5">
+                                                                                <div
+                                                                                    className={`h-1.5 rounded-full ${getCorrelationColor(fn.correlationRate)}`}
+                                                                                    style={{ width: `${Math.min(fn.correlationRate, 100)}%` }}
+                                                                                ></div>
+                                                                            </div>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </React.Fragment>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Mobile View */}
+                        <div className="md:hidden space-y-4">
+                            {paginatedPatterns.map((pattern) => {
+                                const tripleKey = tripleToKey(pattern.triggerTriple);
+                                return (
+                                    <div key={tripleKey} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                                        <div className="p-4 bg-gray-50/50 cursor-pointer" onClick={() => toggleRow(tripleKey)}>
+                                            <div className="text-[10px] font-bold text-gray-400 uppercase mb-2">Trigger {pattern.totalAppearances} lần</div>
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2 font-bold text-gray-700">
+                                                    <span className="w-8 h-8 bg-white rounded shadow-sm flex items-center justify-center border border-gray-100">{pattern.triggerTriple[0]}</span>
+                                                    <span className="text-gray-300">→</span>
+                                                    <span className="w-8 h-8 bg-white rounded shadow-sm flex items-center justify-center border border-gray-100">{pattern.triggerTriple[1]}</span>
+                                                    <span className="text-gray-300">→</span>
+                                                    <span className="w-8 h-8 bg-red-50 text-red-600 rounded shadow-sm flex items-center justify-center border border-red-100 font-black">{pattern.triggerTriple[2]}</span>
+                                                </div>
+                                                <svg className={`w-5 h-5 text-gray-400 transition-transform ${expandedRows.has(tripleKey) ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        <div className="p-4 border-t border-gray-50">
+                                            <div className="flex flex-wrap gap-2">
+                                                {pattern.followNumbers.slice(0, 3).map(fn => (
+                                                    <div key={fn.number} className="px-3 py-1.5 bg-blue-50 rounded-lg text-center border border-blue-100">
+                                                        <div className="text-lg font-bold text-blue-700">{fn.number}</div>
+                                                        <div className="text-[10px] font-bold text-blue-400">{fn.correlationRate.toFixed(0)}%</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        {expandedRows.has(tripleKey) && (
+                                            <div className="p-4 bg-gray-50 border-t border-gray-100 animate-fade-in">
+                                                <div className="grid grid-cols-3 gap-2">
+                                                    {pattern.followNumbers.map(fn => (
+                                                        <div key={fn.number} className="bg-white p-2 rounded-lg text-center shadow-sm border border-gray-100">
+                                                            <div className="text-base font-bold text-red-600">{fn.number}</div>
+                                                            <div className="text-[10px] font-bold text-gray-400">{fn.correlationRate.toFixed(0)}%</div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Pagination */}
+                        {totalPages > 1 && (
+                            <div className="flex justify-center items-center gap-4 mt-8 pt-6 border-t border-gray-100">
+                                <button
+                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                    disabled={currentPage === 1}
+                                    className="p-2 rounded-lg bg-gray-100 text-gray-500 disabled:opacity-50 hover:bg-red-600 hover:text-white transition-all shadow-sm"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                    </svg>
+                                </button>
+                                <div className="flex items-center gap-2">
+                                    <span className="w-10 h-10 bg-red-600 text-white flex items-center justify-center rounded-lg font-bold shadow-md">
+                                        {currentPage}
+                                    </span>
+                                    <span className="text-gray-400 font-bold">/</span>
+                                    <span className="text-gray-600 font-bold">{totalPages}</span>
+                                </div>
+                                <button
+                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                    disabled={currentPage === totalPages}
+                                    className="p-2 rounded-lg bg-gray-100 text-gray-500 disabled:opacity-50 hover:bg-red-600 hover:text-white transition-all shadow-sm"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </button>
+                            </div>
+                        )}
                     </div>
-                )}
-            </div>
+                </>
+            )}
         </div>
     );
 }
