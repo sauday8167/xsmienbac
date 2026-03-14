@@ -30,6 +30,7 @@ export default function HoiDongBacNhoPage() {
     const [history, setHistory] = useState<HistoryRecord[]>([]);
     const [hotNumbers, setHotNumbers] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
+    const [copied, setCopied] = useState(false);
 
     useEffect(() => {
         const fetchAll = async () => {
@@ -137,6 +138,29 @@ export default function HoiDongBacNhoPage() {
                                 📈 TB: <strong>{avgHits} nháy/ngày</strong>
                             </span>
                         )}
+                        <button
+                            onClick={() => {
+                                const numbers = parsedNumbers.map(n => n.number).join(', ');
+                                navigator.clipboard.writeText(numbers);
+                                setCopied(true);
+                                setTimeout(() => setCopied(false), 2000);
+                            }}
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-black text-xs uppercase tracking-widest transition-all duration-300 ${copied
+                                ? 'bg-green-500 text-white shadow-lg shadow-green-500/30'
+                                : 'bg-cyan-500 text-slate-950 hover:bg-cyan-400 shadow-lg shadow-cyan-500/20'
+                                }`}
+                        >
+                            {copied ? (
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                </svg>
+                            ) : (
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                </svg>
+                            )}
+                            {copied ? 'Đã Sao Chép!' : 'Sao Chép 10 Số'}
+                        </button>
                     </div>
                 </div>
             </div>
