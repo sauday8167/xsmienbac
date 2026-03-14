@@ -7,7 +7,7 @@ export async function GET() {
     try {
         const rows = await query<any[]>(`
             SELECT * FROM bac_nho_history 
-            ORDER BY draw_date DESC 
+            ORDER BY id DESC 
             LIMIT 10
         `);
         return NextResponse.json({ success: true, data: rows || [] });

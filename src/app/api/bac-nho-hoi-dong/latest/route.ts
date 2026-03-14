@@ -7,7 +7,7 @@ export async function GET() {
     try {
         const row = await queryOne<any>(`
             SELECT * FROM bac_nho_history 
-            ORDER BY draw_date DESC 
+            ORDER BY id DESC 
             LIMIT 1
         `);
         if (!row) {
