@@ -31,6 +31,14 @@ export default function AIPredictionClient() {
                 const dataLatest = await resLatest.json();
                 if (dataLatest.success) {
                     setPrediction(dataLatest.data);
+                } else {
+                    // Provide a default empty state instead of null so it stops loading
+                    setPrediction({
+                        draw_date: new Date().toISOString(),
+                        analysis_content: JSON.stringify({ summary: dataLatest.error || 'Dữ liệu AI đang được tính toán, vui lòng quay lại sau.', evidence: [], advice: 'Hệ thống đang chờ lệnh chạy AI đầu tiên.'}),
+                        predicted_pairs: '[]',
+                        confidence_score: 0
+                    });
                 }
 
                 // Fetch history
@@ -41,6 +49,12 @@ export default function AIPredictionClient() {
                 }
             } catch (error) {
                 console.error('Failed to load AI data');
+                setPrediction({
+                    draw_date: new Date().toISOString(),
+                    analysis_content: JSON.stringify({ summary: 'Lỗi kết nối tới máy chủ AI.', evidence: [], advice: 'Lỗi mạng.'}),
+                    predicted_pairs: '[]',
+                    confidence_score: 0
+                });
             }
         };
         fetchData();
