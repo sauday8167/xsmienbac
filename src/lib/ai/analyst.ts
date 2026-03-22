@@ -192,7 +192,7 @@ CẢNH BÁO LÔ GAN: ${ganList}
 
             // 6. Save to DB
             await query(
-                `INSERT INTO ai_predictions (draw_date, analysis_content, predicted_pairs, confidence_score, model_used)
+                `INSERT OR REPLACE INTO ai_predictions (draw_date, analysis_content, predicted_pairs, confidence_score, model_used)
                  VALUES (?, ?, ?, ?, ?)`,
                 [targetDate, analysisContent, JSON.stringify(predictedPairs), confidence, modelKey]
             );
