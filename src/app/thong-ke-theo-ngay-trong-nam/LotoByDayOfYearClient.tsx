@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import StatisticsPanel from '@/components/statistics/StatisticsPanel';
+import StatisticsPanel from '@/components/stats-display/StatisticsPanel';
 
 export default function LotoByDayOfYearClient() {
     const today = new Date();
