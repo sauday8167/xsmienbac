@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 
@@ -21,7 +21,7 @@ export default function TaoDanXoSoClient() {
     const [dan3D, setDan3D] = useState('');
     const [result3D4D, setResult3D4D] = useState<string[]>([]);
 
-    // State for Xiên
+    // State for Xi├¬n
     const [xienNumbers, setXienNumbers] = useState('');
     const [xienType, setXienType] = useState(2);
     const [xienResult, setXienResult] = useState<string[]>([]);
@@ -109,7 +109,7 @@ export default function TaoDanXoSoClient() {
 
     const copyToClipboard = (text: string, source: string) => {
         navigator.clipboard.writeText(text).then(() => {
-            setCopyNotif(`Đã sao chép ${source}`);
+            setCopyNotif(`─É├ú sao ch├⌐p ${source}`);
             setTimeout(() => setCopyNotif(''), 2000);
         });
     };
@@ -118,30 +118,30 @@ export default function TaoDanXoSoClient() {
         <div className="bg-white border border-gray-300 rounded-lg p-4">
             <div className="flex justify-between items-center mb-2">
                 <h3 className="font-bold text-lg text-gray-700">{title}</h3>
-                <button onClick={() => copyToClipboard(data.join(joinStr), source)} className="px-3 py-1 bg-green-600 text-white text-sm font-semibold rounded hover:bg-green-700 transition">📋 SAO CHÉP</button>
+                <button onClick={() => copyToClipboard(data.join(joinStr), source)} className="px-3 py-1 bg-green-600 text-white text-sm font-semibold rounded hover:bg-green-700 transition">≡ƒôï SAO CH├ëP</button>
             </div>
             <div className="bg-gray-50 border border-gray-200 rounded p-3 min-h-[80px] max-h-[200px] overflow-y-auto">
                 <div className="flex flex-wrap gap-2">
                     {data.map((num, idx) => <span key={idx} className="px-2 py-1 bg-blue-100 border border-blue-300 rounded text-sm font-mono">{num}</span>)}
                 </div>
             </div>
-            <p className="text-xs text-gray-500 mt-2">Tổng: {data.length} số</p>
+            <p className="text-xs text-gray-500 mt-2">Tß╗òng: {data.length} sß╗æ</p>
         </div>
     );
 
     return (
         <div className="container mx-auto px-4 py-8 max-w-6xl">
-            <h1 className="text-3xl font-bold text-center mb-8 text-lottery-red-700">🎲 Công Cụ Tạo Dàn Xổ Số</h1>
-            {copyNotif && <div className="fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50 animate-bounce">✅ {copyNotif}</div>}
+            <h1 className="text-3xl font-bold text-center mb-8 text-lottery-red-700">≡ƒÄ▓ C├┤ng Cß╗Ñ Tß║ío D├án Xß╗ò Sß╗æ</h1>
+            {copyNotif && <div className="fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50 animate-bounce">Γ£à {copyNotif}</div>}
 
             <section className="mb-8 bg-white border border-gray-300 rounded-xl p-6 shadow-sm">
-                <h2 className="text-2xl font-bold mb-4 text-gray-800">📊 Tạo Dàn 2D (00-99)</h2>
+                <h2 className="text-2xl font-bold mb-4 text-gray-800">≡ƒôè Tß║ío D├án 2D (00-99)</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <input type="text" value={touchDigits} onChange={(e) => setTouchDigits(e.target.value)} placeholder="Chạm..." className="input border" />
-                    <input type="text" value={sumDigits} onChange={(e) => setSumDigits(e.target.value)} placeholder="Tổng..." className="input border" />
+                    <input type="text" value={touchDigits} onChange={(e) => setTouchDigits(e.target.value)} placeholder="Chß║ím..." className="input border" />
+                    <input type="text" value={sumDigits} onChange={(e) => setSumDigits(e.target.value)} placeholder="Tß╗òng..." className="input border" />
                 </div>
-                <button onClick={handleGenerate2D} className="btn btn-primary">Tạo Dàn</button>
-                <ResultBox title="Kết Quả Dàn 2D" data={result2D} source="Dàn 2D" />
+                <button onClick={handleGenerate2D} className="btn btn-primary">Tß║ío D├án</button>
+                <ResultBox title="Kß║┐t Quß║ú D├án 2D" data={result2D} source="D├án 2D" />
             </section>
             {/* ... Rest of components ... */}
         </div>

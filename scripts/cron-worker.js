@@ -114,18 +114,8 @@ console.log(' - 19:40: AI Prediction (/du-doan-ai) - phân tích sau kết quả
 
 // 2-5 ... (omitted same part)
 
-// New Task: 18:47 - AI Council Accuracy Scoring
-cron.schedule('47 18 * * *', () => {
-    console.log(`[${new Date().toISOString()}] Triggering AI Council Accuracy Scoring (Post-Result)...`);
-    const { exec } = require('child_process');
-    exec('node scripts/run-council.js --mode=accuracy', (error, stdout, stderr) => {
-        if (error) {
-            console.error(`[Council Accuracy Post] Error: ${error.message}`);
-            return;
-        }
-        console.log(`[Council Accuracy Post] Done:\n${stdout}`);
-    });
-});
+// New Task: 18:47 - AI Council Accuracy Scoring (Deprecated - Removed logic)
+// cron.schedule('47 18 * * *', () => { ... });
 
 // 7. 19:40 - AI Prediction (Dự Đoán AI - /du-doan-ai)
 cron.schedule('40 19 * * *', () => {
@@ -167,31 +157,11 @@ cron.schedule('50 18 * * *', () => {
     });
 });
 
-// 10. 16:30 - Fetch Hội Đồng Bạc Nhớ Predictions
-cron.schedule('30 16 * * *', () => {
-    console.log(`[${new Date().toISOString()}] Triggering Fetch Hội Đồng Bạc Nhớ...`);
-    const { exec } = require('child_process');
-    exec('npx tsx scripts/fetch-bac-nho.ts', (error, stdout, stderr) => {
-        if (error) {
-            console.error(`Fetch Bac Nho Error: ${error.message}`);
-            return;
-        }
-        console.log(`Fetch Bac Nho Stdout: ${stdout}`);
-    });
-});
+// 10. 16:30 - Fetch Hội Đồng Bạc Nhớ Predictions (Deprecated)
+// cron.schedule('30 16 * * *', () => { ... });
 
-// 11. 19:00 - Verify Hội Đồng Bạc Nhớ Results
-cron.schedule('0 19 * * *', () => {
-    console.log(`[${new Date().toISOString()}] Triggering Verify Hội Đồng Bạc Nhớ...`);
-    const { exec } = require('child_process');
-    exec('npx tsx scripts/verify-bac-nho.ts', (error, stdout, stderr) => {
-        if (error) {
-            console.error(`Verify Bac Nho Error: ${error.message}`);
-            return;
-        }
-        console.log(`Verify Bac Nho Stdout: ${stdout}`);
-    });
-});
+// 11. 19:00 - Verify Hội Đồng Bạc Nhớ Results (Deprecated)
+// cron.schedule('0 19 * * *', () => { ... });
 
 // 12. 16:00 - AI Learning v2: Snapshot 6 nguồn phân tích (trước khi xổ số)
 cron.schedule('0 16 * * *', () => {
