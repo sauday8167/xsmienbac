@@ -47,14 +47,6 @@
       "seoDescription": "Công cụ tạo dàn số học xổ số miền Bắc bằng thuật toán mô phỏng ngẫu nhiên, chỉ dùng để tham khảo thông tin."
     },
     {
-      "id": "so-hot",
-      "href": "/so-hot-trong-ngay",
-      "label": "Số Hot Trong Ngày",
-      "description": "Tổng hợp số đẹp bằng AI",
-      "seoTitle": "Số Hot Trong Ngày - Dự Đoán Xổ Số Miền Bắc Từ Website & Youtube",
-      "seoDescription": "Xổ Số Miền Bắc hôm nay: AI tổng hợp dữ liệu từ Youtube và Website tìm ra các con số hot nhất."
-    },
-    {
       "id": "7",
       "href": "/tin-tuc",
       "label": "Tin tức",
@@ -64,14 +56,6 @@
     }
   ],
   "mobile": [
-    {
-      "label": "Số Hot Trong Ngày",
-      "href": "/so-hot-trong-ngay",
-      "description": "Tổng hợp số đẹp bằng AI",
-      "seoTitle": "Số Hot Trong Ngày - Dự Đoán Xổ Số Miền Bắc Từ Website & Youtube",
-      "seoDescription": "Xổ Số Miền Bắc hôm nay: AI tổng hợp dữ liệu từ Youtube và Website tìm ra các con số lô đề miền Bắc hot nhất.",
-      "id": "so-hot-m"
-    },
     {
       "id": "5",
       "href": "/soi-cau-bac-nho",

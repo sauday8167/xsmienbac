@@ -105,7 +105,15 @@ async function crawlAndSave(date: string) {
 }
 
 async function run() {
-    const missingDates = ['03-02-2026', '04-02-2026', '05-02-2026'];
+    const missingDates = [
+        '14-03-2026',
+        '15-03-2026',
+        '16-03-2026',
+        '17-03-2026',
+        '18-03-2026',
+        '19-03-2026',
+        '20-03-2026'
+    ];
     for (const date of missingDates) {
         await crawlAndSave(date);
     }

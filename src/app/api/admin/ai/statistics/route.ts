@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { query, queryOne } from "@/lib/db";
 import { verifyAdmin } from "@/lib/auth";
 
@@ -15,10 +15,10 @@ export async function GET(request: NextRequest) {
         }
 
         const modelInfo = {
-            name: "Gemini 2.5 Flash",
-            provider: "Google Generative AI",
-            version: "2.5-flash",
-            description: "AI phân tích đa chiều với khả năng tự kiểm điểm và điều chỉnh chiến lược dựa trên lịch sử dự đoán. Sử dụng 9+ nguồn dữ liệu."
+            name: "Claude AI Engine",
+            provider: "Anthropic / Claude 3 Haiku",
+            version: "v2.5 (Automated)",
+            description: "Hệ thống AI phân tích Bạc Nhớ chuyên sâu, tự động tổng hợp dữ liệu và viết bài dự đoán XSMB hàng ngày lúc 21:00."
         };
 
         const totalStats = await queryOne("SELECT COUNT(*) as total FROM ai_predictions");

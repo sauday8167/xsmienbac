@@ -222,3 +222,29 @@ cron.schedule('10 19 * * *', () => {
         console.log(`AI Learn Done: ${stdout}`);
     });
 });
+
+// 14. 21:00 - Tự động viết tin tức AI cho ngày mai
+cron.schedule('0 21 * * *', () => {
+    console.log(`[${new Date().toISOString()}] Triggering Auto News Generation (21:00)...`);
+    const { exec } = require('child_process');
+    exec('npx tsx scripts/auto-write-news.ts', (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Auto News Error: ${error.message}`);
+            return;
+        }
+        console.log(`Auto News Stdout: ${stdout}`);
+    });
+});
+
+// 15. 22:00 - Kiểm tra và viết tin tức AI (nếu chưa có)
+cron.schedule('0 22 * * *', () => {
+    console.log(`[${new Date().toISOString()}] Triggering Auto News Check (22:00)...`);
+    const { exec } = require('child_process');
+    exec('npx tsx scripts/auto-write-news.ts --check', (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Auto News Check Error: ${error.message}`);
+            return;
+        }
+        console.log(`Auto News Check Stdout: ${stdout}`);
+    });
+});

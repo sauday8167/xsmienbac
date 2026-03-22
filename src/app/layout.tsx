@@ -110,9 +110,6 @@ export async function generateMetadata(): Promise<Metadata> {
             description: 'Xem kết quả xổ số miền Bắc (XSMB) hôm nay nhanh nhất, chính xác nhất.',
             images: [ogImage],
         },
-        alternates: {
-            canonical: siteUrl,
-        },
         robots: {
             index: true,
             follow: true,

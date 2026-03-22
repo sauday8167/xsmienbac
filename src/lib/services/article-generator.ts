@@ -125,22 +125,25 @@ export class AutoArticleGenerator {
 
             6. Lời kết: Chúc bạn đọc may mắn. Nhắc nhở: Các con số chỉ mang tính chất tham khảo, hãy tham gia dự thưởng Xổ Số Kiến Thiết ích nước lợi nhà.
             
-            INPUT FORMATS:
+            OUTPUT FORMAT (MANDATORY):
+            TUYỆT ĐỐI KHÔNG viết lời chào, lời dẫn hay bất kỳ nội dung nào ngoài hai phần dưới đây.
             
-            OUTPUT FORMAT:
-            Please provide the response in TWO parts separated by "---HTML_START---":
+            Hãy cung cấp phản hồi chính xác theo hai phần, cách nhau bởi chuỗi "---HTML_START---":
             
-            Part 1: JSON Metadata
+            Phần 1: JSON Metadata (Dùng để SEO)
             {
                 "title": "${formattedDate} - Phân Tích & Dự Đoán Kết Quả XSMB",
                 "excerpt": "Phân tích thống kê và dự đoán kết quả XSMB ${formattedDate}... (100-150 ký tự)",
                 "meta_title": "Dự Đoán Xổ Số Miền Bắc ${formattedDate} - Soi Cầu XSMB Hôm Nay",
-                "meta_description": "Dự Đoán Xổ Số Miền Bắc ${formattedDate}, Phân tích thống kê chi tiết và dự đoán XSMB hôm nay. Bạch thủ, song thủ, dàn đề tiềm năng dựa trên dữ liệu thực tế. (150-160 ký tự)"
+                "meta_description": "Dự Đoán Xổ Số Miền Bắc ${formattedDate}, Phân tích thống kê chi tiết và dự đoán XSMB hôm nay. (150-160 ký tự)"
             }
             
             ---HTML_START---
             
-            Part 2: HTML Content (Just the HTML code, no JSON escaping needed)
+            Phần 2: HTML Content (Mã HTML cho bài viết)
+            <div class="analysis-article">
+                ... nội dung bài viết ...
+            </div>
             <div class="analysis-article">
                 ... content here ...
             </div>
@@ -164,42 +167,42 @@ export class AutoArticleGenerator {
          // 5. Robust Parsing
          let article: any = {};
 
-         const parts = aiResponse.split('---HTML_START---');
-
-         if (parts.length < 2) {
-            console.warn("AI didn't use the splitter, attempting fallback JSON parse...");
-            // Fallback to old regex method if AI ignored instructions
-            const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-            if (jsonMatch) {
-               article = JSON.parse(jsonMatch[0]);
-            } else {
-               throw new Error('Failed to parse AI response: No separation and no valid JSON');
-            }
-         } else {
-            // Parse Metadata
-            const jsonStr = parts[0].replace(/```json/g, '').replace(/```/g, '').trim();
+         // Extract JSON metadata (non-greedy match for the first JSON object)
+         const jsonMatch = aiResponse.match(/\{[\s\S]*?\}/);
+         if (jsonMatch) {
             try {
-               // Find the first '{' and last '}'
-               const firstBrace = jsonStr.indexOf('{');
-               const lastBrace = jsonStr.lastIndexOf('}');
-               if (firstBrace !== -1 && lastBrace !== -1) {
-                  const cleanJson = jsonStr.substring(firstBrace, lastBrace + 1);
-                  article = JSON.parse(cleanJson);
-               } else {
-                  article = JSON.parse(jsonStr);
-               }
+               article = JSON.parse(jsonMatch[0]);
             } catch (e) {
-               console.error('Metadata JSON Parse Error:', e);
-               throw new Error('Failed to parse article metadata');
+               console.error('Metadata JSON Parse Error, using fallbacks:', e);
             }
-
-            // Get Content
-            let htmlContent = parts[1].trim();
-            // Remove markdown code blocks if AI wrapped the HTML
-            htmlContent = htmlContent.replace(/^```html/i, '').replace(/^```/i, '').replace(/```$/i, '').trim();
-
-            article.content = htmlContent;
          }
+
+         // Fill basic fallbacks just in case
+         if (!article.title) article.title = `${formattedDate} - Phân Tích & Dự Đoán Kết Quả Xổ Số Miền Bắc`;
+         if (!article.excerpt) article.excerpt = `Phân tích thống kê chi tiết và nhận định cơ hội may mắn cho kỳ quay XSMB ngày ${formattedDate}.`;
+         if (!article.meta_title) article.meta_title = `Dự Đoán XSMB ${formattedDate} - Soi Cầu Miền Bắc Hôm Nay`;
+         if (!article.meta_description) article.meta_description = article.excerpt;
+
+         // Extract HTML Content
+         let htmlContent = '';
+         if (aiResponse.includes('---HTML_START---')) {
+             const parts = aiResponse.split('---HTML_START---');
+             htmlContent = parts.pop() || ''; // Take the last part which should be HTML
+         } else {
+             htmlContent = aiResponse;
+         }
+
+         // Clean up the HTML part: it might still contain the JSON block if AI placed the splitter at the very beginning
+         // We look for the first actual HTML tag and discard anything before it.
+         const firstTagIndex = htmlContent.indexOf('<');
+         if (firstTagIndex !== -1) {
+             htmlContent = htmlContent.substring(firstTagIndex);
+         }
+
+         // Clean up any remaining markdown backticks
+         htmlContent = htmlContent.replace(/^```html/i, '').replace(/^```/i, '').replace(/```$/i, '').trim();
+
+         article.content = htmlContent;
 
          // Validate required fields
          if (!article.title || !article.content) {

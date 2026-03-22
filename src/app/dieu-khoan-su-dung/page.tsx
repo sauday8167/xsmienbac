@@ -3,6 +3,9 @@ import React from 'react';
 export const metadata = {
     title: 'Điều Khoản Sử Dụng - Xổ Số Miền Bắc 24h',
     description: 'Các điều khoản sử dụng khi truy cập website Xổ Số Miền Bắc 24h.',
+    alternates: {
+        canonical: 'https://xosomienbac24h.com/dieu-khoan-su-dung',
+    },
 };
 
 export default function TermsPage() {

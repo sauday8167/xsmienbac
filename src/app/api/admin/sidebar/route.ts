@@ -9,6 +9,7 @@ const FILE_PATH = join(DATA_DIR, 'sidebar-config.json');
 const DEFAULT_SIDEBAR = [
     { id: 's1', href: '/ket-qua-theo-ngay', label: 'Kết quả theo ngày', icon: 'calendar' },
     { id: 's2', href: '/thong-ke', label: 'Thống kê lô tô', icon: 'chart' },
+    { id: 's6', href: '/hoi-dong-bac-nho', label: 'Hội Đồng Bạc Nhớ', icon: 'bulb' },
     { id: 's3', href: '/do-ve-so', label: 'Dò vé số', icon: 'check' },
     { id: 's4', href: '/quay-thu', label: 'Quay thử số', icon: 'refresh' },
     { id: 's5', href: '/du-doan', label: 'Tần Suất Lô Tô', icon: 'bulb' }

@@ -119,20 +119,6 @@ async function migrate() {
         `);
         console.log('✅ statistics_cache table ready.');
 
-        // Create so_hot_history table
-        console.log('🛠️ Checking/Creating so_hot_history table...');
-        await query(`
-            CREATE TABLE IF NOT EXISTS so_hot_history (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                draw_date TEXT NOT NULL UNIQUE,
-                prediction_data TEXT NOT NULL, -- JSON
-                hit_details TEXT,             -- JSON (details of what hit)
-                is_verified INTEGER DEFAULT 0,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
-        console.log('✅ so_hot_history table ready.');
-
         // Create bac_nho_history table
         console.log('🛠️ Checking/Creating bac_nho_history table...');
         await query(`
@@ -151,19 +137,17 @@ async function migrate() {
         `);
         console.log('✅ bac_nho_history table ready.');
 
-        // Create ai_source_snapshots table (AI Learning Engine v2)
-        console.log('🛠️ Checking/Creating ai_source_snapshots table...');
+        // Create ai_source_snapshots table (AI Learning Engine v2 - Updated for new sources)
+        console.log('🛠️ Updating ai_source_snapshots table (Drop and Recreate)...');
+        await query(`DROP TABLE IF EXISTS ai_source_snapshots`);
         await query(`
             CREATE TABLE IF NOT EXISTS ai_source_snapshots (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 snapshot_date TEXT NOT NULL UNIQUE,
                 target_date TEXT NOT NULL,
-                bac_nho_numbers TEXT,
-                khung_3_ngay_numbers TEXT,
-                bach_thu_numbers TEXT,
-                thong_ke_thu_numbers TEXT,
-                thong_ke_ngay_numbers TEXT,
-                thong_ke_nam_numbers TEXT,
+                bac_nho_cap_3_numbers TEXT,
+                bac_nho_2_ngay_numbers TEXT,
+                bac_nho_3_ngay_numbers TEXT,
                 actual_numbers TEXT,
                 source_accuracy TEXT,
                 ai_rules TEXT,

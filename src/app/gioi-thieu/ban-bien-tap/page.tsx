@@ -5,9 +5,13 @@ import Link from 'next/link';
 export const metadata: Metadata = {
     title: 'Ban Biên Tập & Chuyên Gia - XSMB 24h',
     description: 'Đội ngũ chuyên gia soi cầu, phân tích toán học và biên tập viên giàu kinh nghiệm tại XSMB 24h. Cam kết mang đến thông tin chính xác và chuyên sâu nhất.',
+    alternates: {
+        canonical: 'https://xosomienbac24h.com/gioi-thieu/ban-bien-tap',
+    },
     openGraph: {
         title: 'Ban Biên Tập & Chuyên Gia - XSMB 24h',
         description: 'Đội ngũ chuyên gia soi cầu, phân tích toán học và biên tập viên giàu kinh nghiệm tại XSMB 24h.',
+        url: 'https://xosomienbac24h.com/gioi-thieu/ban-bien-tap',
     }
 };
 

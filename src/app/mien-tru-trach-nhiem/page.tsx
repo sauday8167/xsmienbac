@@ -3,6 +3,9 @@ import React from 'react';
 export const metadata = {
     title: 'Miễn Trừ Trách Nhiệm - Xổ Số Miền Bắc 24h',
     description: 'Thông tin miễn trừ trách nhiệm về kết quả xổ số và dịch vụ tại Xổ Số Miền Bắc 24h.',
+    alternates: {
+        canonical: 'https://xosomienbac24h.com/mien-tru-trach-nhiem',
+    },
 };
 
 export default function DisclaimerPage() {

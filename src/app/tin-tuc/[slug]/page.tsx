@@ -103,6 +103,9 @@ export async function generateMetadata(
                 'max-snippet': -1,
             },
         },
+        alternates: {
+            canonical: postUrl,
+        },
     };
 }
 

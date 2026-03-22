@@ -3,6 +3,8 @@ import ResultTable from '@/components/ResultTable';
 import JsonLd from '@/components/seo/JsonLd';
 import Link from 'next/link';
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://xosomienbac24h.com';
+
 interface Props {
     params: {
         date: string;
@@ -29,9 +31,13 @@ export async function generateMetadata({ params }: Props) {
     return {
         title: `Kết quả xổ số Miền Bắc ngày ${displayDate} - Xổ Số Miền Bắc 24h`,
         description: `Xổ Số Miền Bắc ngày ${displayDate}: Xem kết quả xổ số (XSMB) nhanh nhất, chính xác 100% trực tiếp từ trường quay hôm nay.`,
+        alternates: {
+            canonical: `${siteUrl}/ket-qua-theo-ngay/${date}`,
+        },
         openGraph: {
             title: `Kết quả xổ số Miền Bắc ngày ${displayDate}`,
             description: `Kết quả XSMB ngày ${displayDate} chính xác 100%.`,
+            url: `${siteUrl}/ket-qua-theo-ngay/${date}`,
         }
     };
 }

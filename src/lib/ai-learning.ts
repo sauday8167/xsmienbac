@@ -1,9 +1,10 @@
 import { query, queryOne } from './db';
-import { GeminiClient } from './ai/gemini-client';
+import { ClaudeClient } from './ai/claude-client';
 import { extractAllLotoNumbers } from './lottery-helpers';
-import { analyzeBacNhoSoDon } from './bac-nho-so-don';
-import { analyzeBacNhoSoDonKhung3Ngay } from './bac-nho-khung-3-ngay-so-don';
-import { findBridges } from './soi-cau-bach-thu';
+import { analyzeBacNhoCap3 } from './bac-nho-cap-3';
+import { analyzeBacNho2Ngay } from './bac-nho-2-ngay';
+import { analyzeBacNho3Ngay } from './bac-nho-3-ngay';
+import { getOrUpdateBacNhoData } from './bac-nho-cache-service';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -64,8 +65,6 @@ function extractTopFromPredictions(predictions: any[], limit = 15): string[] {
         .map(e => e[0]);
 }
 
-// ─── 1. SNAPSHOT: Lưu dự đoán của 6 nguồn cho ngày D (target: D+1) ────────
-
 /**
  * Chụp snapshot dữ liệu phân tích của ngày `sourceDate` (D-1).
  * target_date là ngày D (ngày xổ số mà chúng ta muốn dự đoán).
@@ -85,73 +84,46 @@ export async function snapshotSourcePredictions(sourceDate: string): Promise<voi
         return;
     }
 
-    let bacNhoNumbers: string[] = [];
-    let khung3NgayNumbers: string[] = [];
-    let bachThuNumbers: string[] = [];
-    let thongKeThuNumbers: string[] = [];
-    let thongKeNgayNumbers: string[] = [];
-    let thongKeNamNumbers: string[] = [];
+    let bacNhoCap3Numbers: string[] = [];
+    let bacNho2NgayNumbers: string[] = [];
+    let bacNho3NgayNumbers: string[] = [];
 
-    // 1. Bạc Nhớ Số Đơn
-    try {
-        const data = await analyzeBacNhoSoDon(120, sourceDate);
-        bacNhoNumbers = extractTopFromPredictions(data.todayPredictions, 15);
-        console.log(`  ✅ Bạc Nhớ: ${bacNhoNumbers.length} số`);
-    } catch (e: any) { console.warn('  ⚠️ Bạc Nhớ lỗi:', e.message); }
+    const RANGE = 500;
 
-    // 2. Bạc Nhớ Khung 3 Ngày
+    // 1. Bạc Nhớ Cặp 3
     try {
-        const data = await analyzeBacNhoSoDonKhung3Ngay(120, sourceDate);
-        khung3NgayNumbers = extractTopFromPredictions(data.todayPredictions, 15);
-        console.log(`  ✅ Khung 3 Ngày: ${khung3NgayNumbers.length} số`);
-    } catch (e: any) { console.warn('  ⚠️ Khung 3 Ngày lỗi:', e.message); }
+        const data = await getOrUpdateBacNhoData('cap-3', (d) => analyzeBacNhoCap3(d, sourceDate), RANGE);
+        bacNhoCap3Numbers = extractTopFromPredictions(data.todayPredictions, 20);
+        console.log(`  ✅ Bạc Nhớ Cặp 3: ${bacNhoCap3Numbers.length} số (từ Cache)`);
+    } catch (e: any) { console.warn('  ⚠️ Bạc Nhớ Cặp 3 lỗi:', e.message); }
 
-    // 3. Bạch Thủ (findBridges)
+    // 2. Bạc Nhớ 2 Ngày
     try {
-        const bridges = await findBridges(sourceDate, 3, 'loto');
-        const bridgeMap: Record<string, number> = {};
-        bridges.forEach(b => { bridgeMap[b.predictedNumber] = (bridgeMap[b.predictedNumber] || 0) + 1; });
-        bachThuNumbers = Object.entries(bridgeMap).sort((a, b) => b[1] - a[1]).slice(0, 15).map(e => e[0]);
-        console.log(`  ✅ Bạch Thủ: ${bachThuNumbers.length} số`);
-    } catch (e: any) { console.warn('  ⚠️ Bạch Thủ lỗi:', e.message); }
+        const data = await getOrUpdateBacNhoData('2-ngay', (d) => analyzeBacNho2Ngay(d, sourceDate), RANGE);
+        bacNho2NgayNumbers = extractTopFromPredictions(data.todayPredictions, 20);
+        console.log(`  ✅ Bạc Nhớ 2 Ngày: ${bacNho2NgayNumbers.length} số (từ Cache)`);
+    } catch (e: any) { console.warn('  ⚠️ Bạc Nhớ 2 Ngày lỗi:', e.message); }
 
-    // 4. Thống kê Theo Thứ
+    // 3. Bạc Nhớ 3 Ngày
     try {
-        thongKeThuNumbers = await getTopByDayOfWeek(sourceDate);
-        console.log(`  ✅ Thống Kê Thứ: ${thongKeThuNumbers.length} số`);
-    } catch (e: any) { console.warn('  ⚠️ Thống kê thứ lỗi:', e.message); }
-
-    // 5. Thống kê Theo Ngày
-    try {
-        thongKeNgayNumbers = await getTopByDayOfMonth(sourceDate);
-        console.log(`  ✅ Thống Kê Ngày: ${thongKeNgayNumbers.length} số`);
-    } catch (e: any) { console.warn('  ⚠️ Thống kê ngày lỗi:', e.message); }
-
-    // 6. Thống kê Theo Ngày Trong Năm
-    try {
-        thongKeNamNumbers = await getTopByDayOfYear(sourceDate);
-        console.log(`  ✅ Thống Kê Năm: ${thongKeNamNumbers.length} số`);
-    } catch (e: any) { console.warn('  ⚠️ Thống kê năm lỗi:', e.message); }
+        const data = await getOrUpdateBacNhoData('3-ngay', (d) => analyzeBacNho3Ngay(d, sourceDate), RANGE);
+        bacNho3NgayNumbers = extractTopFromPredictions(data.todayPredictions, 20);
+        console.log(`  ✅ Bạc Nhớ 3 Ngày: ${bacNho3NgayNumbers.length} số (từ Cache)`);
+    } catch (e: any) { console.warn('  ⚠️ Bạc Nhớ 3 Ngày lỗi:', e.message); }
 
     await query(`
         INSERT INTO ai_source_snapshots 
-        (snapshot_date, target_date, bac_nho_numbers, khung_3_ngay_numbers, bach_thu_numbers, thong_ke_thu_numbers, thong_ke_ngay_numbers, thong_ke_nam_numbers)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        (snapshot_date, target_date, bac_nho_cap_3_numbers, bac_nho_2_ngay_numbers, bac_nho_3_ngay_numbers)
+        VALUES (?, ?, ?, ?, ?)
         ON CONFLICT(snapshot_date) DO UPDATE SET
-            bac_nho_numbers = excluded.bac_nho_numbers,
-            khung_3_ngay_numbers = excluded.khung_3_ngay_numbers,
-            bach_thu_numbers = excluded.bach_thu_numbers,
-            thong_ke_thu_numbers = excluded.thong_ke_thu_numbers,
-            thong_ke_ngay_numbers = excluded.thong_ke_ngay_numbers,
-            thong_ke_nam_numbers = excluded.thong_ke_nam_numbers
+            bac_nho_cap_3_numbers = excluded.bac_nho_cap_3_numbers,
+            bac_nho_2_ngay_numbers = excluded.bac_nho_2_ngay_numbers,
+            bac_nho_3_ngay_numbers = excluded.bac_nho_3_ngay_numbers
     `, [
         sourceDate, targetDate,
-        JSON.stringify(bacNhoNumbers),
-        JSON.stringify(khung3NgayNumbers),
-        JSON.stringify(bachThuNumbers),
-        JSON.stringify(thongKeThuNumbers),
-        JSON.stringify(thongKeNgayNumbers),
-        JSON.stringify(thongKeNamNumbers),
+        JSON.stringify(bacNhoCap3Numbers),
+        JSON.stringify(bacNho2NgayNumbers),
+        JSON.stringify(bacNho3NgayNumbers)
     ]);
 
     console.log(`✅ [AI Snapshot] Đã lưu snapshot ngày ${sourceDate} → dự đoán cho ${targetDate}`);
@@ -169,7 +141,7 @@ function calcAccuracy(predicted: string[], actual: string[]): { hits: string[]; 
  * Sau khi có KQXS ngày `resultDate` (D):
  * - Lấy snapshot của ngày D-1
  * - So sánh từng nguồn với KQXS thực tế
- * - Lấy 15 ngày lịch sử → Gemini phân tích → Rút quy tắc
+ * - Lấy 15 ngày lịch sử → Claude phân tích → Rút quy tắc
  * - Lưu vào ai_source_snapshots
  */
 export async function verifyAndLearnFromSources(resultDate: string): Promise<void> {
@@ -198,15 +170,12 @@ export async function verifyAndLearnFromSources(resultDate: string): Promise<voi
     const parse = (s: string | null): string[] => { try { return s ? JSON.parse(s) : []; } catch { return []; } };
 
     const sourceAccuracy = {
-        bac_nho: calcAccuracy(parse(snapshot.bac_nho_numbers), actualNumbers),
-        khung_3_ngay: calcAccuracy(parse(snapshot.khung_3_ngay_numbers), actualNumbers),
-        bach_thu: calcAccuracy(parse(snapshot.bach_thu_numbers), actualNumbers),
-        thong_ke_thu: calcAccuracy(parse(snapshot.thong_ke_thu_numbers), actualNumbers),
-        thong_ke_ngay: calcAccuracy(parse(snapshot.thong_ke_ngay_numbers), actualNumbers),
-        thong_ke_nam: calcAccuracy(parse(snapshot.thong_ke_nam_numbers), actualNumbers),
+        bac_nho_cap_3: calcAccuracy(parse(snapshot.bac_nho_cap_3_numbers), actualNumbers),
+        bac_nho_2_ngay: calcAccuracy(parse(snapshot.bac_nho_2_ngay_numbers), actualNumbers),
+        bac_nho_3_ngay: calcAccuracy(parse(snapshot.bac_nho_3_ngay_numbers), actualNumbers),
     };
 
-    console.log(`  📊 Accuracy: BạcNhớ=${sourceAccuracy.bac_nho.rate}% | Khung3=${sourceAccuracy.khung_3_ngay.rate}% | BạchThủ=${sourceAccuracy.bach_thu.rate}% | Thu=${sourceAccuracy.thong_ke_thu.rate}% | Ngay=${sourceAccuracy.thong_ke_ngay.rate}% | Nam=${sourceAccuracy.thong_ke_nam.rate}%`);
+    console.log(`  📊 Accuracy (Claude Learning): Cặp3=${sourceAccuracy.bac_nho_cap_3.rate}% | 2Ngày=${sourceAccuracy.bac_nho_2_ngay.rate}% | 3Ngày=${sourceAccuracy.bac_nho_3_ngay.rate}%`);
 
     // Cập nhật DB với actual_numbers + source_accuracy
     await query(`
@@ -215,11 +184,10 @@ export async function verifyAndLearnFromSources(resultDate: string): Promise<voi
         WHERE snapshot_date = ?
     `, [JSON.stringify(actualNumbers), JSON.stringify(sourceAccuracy), sourceDate]);
 
-    // Lấy 15 ngày lịch sử đã verify để Gemini học
+    // Lấy 15 ngày lịch sử đã verify để Claude học
     const history15 = await query<any[]>(`
         SELECT snapshot_date, source_accuracy, actual_numbers,
-               bac_nho_numbers, khung_3_ngay_numbers, bach_thu_numbers,
-               thong_ke_thu_numbers, thong_ke_ngay_numbers, thong_ke_nam_numbers
+               bac_nho_cap_3_numbers, bac_nho_2_ngay_numbers, bac_nho_3_ngay_numbers
         FROM ai_source_snapshots
         WHERE actual_numbers IS NOT NULL AND source_accuracy IS NOT NULL
         ORDER BY snapshot_date DESC
@@ -227,77 +195,72 @@ export async function verifyAndLearnFromSources(resultDate: string): Promise<voi
     `);
 
     if (history15.length < 3) {
-        console.log(`ℹ️ Chưa đủ 3 ngày lịch sử để Gemini học. Hiện có: ${history15.length} ngày.`);
+        console.log(`ℹ️ Chưa đủ 3 ngày lịch sử để Claude học. Hiện có: ${history15.length} ngày.`);
         return;
     }
 
-    // Chuẩn bị dữ liệu cho Gemini
+    // Chuẩn bị dữ liệu cho Claude
     const historySummary = history15.map(h => {
         const acc = JSON.parse(h.source_accuracy || '{}');
         return {
             date: h.snapshot_date,
             accuracy: {
-                bac_nho: acc.bac_nho?.rate || 0,
-                khung_3_ngay: acc.khung_3_ngay?.rate || 0,
-                bach_thu: acc.bach_thu?.rate || 0,
-                thong_ke_thu: acc.thong_ke_thu?.rate || 0,
-                thong_ke_ngay: acc.thong_ke_ngay?.rate || 0,
-                thong_ke_nam: acc.thong_ke_nam?.rate || 0,
+                bac_nho_cap_3: acc.bac_nho_cap_3?.rate || 0,
+                bac_nho_2_ngay: acc.bac_nho_2_ngay?.rate || 0,
+                bac_nho_3_ngay: acc.bac_nho_3_ngay?.rate || 0,
             },
             hits: {
-                bac_nho: acc.bac_nho?.hits || [],
-                bach_thu: acc.bach_thu?.hits || [],
-                khung_3_ngay: acc.khung_3_ngay?.hits || [],
+                bac_nho_cap_3: acc.bac_nho_cap_3?.hits || [],
+                bac_nho_2_ngay: acc.bac_nho_2_ngay?.hits || [],
+                bac_nho_3_ngay: acc.bac_nho_3_ngay?.hits || [],
             },
             actual: JSON.parse(h.actual_numbers || '[]').slice(0, 15),
         };
     });
 
-    const prompt = `Bạn là AI chuyên phân tích độ chính xác của các nguồn dự đoán XSMB.
+    const prompt = `Bạn là Claude - AI Siêu cấp chuyên phân tích độ chính xác của các nguồn dự đoán XSMB.
+CHIẾN THUẬT KPI: Mục tiêu chốt số nổ từ 5 NHÁY trở lên mỗi ngày.
 
-Dưới đây là lịch sử ${historySummary.length} ngày so sánh dự đoán từ 6 nguồn với kết quả thực tế:
+Dưới đây là lịch sử ${historySummary.length} ngày so sánh dự đoán từ 3 nguồn Bạc Nhớ chuyên sâu với kết quả thực tế:
 
 ${JSON.stringify(historySummary, null, 2)}
 
-NHIỆM VỤ: Phân tích và rút ra QUY TẮC CHỌN SỐ cho ngày tiếp theo dựa trên các câu hỏi:
-1. Nguồn nào đang có accuracy cao nhất? Xu hướng tăng hay giảm?
-2. Khi nhiều nguồn cùng dự báo một số → xác suất trúng có tăng không?
-3. Nguồn nào hiện đang YẾU (nên giảm trọng số)?
-4. Nguồn nào hiện đang MẠNH (nên tăng trọng số)?
-5. Có quy tắc nào về ngày thứ hay ngày trong tháng đang cho chính xác cao?
+NHIỆM VỤ: Phân tích cực kỳ khắt khe và rút ra QUY TẮC CHỌN SỐ cho ngày tiếp theo:
+1. Nguồn nào (Cặp 3, 2 Ngày, 3 Ngày) đang có phong độ ổn định nhất để nổ nhiều nháy?
+2. Khi các nguồn cùng hội tụ (consensus) vào một số, xác suất nổ 5 nháy có khả thi không?
+3. Nguồn nào hiện đang "vào dây đen" (nên giảm mạnh trọng số)?
+4. Nguồn nào đang "vào dây đỏ" (nên tăng mạnh trọng số)?
+5. Rút ra bài học cốt lõi để đạt KPI 5 nháy.
 
 TRẢ VỀ JSON NGHIÊM NGẶT:
 {
   "source_weights": {
-    "bac_nho": 1.0,
-    "khung_3_ngay": 1.0,
-    "bach_thu": 1.0,
-    "thong_ke_thu": 1.0,
-    "thong_ke_ngay": 1.0,
-    "thong_ke_nam": 1.0
+    "bac_nho_cap_3": 1.0,
+    "bac_nho_2_ngay": 1.0,
+    "bac_nho_3_ngay": 1.0
   },
-  "consensus_threshold": 3,
-  "analysis": "Phân tích tình hình 15 ngày qua...",
-  "top_rule": "Quy tắc quan trọng nhất cần áp dụng ngày mai...",
+  "consensus_threshold": 2,
+  "analysis": "Phân tích chiến thuật đạt KPI 5 nháy dựa trên 15 ngày qua...",
+  "top_rule": "Quy tắc vàng để nổ 5 nháy ngày mai...",
   "weak_sources": ["nguồn đang yếu"],
   "strong_sources": ["nguồn đang mạnh"]
 }`;
 
     try {
-        const aiResponse = await GeminiClient.generateContent(prompt);
-        if (!aiResponse) { console.warn('⚠️ Gemini không trả về kết quả'); return; }
+        const aiResponse = await ClaudeClient.generateContent(prompt);
+        if (!aiResponse) { console.warn('⚠️ Claude không trả về kết quả'); return; }
 
         const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) { console.warn('⚠️ Không parse được JSON từ Gemini'); return; }
+        if (!jsonMatch) { console.warn('⚠️ Không parse được JSON từ Claude'); return; }
 
         const rules = JSON.parse(jsonMatch[0]);
         await query(`UPDATE ai_source_snapshots SET ai_rules = ? WHERE snapshot_date = ?`,
             [JSON.stringify(rules), sourceDate]);
 
-        console.log(`✅ [AI Learn] Đã lưu quy tắc mới: ${rules.top_rule?.substring(0, 100)}...`);
+        console.log(`✅ [AI Learn - Claude] Đã lưu quy tắc mới hướng tới KPI 5 nháy: ${rules.top_rule?.substring(0, 100)}...`);
         console.log(`  💪 Nguồn mạnh: ${rules.strong_sources?.join(', ')} | Nguồn yếu: ${rules.weak_sources?.join(', ')}`);
     } catch (e: any) {
-        console.error('❌ Gemini học thất bại:', e.message);
+        console.error('❌ Claude học thất bại:', e.message);
     }
 }
 

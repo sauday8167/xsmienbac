@@ -1,26 +1,39 @@
-import { GeminiClient } from './gemini-client';
+import { ClaudeClient } from './claude-client';
 import { ContextProvider } from './context-provider';
 import { query, queryOne } from '@/lib/db';
 import { getLatestTacticalAdvice } from '../ai-learning';
 import { calculateLoGan } from '@/lib/statistics';
 
 export class AIAnalyst {
-    static async runDailyAnalysis(customTargetDate?: string) {
+    static async runDailyAnalysis(customTargetDate?: string, mode: 'hoi-dong' | 'du-doan-3-số' = 'hoi-dong') {
         try {
             // Get Vietnam Date string reliably
-            const vnDateStr = customTargetDate || new Intl.DateTimeFormat('en-CA', {
+            const now = new Date();
+            const vnTime = new Intl.DateTimeFormat('en-CA', {
                 timeZone: 'Asia/Ho_Chi_Minh',
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit'
-            }).format(new Date()); // Returns "YYYY-MM-DD"
+                hour: 'numeric',
+                hour12: false
+            }).format(now);
+            
+            let targetDate = customTargetDate;
+            if (!targetDate) {
+                const dateObj = new Date(now);
+                // Nếu sau 18:30 (giờ quay xong), dự đoán cho ngày mai
+                if (parseInt(vnTime) >= 19) { 
+                    dateObj.setDate(dateObj.getDate() + 1);
+                }
+                targetDate = new Intl.DateTimeFormat('en-CA', {
+                    timeZone: 'Asia/Ho_Chi_Minh',
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                }).format(dateObj);
+            }
 
-            const targetDate = vnDateStr;
+            const modelKey = mode === 'hoi-dong' ? 'claude-3-haiku-hoi-dong' : 'claude-3-haiku-3-so';
 
-            // 0. Update accuracy for previous days (last 3 days)
-            // We use the VN date object to subtract days
+            // 0. Update accuracy for previous days
             const vnDate = new Date(targetDate);
-
             for (let i = 1; i <= 3; i++) {
                 const prevDate = new Date(vnDate);
                 prevDate.setDate(prevDate.getDate() - i);
@@ -28,18 +41,18 @@ export class AIAnalyst {
                 await this.checkAccuracy(prevDateStr);
             }
 
-            // 0.5. Fetch History Context for Prompt
+            // 0.5. Fetch History Context
             const historyRows = await query<any[]>(
                 `SELECT draw_date, is_correct, accuracy_notes 
                  FROM ai_predictions 
-                 WHERE draw_date < ? 
+                 WHERE draw_date < ? AND model_used = ?
                  ORDER BY draw_date DESC 
                  LIMIT 3`,
-                [targetDate]
+                [targetDate, modelKey]
             );
 
             let historyContext = "Chưa có dữ liệu lịch sử.";
-            let recentHitRate = 100; // Mặc định tự tin ban đầu nếu chưa có sử
+            let recentHitRate = 100;
 
             if (historyRows.length > 0) {
                 let hitCount = 0;
@@ -53,249 +66,174 @@ export class AIAnalyst {
                 recentHitRate = (hitCount / historyRows.length) * 100;
             }
 
-            // 0.5.5 Lập Chiến Thuật Động (Dynamic Strategy) dựa trên Tỷ lệ Trúng
+            // 0.5.5 Dynamic Strategy
             let dynamicInstructions = "";
             if (recentHitRate >= 40) {
-                // Đang trong nhịp cầu trơn -> Đánh theo đám đông & cầu kèo phổ thông
                 dynamicInstructions = `
 [CHIẾN THUẬT HIỆN TẠI: ĐÁNH THEO NHỊP CẦU THUẬN]
-Phong độ của Hội đồng đang TỐT (Tỷ lệ thắng: ${recentHitRate}%). 
-HÃY ƯU TIÊN SỰ HỘI TỤ CỦA CÁC ĐƯỜNG CẦU PHỔ BIẾN:
-- Tập trung vào các loto có nhịp rơi ổn định theo Thống Kê Tần Suất.
-- Kế thừa Bạc Nhớ, Lô Rơi và Bạc Nhớ Khung 3 Ngày vì thị trường đang đi đúng quy luật.
-`;
+Phong độ đang TỐT. Ưu tiên hội tụ chuyên sâu.`;
             } else {
-                // Đang bị gạch -> Bắt AI bẻ cầu, cấm đi theo lối mòn
                 dynamicInstructions = `
-[CHIẾN THUẬT HIỆN TẠI: CHỐT SỐ RỦI RO / BẺ CẦU - PHÁ LỐI MÒN]
-CẢNH BÁO ĐỎ: Phong độ của Hội đồng đang RẤT TỆ (Tỷ lệ thắng: ${recentHitRate}%, đang trượt nhiều ngày).
-Bạn ĐANG BỊ RƠI VÀO LỐI MÒN của các phương pháp cơ bản (Bạc nhớ thông thường đã GÃY). Mệnh lệnh cho ngày hôm nay:
-- TUYỆT ĐỐI KHÔNG đi theo đám đông. Bỏ qua các cầu loto quá lộ liễu.
-- HÃY TÌM KIẾM CÁC DẤU HIỆU ĐẢO CHIỀU: Tìm Lô Kép, Lô đi theo Đầu/Đuôi đang câm hôm qua, hoặc Loto nghịch.
-- Soi kỹ các dấu hiệu cực kỳ bất thường từ Giải Đặc Biệt. 
-- Hãy chọn ít nhất 2 loto mà các thuật toán cơ bản thường bỏ qua nhưng mang lại tiềm năng đột biến ngày hôm nay.
-`;
+[CHIẾN THUẬT HIỆN TẠI: CHỐT SỐ RỦI RO / BẺ CẦU]
+CẢNH BÁO: Phong độ đang thấp. Tìm kiếm dấu hiệu đảo chiều, lô gan hoặc giải đặc biệt biến động.`;
             }
 
-            // 0.6. Get Source Rules (v2) & Gan Stats
+            // 0.6 Rules & Gan
             const [tacticalAdvice, loGan50] = await Promise.all([
                 getLatestTacticalAdvice(),
-                calculateLoGan(50, 60) // High risk numbers
+                calculateLoGan(50, 60)
             ]);
-
             const ganList = loGan50.map((g: any) => g.number).join(', ');
 
-            // Build enhanced tactical context from source-comparison learning
-            let tacticalContext = "Đang thu thập kinh nghiệm từ các nguồn phân tích...";
+            let tacticalContext = "Đang thu thập kinh nghiệm...";
             if (tacticalAdvice) {
-                const weights = tacticalAdvice.weights || {};
-                const strongSources = Object.entries(weights)
-                    .filter(([_, w]) => (w as number) > 1.0)
-                    .map(([k]) => k)
-                    .join(', ');
-                const weakSources = Object.entries(weights)
-                    .filter(([_, w]) => (w as number) < 1.0)
-                    .map(([k]) => k)
-                    .join(', ');
-
-                tacticalContext = `
-QUY TẮC TỪ AI HỌC ĐƯỢC (15 NGÀY GẦN NHẤT):
-${tacticalAdvice.advice}
-NGUỒN ĐANG MẠNH: ${strongSources || 'Chưa xác định'}
-NGUỒN ĐANG YẾU: ${weakSources || 'Chưa xác định'}
-MỨC ĐỘ RỦI RO: ${tacticalAdvice.risk_level}
-NGUYÊN TẮC VÀNG: Ưu tiên số xuất hiện ở ít nhất 3+ nguồn cùng lúc (Consensus).`;
+                tacticalContext = `QUY TẮC VÀNG: ${tacticalAdvice.advice}\nMỨC ĐỘ RỦI RO: ${tacticalAdvice.risk_level}`;
             }
 
-            // 1. Check if we already have a prediction for target date
+            // 1. Check existing
             const existing = await queryOne(
-                `SELECT id FROM ai_predictions WHERE draw_date = ?`,
-                [targetDate]
+                `SELECT id FROM ai_predictions WHERE draw_date = ? AND model_used = ?`,
+                [targetDate, modelKey]
             );
-
             if (existing) {
-                console.log(`Prediction for ${targetDate} already exists.`);
+                console.log(`Prediction for ${targetDate} (${mode}) already exists.`);
                 return;
             }
 
-            // 2. Build Context
-            // This will fetch results BEFORE targetDate (i.e., latest available)
-            const context = await ContextProvider.getDailyContext(targetDate);
-            const contextText = ContextProvider.formatContextForPrompt(context);
+            // 2. Context
+            const context = await ContextProvider.getDailyContext(targetDate, mode);
+            const contextText = ContextProvider.formatContextForPrompt(context, mode);
 
-            // 3. Construct Enhanced Prompt (Simplified for Readability)
-
-            // Core Analyst Prompt
-            const ANALYST_PROMPT = `
-VAI TRÒ: Bạn là người phân tích dữ liệu Xổ số Miền Bắc (XSMB), chia sẻ phân tích một cách TỰ NHIÊN, DỄ HIỂU.
-
-PHONG CÁCH:
-- Thân thiện, gần gũi như đang chia sẻ với bạn bè
-- TRÁNH dùng: "chuyên gia", "kinh nghiệm lâu năm", "bề dày kinh nghiệm"
-- Viết ngắn gọn, súc tích, dễ hiểu
-- Sử dụng ngôn ngữ đơn giản, tự nhiên
+            // 3. Prompt Configuration based on Mode
+            const kpiTarget = mode === 'hoi-dong' ? '5 NHÁY' : '2 NHÁY';
+            const lotoCount = mode === 'hoi-dong' ? 'ĐÚNG 10 CẶP/SỐ LOTO' : '3 SỐ LOTO DUY NHẤT';
+            
+            let ANALYST_PROMPT = `
+VAI TRÒ: Bạn là Claude - Chuyên gia phân tích dữ liệu XSMB cấp cao.
+MỤC TIÊU TỐI THƯỢNG: Chốt dàn loto nổ từ ${kpiTarget} trở lên.
+PHONG CÁCH: Quyết đoán, chuyên nghiệp, sắc bén. Ngôn ngữ tự nhiên.
 
 NHIỆM VỤ:
-1. Phân tích dữ liệu thống kê được cung cấp
-2. Đưa ra nhận định dựa trên số liệu thực tế
-3. Trình bày theo format yêu cầu
+1. Phân tích dữ liệu từ các nguồn Bạc Nhớ chuyên sâu.
+2. Tìm ra đúng ${lotoCount} có khả năng nổ cao nhất, mục tiêu "${kpiTarget}".
+3. GIẢI THÍCH logic "Bẻ cầu" hoặc "Thuận cầu" cực kỳ thuyết phục cho dàn số này.
+4. QUAN TRỌNG: CHỈ TRẢ VỀ JSON, KHÔNG CÓ LỜI DẪN, KHÔNG CÓ CHÀO HỎI.
 `;
+
+            if (mode === 'du-doan-3-số') {
+                ANALYST_PROMPT = `
+VAI TRÒ: Bạn là Claude - Kỹ sư Thuật Toán Xác Suất & Machine Learning chuyên sâu về Xổ Số.
+MỤC TIÊU TỐI THƯỢNG: Trích xuất chính xác ${lotoCount} có Động lượng (Momentum) và Phân phối kỳ vọng (Expected Distribution) cao nhất để đạt KPI "${kpiTarget}".
+PHONG CÁCH: Khoa học dữ liệu, lập luận thuần túy bằng toán học, xác suất, độ trễ lô gan chuẩn và nhịp xung lực. TUYỆT ĐỐI KHÔNG dùng từ ngữ dân gian như "Bạc nhớ", "Cầu kèo", "Tâm linh", "Thuận/Bẻ cầu".
+
+NHIỆM VỤ:
+1. Đánh giá Tần suất Vĩ mô (Frequency Over 30-50 days) để tìm các Loto đang có gia tốc rơi mạnh nhất. Ngược lại, tính toán độ trễ (Standard Deviation) của các Loto Gan để bắt điểm nổ (Breakout point).
+2. Tích hợp số liệu Loto Rơi, chu kỳ Giải Đặc Biệt/Giải Nhất vào mô hình toán học (Markov Chain / Regression) của bạn để loại trừ nhiễu.
+3. Chốt ĐÚNG ${lotoCount}.
+4. Phần "summary" / "advice": Lập luận thuyết phục người xem bằng ngôn ngữ kỹ thuật học thống kê (động lượng phân phối, điểm bùng nổ xác suất, phương sai hẹp...). Thuyết phục hoàn toàn bằng số liệu.
+5. QUAN TRỌNG: CHỈ TRẢ VỀ JSON.
+`;
+            }
 
             const prompt = `
 ${ANALYST_PROMPT}
 
-TUYỆT ĐỐI KHÔNG nhắc đến "XSMN", "Miền Nam", "Xổ số Miền Nam". Bạn chỉ phân tích duy nhất đài MIỀN BẮC.
-
-QUY TẮC TỪ NGỮ (BẮT BUỘC):
-- KHÔNG dùng từ "lô", "đề", "lô đề".
-- HÃY dùng: "loto", "cặp loto", "loto đặc biệt", "giải đặc biệt".
-
-MỤC TIÊU: Dự đoán 5 cặp loto tiềm năng nhất cho ngày ${targetDate}.
-MỤC TIÊU KPI: Phải trúng ít nhất 2 nháy trở lên (Tỷ lệ chính xác mong muốn >90%).
-
 DỮ LIỆU ĐẦU VÀO:
 ${contextText}
 
-LỊCH SỬ DỰ ĐOÁN TẦM NHÌN 3 NGÀY QUA:
+LỊCH SỬ THẮNG/THUA:
 ${historyContext}
 
 ${dynamicInstructions}
-
-BÀI HỌC & CHIẾN THUẬT QUYẾT ĐOÁN TỪ AI MENTOR:
 ${tacticalContext}
+CẢNH BÁO LÔ GAN: ${ganList}
 
-CẢNH BÁO TỪ CHUYÊN GIA GAN (KIỂM SOÁT RỦI RO):
-Danh sách loto Gan cực cao (CẤM DỰ ĐOÁN VÀO NHỮNG SỐ NÀY): ${ganList}
-
-NHIỆM VỤ:
-1. TỔNG KẾT phong độ dựa trên lịch sử và áp dụng BÀI HỌC KINH NGHIỆM để điều chỉnh lựa chọn.
-2. Tuyệt đối KHÔNG chọn các số trong danh sách CẢNH BÁO TỪ CHUYÊN GIA GAN.
-3. TUÂN THỦ NGHIÊM NGẶT [CHIẾN THUẬT HIỆN TẠI]: Nếu chiến thuật yêu cầu "BẺ CẦU", bạn PHẢI phân tích ngoài lề và cấm chọn số dễ dãi.
-4. Phân tích dữ liệu theo đúng chiến thuật và tìm ra 5 cặp loto nổ 2 nháy cao nhất.
-5. Cảnh báo: Lệnh của AI Bậc thầy là tối thượng, tuyệt đối không được chống lệnh (vd Bậc thầy bảo loại đầu 6 thì hãy dẹp hết đầu 6).
-6. Hãy chắc chắn rằng trong Json phần "top_evidence", bạn có CÂU TỰ SỰ GIẢI THÍCH (Ví dụ: "Hôm nay quyết định bẻ cầu không theo lối mòn cũ..." hoặc "Tiếp tục bám sát nhịp Bạc Nhớ đang ổn định...").
-
-ĐỊNH DẠNG ĐẦU RA (JSON):
-Trình bày TỪNG LOTO CỤ THỂ, VÍ DỤ: "01", KHÔNG TRÌNH BÀY KIỂU "12, 21". Trả về MỘT obect JSON duy nhất (không markdown wrapper nếu có thể, hoặc nằm trong block code json):
+ĐỊNH DẠNG JSON:
 {
-    "dan_loto": ["xx", "yy", "zz", "aa", "bb"],
-    "confidence": 85,
+    "dan_loto": ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10"], 
+    "confidence": 95,
     "analysis": {
-        "summary": "Đoạn văn tổng kết. Phải nhắc đến việc hôm nay sẽ Bẻ Cầu hay Đánh Thuận Cầu dựa trên tỷ lệ trúng vừa qua.",
+        "summary": "Phân tích vì sao dàn này sẽ nổ ${kpiTarget} dựa trên thống kê xác suất, động lượng (momentum), và quy luật phân phối.",
         "top_evidence": [
-            "Lý do 1: Sự thay đổi tư duy so với ngày hôm qua (Bẻ cầu / Bám cầu).",
-            "Lý do 2: Loto xx chọn vì (lý do khác biệt).",
-            "Lý do 3: Dấu hiệu dị thường (nếu có)."
+            "Lý do chọn loto bằng thông số toán học...",
+            "Dấu hiệu đạt ngưỡng bùng nổ..."
         ],
-        "advice": "Lời khuyên ngắn gọn."
+        "advice": "Lời khuyên quản trị rủi ro & thuật toán hiện tại."
     }
 }
-            `;
+`;
 
-            // 4. Call AI
-            console.log('Asking Gemini for simplified analysis...');
-            const rawResponse = await GeminiClient.generateContent(prompt);
+            // 4. Call Claude
+            console.log('Asking Claude for high-precision analysis...');
+            const rawResponse = await ClaudeClient.generateContent(prompt + "\n\nTRẢ VỀ JSON NGAY BÂY GIỜ:");
 
-            if (!rawResponse) throw new Error('Empty response from AI');
+            if (!rawResponse) throw new Error('Empty response from Claude');
 
-            // POST-PROCESSING SAFETY NET:
-            // Replace any accidental "XSMN" or "Miền Nam" references with "XSMB" / "Miền Bắc"
             const aiResponse = rawResponse
                 .replace(/XSMN/g, 'XSMB')
-                .replace(/Miền Nam/g, 'Miền Bắc')
-                .replace(/miền nam/g, 'miền bắc');
+                .replace(/Miền Nam/g, 'Miền Bắc');
 
             // 5. Parse Response
             let predictedPairs = [];
             let confidence = 0;
-            let analysisContent = aiResponse; // Default to raw if parse fails
+            let analysisContent = aiResponse;
 
             try {
-                // Try to extract JSON
                 const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
                 if (jsonMatch) {
-                    const jsonStr = jsonMatch[0];
-                    const data = JSON.parse(jsonStr);
+                    const data = JSON.parse(jsonMatch[0]);
                     predictedPairs = data.dan_loto || [];
                     confidence = data.confidence || 0;
-                    // Store the WHOLE structured JSON string as analysis_content for frontend parsing
                     analysisContent = JSON.stringify(data);
                 }
             } catch (e) {
-                console.warn('Failed to parse AI JSON', e);
+                console.warn('Failed to parse Claude JSON', e);
             }
 
             // 6. Save to DB
             await query(
                 `INSERT INTO ai_predictions (draw_date, analysis_content, predicted_pairs, confidence_score, model_used)
                  VALUES (?, ?, ?, ?, ?)`,
-                [targetDate, analysisContent, JSON.stringify(predictedPairs), confidence, 'gemini-2.5-flash']
+                [targetDate, analysisContent, JSON.stringify(predictedPairs), confidence, modelKey]
             );
 
-            console.log(`AI Prediction saved for ${targetDate}`);
+            console.log(`AI Prediction (Claude) saved for ${targetDate} - KPI: 5+ Hits`);
 
-            // Return result for API response
-            return {
-                targetDate,
-                predictedPairs,
-                confidence,
-                analysisContent // Return the simplified JSON string
-            };
+            return { targetDate, predictedPairs, confidence, analysisContent };
 
         } catch (error) {
-            console.error('AI Analysis Failed:', error);
-            throw error; // Re-throw to let API handler catch it
+            console.error('Claude Analysis Failed:', error);
+            throw error;
         }
     }
 
     static async checkAccuracy(drawDate: string) {
         try {
-            // 1. Get prediction (only if not already updated or missing result)
-            // Skip if actual_result is already set (to avoid re-checking processed ones, 
-            // unless we want to allow updates? Usually once set it's final. 
-            // BUT for debugging, we might want to check if it's null)
             const prediction = await queryOne<any>(
                 'SELECT id, predicted_pairs, actual_result FROM ai_predictions WHERE draw_date = ?',
                 [drawDate]
             );
 
-            if (!prediction) return;
-            if (prediction.actual_result) return; // Already checked
+            if (!prediction || prediction.actual_result) return;
 
-            // 2. Get results
             const result = await queryOne<any>(
                 'SELECT * FROM xsmb_results WHERE draw_date = ?',
                 [drawDate]
             );
 
-            if (!result) return;
+            if (!result || result.draw_date !== drawDate) return;
 
-            // STRICT CHECK: Ensure the result date matches the requested date
-            // (Handling potential DB misconfiguration or lucky query matches)
-            if (result.draw_date !== drawDate) {
-                console.warn(`Mismatch date in checkAccuracy: Requested ${drawDate} but got result for ${result.draw_date}`);
-                return;
-            }
-
-            // 3. Extract all loto numbers (last 2 digits)
             const winningLotos = new Set<string>();
-            const prizeKeys = [
-                'special_prize', 'prize_1', 'prize_2', 'prize_3',
-                'prize_4', 'prize_5', 'prize_6', 'prize_7'
-            ];
+            const prizeKeys = ['special_prize', 'prize_1', 'prize_2', 'prize_3', 'prize_4', 'prize_5', 'prize_6', 'prize_7'];
 
             prizeKeys.forEach(key => {
                 const prizeData = result[key];
                 if (!prizeData) return;
-
                 try {
-                    // Handle JSON array or single string
                     const prizes = prizeData.startsWith('[') ? JSON.parse(prizeData) : [prizeData];
                     prizes.forEach((p: any) => {
                         const s = String(p);
-                        if (s.length >= 2) {
-                            winningLotos.add(s.slice(-2));
-                        }
+                        if (s.length >= 2) winningLotos.add(s.slice(-2));
                     });
                 } catch (e) {
                     const s = String(prizeData);
@@ -303,12 +241,10 @@ Trình bày TỪNG LOTO CỤ THỂ, VÍ DỤ: "01", KHÔNG TRÌNH BÀY KIỂU "1
                 }
             });
 
-            // 4. Compare
             const predicted = JSON.parse(prediction.predicted_pairs || '[]');
             const matches = predicted.filter((num: string) => winningLotos.has(num));
-            const isCorrect = matches.length > 0;
+            const isCorrect = matches.length >= 5; // HoanhDong KPI 5+
 
-            // 5. Update DB
             await query(
                 `UPDATE ai_predictions 
                  SET actual_result = ?, is_correct = ?, accuracy_notes = ?
@@ -316,16 +252,15 @@ Trình bày TỪNG LOTO CỤ THỂ, VÍ DỤ: "01", KHÔNG TRÌNH BÀY KIỂU "1
                 [
                     Array.from(winningLotos).sort().join(','),
                     isCorrect ? 1 : 0,
-                    isCorrect ? `Trúng ${matches.length}/${predicted.length} loto (${matches.join(', ')})` : 'Không trúng',
+                    isCorrect ? `Trúng ${matches.length}/${predicted.length} loto (${matches.join(', ')})` : `Chỉ trúng ${matches.length}/${predicted.length} loto`,
                     prediction.id
                 ]
             );
 
-            console.log(`Accuracy updated for ${drawDate}: ${isCorrect ? 'WIN' : 'FAIL'}`);
+            console.log(`Accuracy updated for ${drawDate}: ${isCorrect ? 'WIN' : 'FAIL'} (${matches.length} hits)`);
 
         } catch (error) {
             console.error(`Error checking accuracy for ${drawDate}:`, error);
         }
     }
 }
-

@@ -11,8 +11,8 @@ export class ContextProvider {
     /**
      * Enhanced context gathering - collects ALL available analysis data
      */
-    static async getDailyContext(targetDate: string): Promise<any> {
-        console.log(`Building comprehensive context for ${targetDate}...`);
+    static async getDailyContext(targetDate: string, mode: 'hoi-dong' | 'du-doan-3-số' = 'hoi-dong'): Promise<any> {
+        console.log(`Building comprehensive context for ${targetDate} (Mode: ${mode})...`);
 
         // Get yesterday's date (the data we're analyzing FROM)
         const yesterday = new Date(targetDate);
@@ -62,17 +62,25 @@ export class ContextProvider {
                 return aggregated;
             };
 
-            const bacNhoSoDon = await getAggregatedBacNho('so-don');
-            const bacNhoCap2 = await getAggregatedBacNho('cap-2');
-            const bacNhoCap3 = await getAggregatedBacNho('cap-3');
-            const bacNho2Ngay = await getAggregatedBacNho('2-ngay');
+            let bacNhoSoDon = [], bacNhoCap2 = [], bacNhoCap3 = [], bacNho2Ngay = [];
+            
+            if (mode === 'hoi-dong') {
+                bacNhoSoDon = await getAggregatedBacNho('so-don');
+                bacNhoCap2 = await getAggregatedBacNho('cap-2');
+                bacNhoCap3 = await getAggregatedBacNho('cap-3');
+                bacNho2Ngay = await getAggregatedBacNho('2-ngay');
+            }
 
             // 4. BAC NHO KHUNG 3 NGÀY - Aggregated from Multi-Range DB Cache
             console.log('  - Running Bạc Nhớ Khung 3 Ngày (Multi-Range DB)...');
-            const bacNhoK3SoDon = await getAggregatedBacNho('khung-3-ngay-so-don');
-            const bacNhoK3Cap2 = await getAggregatedBacNho('khung-3-ngay-cap-2');
-            const bacNhoK3Cap3 = await getAggregatedBacNho('khung-3-ngay-cap-3');
-            const bacNhoK3_2Ngay = await getAggregatedBacNho('khung-3-ngay-2-ngay');
+            let bacNhoK3SoDon = [], bacNhoK3Cap2 = [], bacNhoK3Cap3 = [], bacNhoK3_2Ngay = [];
+            
+            if (mode === 'hoi-dong') {
+                bacNhoK3SoDon = await getAggregatedBacNho('khung-3-ngay-so-don');
+                bacNhoK3Cap2 = await getAggregatedBacNho('khung-3-ngay-cap-2');
+                bacNhoK3Cap3 = await getAggregatedBacNho('khung-3-ngay-cap-3');
+                bacNhoK3_2Ngay = await getAggregatedBacNho('khung-3-ngay-2-ngay');
+            }
 
             // 5. LOTO ROI ALGORITHM
             console.log('  - Running Loto Rơi algorithm...');
@@ -89,7 +97,10 @@ export class ContextProvider {
 
             // 8. AGGREGATED PREDICTIONS (combines all methods with weighted scoring)
             console.log('  - Running prediction aggregator...');
-            const aggregated = await aggregatePredictionsV2();
+            let aggregated: any[] = [];
+            if (mode === 'hoi-dong') {
+                aggregated = await aggregatePredictionsV2();
+            }
 
             // 9. PREDICTION HISTORY (Self-Correction)
             console.log('  - Fetching prediction history...');
@@ -169,7 +180,7 @@ export class ContextProvider {
     /**
      * Format the context into a readable prompt for AI
      */
-    static formatContextForPrompt(context: any): string {
+    static formatContextForPrompt(context: any, mode: 'hoi-dong' | 'du-doan-3-số' = 'hoi-dong'): string {
         const {
             formatRecentResults,
             formatFrequencyStats,
@@ -204,15 +215,17 @@ export class ContextProvider {
         text += formatFrequencyStats(context.frequency);
         text += `\n---\n\n`;
 
-        // 3. Bạc Nhớ
-        text += `## 3. BẠC NHỚ (SILVER MEMORY)\n\n`;
-        text += formatBacNhoData(context.bac_nho);
-        text += `\n---\n\n`;
+        if (mode === 'hoi-dong') {
+            // 3. Bạc Nhớ
+            text += `## 3. BẠC NHỚ (SILVER MEMORY)\n\n`;
+            text += formatBacNhoData(context.bac_nho);
+            text += `\n---\n\n`;
 
-        // 4. Bạc Nhớ Khung 3 Ngày
-        text += `## 4. BẠC NHỚ KHUNG 3 NGÀY\n\n`;
-        text += format3DayBacNho(context.bac_nho_khung_3);
-        text += `\n---\n\n`;
+            // 4. Bạc Nhớ Khung 3 Ngày
+            text += `## 4. BẠC NHỚ KHUNG 3 NGÀY\n\n`;
+            text += format3DayBacNho(context.bac_nho_khung_3);
+            text += `\n---\n\n`;
+        }
 
         // 5. Loto Rơi
         text += `## 5. LOTO RƠI ALGORITHM\n\n`;
@@ -245,9 +258,11 @@ export class ContextProvider {
         }
 
         // 8. Aggregated Predictions
-        text += `## 8. MULTI-METHOD AGGREGATED PREDICTIONS\n\n`;
-        text += formatAggregatedPredictions(context.aggregated_predictions);
-        text += `\n---\n\n`;
+        if (mode === 'hoi-dong') {
+            text += `## 8. MULTI-METHOD AGGREGATED PREDICTIONS\n\n`;
+            text += formatAggregatedPredictions(context.aggregated_predictions);
+            text += `\n---\n\n`;
+        }
 
         return text;
     }

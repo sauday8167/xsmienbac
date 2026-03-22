@@ -15,6 +15,7 @@ export async function GET() {
                 confidence_score,
                 accuracy_notes 
              FROM ai_predictions 
+             WHERE model_used = 'claude-3-haiku-3-so'
              ORDER BY draw_date DESC 
              LIMIT 10`
         );

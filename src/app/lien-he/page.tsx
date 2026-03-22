@@ -3,6 +3,9 @@ import React from 'react';
 export const metadata = {
     title: 'Liên Hệ - Xổ Số Miền Bắc 24h',
     description: 'Thông tin liên hệ Ban quản trị Xổ Số Miền Bắc 24h.',
+    alternates: {
+        canonical: 'https://xosomienbac24h.com/lien-he',
+    },
 };
 
 export default function ContactPage() {

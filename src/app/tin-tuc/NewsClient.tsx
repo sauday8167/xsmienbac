@@ -30,17 +30,29 @@ export function NewsClient() {
     const [loading, setLoading] = useState(true);
     const [category, setCategory] = useState<string>('all');
     const [total, setTotal] = useState(0);
+    const [page, setPage] = useState(1);
+    const pageSize = 20;
+
+    useEffect(() => {
+        setPage(1); // Reset to page 1 when category changes
+    }, [category]);
 
     useEffect(() => {
         fetchPosts();
-    }, [category]);
+        // Scroll to top of posts section
+        const element = document.getElementById('news-content');
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [category, page]);
 
     const fetchPosts = async () => {
         try {
             setLoading(true);
+            const offset = (page - 1) * pageSize;
             const url = category === 'all'
-                ? '/api/posts?limit=20'
-                : `/api/posts?category=${category}&limit=20`;
+                ? `/api/posts?limit=${pageSize}&offset=${offset}`
+                : `/api/posts?category=${category}&limit=${pageSize}&offset=${offset}`;
 
             const response = await fetch(url, { cache: 'no-store' });
             const data = await response.json();
@@ -57,7 +69,7 @@ export function NewsClient() {
     };
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8" id="news-content">
             <div className="text-center">
                 <h1 className="text-4xl font-bold text-lottery-gray-800 mb-2">
                     Tin Tức &amp; Soi Cầu
@@ -148,6 +160,39 @@ export function NewsClient() {
             ) : (
                 <div className="card text-center">
                     <p className="text-lottery-gray-600">Chưa có bài viết nào</p>
+                </div>
+            )}
+
+            {/* Pagination UI */}
+            {total > pageSize && (
+                <div className="flex justify-center items-center space-x-4 mt-8 pb-4">
+                    <button
+                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                        disabled={page === 1}
+                        className={`btn ${page === 1 ? 'btn-outline opacity-50 cursor-not-allowed' : 'btn-primary'}`}
+                    >
+                        <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                        Trang trước
+                    </button>
+                    
+                    <div className="flex items-center space-x-2">
+                        <span className="text-sm font-medium text-lottery-gray-700">
+                            Trang {page} / {Math.ceil(total / pageSize)}
+                        </span>
+                    </div>
+
+                    <button
+                        onClick={() => setPage(p => Math.min(Math.ceil(total / pageSize), p + 1))}
+                        disabled={page >= Math.ceil(total / pageSize)}
+                        className={`btn ${page >= Math.ceil(total / pageSize) ? 'btn-outline opacity-50 cursor-not-allowed' : 'btn-primary'}`}
+                    >
+                        Trang sau
+                        <svg className="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
                 </div>
             )}
 

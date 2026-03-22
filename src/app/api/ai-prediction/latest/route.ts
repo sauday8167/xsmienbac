@@ -26,9 +26,11 @@ export async function GET() {
         const currentMinute = parseInt(getPart('minute'));
         const today = `${getPart('year')}-${getPart('month')}-${getPart('day')}`;
 
-        // Query potentially 2 latest predictions to decide which one to show
+        // Query potentially 2 latest predictions for the 3-so model
         const predictions = await query(
-            `SELECT * FROM ai_predictions ORDER BY draw_date DESC LIMIT 2`
+            `SELECT * FROM ai_predictions 
+             WHERE model_used = 'claude-3-haiku-3-so'
+             ORDER BY draw_date DESC LIMIT 2`
         ) as any[];
 
         if (!predictions.length) {

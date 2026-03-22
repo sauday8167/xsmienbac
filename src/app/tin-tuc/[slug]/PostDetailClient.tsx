@@ -1,5 +1,6 @@
 'use client';
 
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import type { Post } from '@/types';
 import { generateSmartAltText } from '@/lib/image-seo';
@@ -32,15 +33,12 @@ export default function PostDetailClient({ post, relatedPosts }: PostDetailClien
         );
     }
 
-    // Split content for Ad Injection
-    const paragraphs = post.content.split('</p>');
-    let contentPart1 = post.content;
-    let contentPart2 = '';
-
-    if (paragraphs.length > 3) {
-        contentPart1 = paragraphs.slice(0, 2).join('</p>') + '</p>';
-        contentPart2 = paragraphs.slice(2).join('</p>');
-    }
+    // Fix hydration: Do not split raw HTML string blindly as it breaks tags (like <ul> or <table>).
+    // Render the whole content and place the ad safely after.
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     // Construct breadcrumbs
     const breadcrumbItems = [
@@ -71,7 +69,7 @@ export default function PostDetailClient({ post, relatedPosts }: PostDetailClien
                         {post.category}
                     </span>
                     <span className="text-gray-500 text-sm">
-                        {new Date(post.created_at).toLocaleDateString('vi-VN')}
+                        {mounted ? new Date(post.created_at).toLocaleDateString('vi-VN') : ''}
                     </span>
                     <span className="text-gray-300">•</span>
                     <span className="text-gray-500 text-sm">
@@ -112,20 +110,13 @@ export default function PostDetailClient({ post, relatedPosts }: PostDetailClien
                         .article-content :global(th) { background-color: #f9fafb; font-weight: 600; color: #1f2937; }
                     `}</style>
 
-                    {/* Part 1 */}
-                    <div dangerouslySetInnerHTML={{ __html: contentPart1 }} />
+                    {/* Full Content rendering safely */}
+                    <div dangerouslySetInnerHTML={{ __html: post.content }} />
 
-                    {/* In-Article Ad */}
-                    {contentPart2 && (
-                        <div className="my-6">
-                            <GoogleAd position="article_middle" style={{ minHeight: '150px' }} />
-                        </div>
-                    )}
-
-                    {/* Part 2 */}
-                    {contentPart2 && (
-                        <div dangerouslySetInnerHTML={{ __html: contentPart2 }} />
-                    )}
+                    {/* Bottom Article Ad instead of splitting content */}
+                    <div className="my-6">
+                        <GoogleAd position="article_middle" style={{ minHeight: '150px' }} />
+                    </div>
                 </div>
             </article>
 

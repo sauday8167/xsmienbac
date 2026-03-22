@@ -2,9 +2,10 @@
 import { AIAnalyst } from '@/lib/ai/analyst';
 
 async function main() {
-    console.log('Starting AI Daily Analysis...');
+    const targetDate = process.argv[2]; // Lấy ngày từ command line nếu có
+    console.log(`Starting AI Daily Analysis for ${targetDate || 'Today'}...`);
     try {
-        await AIAnalyst.runDailyAnalysis();
+        await AIAnalyst.runDailyAnalysis(targetDate, 'du-doan-3-số');
         console.log('AI Analysis finished successfully.');
         process.exit(0);
     } catch (error) {

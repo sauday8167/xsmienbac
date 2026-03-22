@@ -3,6 +3,9 @@ import React from 'react';
 export const metadata = {
     title: 'Chính Sách Bảo Mật - Xổ Số Miền Bắc 24h',
     description: 'Cam kết bảo mật thông tin người dùng tại Xổ Số Miền Bắc 24h.',
+    alternates: {
+        canonical: 'https://xosomienbac24h.com/chinh-sach-bao-mat',
+    },
 };
 
 export default function PrivacyPage() {

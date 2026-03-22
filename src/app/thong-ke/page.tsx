@@ -9,7 +9,10 @@ export async function generateMetadata() {
 
     return {
         title: 'Thống Kê Xổ Số Miền Bắc - Phân Tích Tần Suất Loto Chi Tiết',
-        description: 'Thống Kê Xổ Số Miền Bắc đầy đủ: Phân tích tần suất loto gan, nhịp lô tô, đầu đuôi và dự đoán giải đặc biệt ngày mai chính xác.'
+        description: 'Thống Kê Xổ Số Miền Bắc đầy đủ: Phân tích tần suất loto gan, nhịp lô tô, đầu đuôi và dự đoán giải đặc biệt ngày mai chính xác.',
+        alternates: {
+            canonical: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://xosomienbac24h.com'}/thong-ke`,
+        }
     };
 }
 
