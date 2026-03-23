@@ -5,19 +5,27 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
     try {
-        // Chuyển sang lấy từ ai_predictions
-        const rows = await query<any[]>(`
-            SELECT 
-                draw_date, 
-                predicted_pairs as predicted_numbers, 
-                actual_result as hit_numbers,
-                is_correct,
-                CASE WHEN actual_result IS NOT NULL THEN 1 ELSE 0 END as is_verified
+        // Thử lấy theo model trước
+        let rows = await query<any[]>(`
+            SELECT draw_date, predicted_pairs as predicted_numbers, actual_result as hit_numbers, 
+                   is_correct, CASE WHEN actual_result IS NOT NULL THEN 1 ELSE 0 END as is_verified
             FROM ai_predictions 
             WHERE model_used = 'claude-3-haiku-hoi-dong'
-            ORDER BY draw_date DESC 
+            ORDER BY draw_date DESC, id DESC 
             LIMIT 10
         `);
+
+        // Nếu không có, lấy 10 bản ghi mới nhất bất kể model
+        if (rows.length === 0) {
+            rows = await query<any[]>(`
+                SELECT draw_date, predicted_pairs as predicted_numbers, actual_result as hit_numbers, 
+                       is_correct, CASE WHEN actual_result IS NOT NULL THEN 1 ELSE 0 END as is_verified
+                FROM ai_predictions 
+                WHERE predicted_pairs IS NOT NULL
+                ORDER BY draw_date DESC, id DESC 
+                LIMIT 10
+            `);
+        }
 
         const data = rows.map(row => {
             const hitNumbers = row.hit_numbers ? row.hit_numbers.split(',') : [];

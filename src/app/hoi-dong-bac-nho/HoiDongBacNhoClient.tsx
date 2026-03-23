@@ -60,13 +60,16 @@ export default function HoiDongBacNhoClient() {
                 ? JSON.parse(latest.predicted_numbers)
                 : latest.predicted_numbers;
             
-            if (Array.isArray(raw) && typeof raw[0] === 'string') {
-                return (raw as string[]).map((num, idx) => ({
-                    number: num,
-                    score: 90 - idx,
-                    tier: idx < 3 ? 'main' : idx < 7 ? 'potential' : 'support',
-                    rank: idx + 1
-                }));
+            if (Array.isArray(raw)) {
+                return raw.map((item, idx) => {
+                    const num = typeof item === 'string' ? item : (item.number || '');
+                    return {
+                        number: num,
+                        score: typeof item === 'object' ? (item.score || 90 - idx) : (90 - idx),
+                        tier: idx < 3 ? 'main' : idx < 7 ? 'potential' : 'support',
+                        rank: idx + 1
+                    };
+                });
             }
             return raw;
         } catch { return []; }
