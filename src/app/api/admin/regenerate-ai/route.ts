@@ -14,7 +14,10 @@ export async function POST() {
         console.log(`✅ Deleted old prediction for ${today}`);
 
         // Step 2: Run AI analysis
-        await AIAnalyst.runDailyAnalysis();
+        await Promise.all([
+            AIAnalyst.runDailyAnalysis(undefined, 'hoi-dong'),
+            AIAnalyst.runDailyAnalysis(undefined, 'du-doan-3-số')
+        ]);
         console.log('✅ AI Analysis completed');
 
         return NextResponse.json({

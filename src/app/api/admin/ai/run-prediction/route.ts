@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { AIAnalyst } from '@/lib/ai/analyst';
 import { verifyAdmin } from '@/lib/auth';
 
@@ -19,11 +19,17 @@ export async function POST(request: NextRequest) {
         // Get optional target date from request body
         const body = await request.json().catch(() => ({}));
         const targetDate = body.targetDate;
+        const mode = body.mode; // 'hoi-dong' or 'du-doan-3-số'
 
-        console.log(`[ADMIN AI] ${admin.username} triggered AI prediction for date: ${targetDate || 'today'}`);
+        console.log(`[ADMIN AI] ${admin.username} triggered AI prediction for date: ${targetDate || 'today'}, mode: ${mode || 'all'}`);
 
         // Run AI analysis
-        const result = await AIAnalyst.runDailyAnalysis(targetDate);
+        const result = mode 
+            ? await AIAnalyst.runDailyAnalysis(targetDate, mode)
+            : await Promise.all([
+                AIAnalyst.runDailyAnalysis(targetDate, 'hoi-dong'),
+                AIAnalyst.runDailyAnalysis(targetDate, 'du-doan-3-số')
+            ]);
 
         return NextResponse.json({
             success: true,
@@ -43,3 +49,4 @@ export async function POST(request: NextRequest) {
         );
     }
 }
+
