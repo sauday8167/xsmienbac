@@ -18,7 +18,6 @@ export interface AIPattern {
 }
 
 export async function findAIPatternsV2(endDate: string): Promise<AIPattern[]> {
-    console.log("LIB FUNC HIT: findAIPatternsV2 " + endDate);
     const sql = `
         SELECT * FROM xsmb_results 
         WHERE draw_date <= ? 
@@ -108,7 +107,6 @@ export async function findAIPatternsV2(endDate: string): Promise<AIPattern[]> {
 }
 
 export async function findAIPatterns3D(endDate: string): Promise<AIPattern[]> {
-    console.log("LIB FUNC HIT: findAIPatterns3D " + endDate);
     const sql = `SELECT * FROM xsmb_results WHERE draw_date <= ? ORDER BY draw_date DESC LIMIT 100`;
     const results = await query<LotteryResultRaw[]>(sql, [endDate]);
     if (results.length < 30) return [];
@@ -142,7 +140,6 @@ export async function findAIPatterns3D(endDate: string): Promise<AIPattern[]> {
 }
 
 export async function findAIPatterns4D(endDate: string): Promise<AIPattern[]> {
-    console.log("LIB FUNC HIT: findAIPatterns4D " + endDate);
     const sql = `SELECT * FROM xsmb_results WHERE draw_date <= ? ORDER BY draw_date DESC LIMIT 100`;
     const results = await query<LotteryResultRaw[]>(sql, [endDate]);
     if (results.length < 30) return [];
@@ -174,7 +171,6 @@ export async function findAIPatterns4D(endDate: string): Promise<AIPattern[]> {
 }
 
 export async function findAIPatternsLotoDau(endDate: string): Promise<AIPattern[]> {
-    console.log("LIB FUNC HIT: findAIPatternsLotoDau " + endDate);
     const sql = `SELECT * FROM xsmb_results WHERE draw_date <= ? ORDER BY draw_date DESC LIMIT 100`;
     const results = await query<LotteryResultRaw[]>(sql, [endDate]);
     if (results.length < 30) return [];

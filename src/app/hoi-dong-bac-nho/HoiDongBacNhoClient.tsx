@@ -184,8 +184,8 @@ export default function HoiDongBacNhoClient() {
                                             <span className={`px-3 py-1 rounded-xl text-[11px] font-black uppercase tracking-widest ${cfg.badge}`}>
                                                 {cfg.label}
                                             </span>
-                                            <span className="text-slate-500 text-xs text-uppercase">
-                                                {tierKey === 'main' ? '3 số điểm cao nhất' : tierKey === 'potential' ? '4 số tiềm năng' : '3 số bổ sung'}
+                                            <span className="text-slate-500 text-xs text-uppercase italic">
+                                                {nums.length} số được chọn
                                             </span>
                                         </div>
                                         <div className="flex flex-wrap gap-4 md:gap-6">

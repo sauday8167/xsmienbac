@@ -167,7 +167,6 @@ export default function Header() {
                             </div>
 
                             {/* Mobile Menu Button */}
-                            {/* Mobile Menu Button */}
                             <button
                                 id="mobile-menu-btn"
                                 onClick={toggleMobileMenu}

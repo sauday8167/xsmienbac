@@ -11,14 +11,12 @@ export async function GET() {
         const minute = vnTime.getMinutes();
 
         const today = vnTime.toISOString().split('T')[0];
-        console.log('API Live Debug:', { serverTime: now, vnTime, today });
 
         // Fetch today's result from database
         const result = await queryOne<any>(
             'SELECT * FROM xsmb_results WHERE draw_date = ?',
             [today]
         );
-        console.log('API Live Result:', result);
 
         // Check if special prize exists - if yes, LIVE is over
         const hasSpecialPrize = result?.special_prize && result.special_prize.length === 5;

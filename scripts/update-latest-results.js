@@ -3,10 +3,15 @@ const sqlite3 = require('sqlite3');
 const { open } = require('sqlite');
 const path = require('path');
 const { exec } = require('child_process');
+const { promisify } = require('util');
+const execAsync = promisify(exec);
 
 async function updateLatest() {
+    // Robust pathing using __dirname
+    const dbPath = path.join(__dirname, '..', 'database', 'xsmb.sqlite');
+    
     const db = await open({
-        filename: path.join(process.cwd(), 'database', 'xsmb.sqlite'),
+        filename: dbPath,
         driver: sqlite3.Database
     });
 
@@ -19,8 +24,10 @@ async function updateLatest() {
             startDate = new Date();
             startDate.setDate(startDate.getDate() - 7); // Start from a week ago if empty
         } else {
+            // LOGIC CHANGE: Start from the latest existing date to ensure it is fully updated
+            // (e.g. if the DB had only partial results from a live crawl)
             startDate = new Date(latest.draw_date);
-            startDate.setDate(startDate.getDate() + 1); // Start from next day
+            console.log(`Checking/Updating from existing latest date: ${latest.draw_date}`);
         }
 
         const today = new Date();
@@ -28,11 +35,12 @@ async function updateLatest() {
 
         let current = new Date(startDate);
         while (current <= today) {
-            console.log(`Crawling results for ${current.toISOString().split('T')[0]}...`);
+            const dateStr = current.toISOString().split('T')[0];
+            console.log(`Crawling results for ${dateStr}...`);
             const result = await crawlMinhNgoc(current);
 
             if (result && result.special_prize) {
-                console.log(`Success! Found results for ${result.draw_date}`);
+                console.log(`Success! Processing results for ${result.draw_date}`);
                 await db.run(
                     `INSERT INTO xsmb_results 
                     (draw_date, special_prize, prize_1, prize_2, prize_3, prize_4, prize_5, prize_6, prize_7, updated_at) 
@@ -55,7 +63,7 @@ async function updateLatest() {
                     ]
                 );
             } else {
-                console.log(`No results found yet for ${current.toISOString().split('T')[0]}`);
+                console.log(`No results found (or incomplete) for ${dateStr}`);
             }
 
             current.setDate(current.getDate() + 1);
@@ -66,20 +74,22 @@ async function updateLatest() {
 
         // Trigger AI Analysis
         console.log('Triggering AI Analysis...');
-        exec('npx ts-node -r tsconfig-paths/register scripts/run-ai.ts', (error, stdout, stderr) => {
-            if (error) {
-                console.error(`AI Analysis Error: ${error.message}`);
-                return;
-            }
+        try {
+            const { stdout, stderr } = await execAsync('npm run run-ai');
+            if (stdout) console.log(`AI Analysis Output: ${stdout}`);
             if (stderr) console.error(`AI Analysis Stderr: ${stderr}`);
-            console.log(`AI Analysis Stdout: ${stdout}`);
-        });
+        } catch (execError) {
+            console.error(`AI Analysis Trigger Failed: ${execError.message}`);
+        }
 
     } catch (e) {
-        console.error('Update failed:', e);
+        console.error('Update operation failed:', e);
     } finally {
         await db.close();
     }
 }
 
-updateLatest();
+updateLatest().catch(err => {
+    console.error('Critical Script Error:', err);
+    process.exit(1);
+});
