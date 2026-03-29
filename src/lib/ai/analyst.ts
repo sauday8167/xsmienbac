@@ -175,7 +175,7 @@ CẢNH BÁO LÔ GAN: ${ganList}
                 .replace(/Miền Nam/g, 'Miền Bắc');
 
             // 5. Parse Response
-            let predictedPairs = [];
+            let predictedPairs: string[] = [];
             let confidence = 0;
             let analysisContent = aiResponse;
 
@@ -194,12 +194,16 @@ CẢNH BÁO LÔ GAN: ${ganList}
                         ].filter(n => n && !predictedPairs.includes(n));
                         
                         while (predictedPairs.length < 10 && allAvailable.length > 0) {
-                            predictedPairs.push(allAvailable.shift());
+                            const n = allAvailable.shift();
+                            if (n) predictedPairs.push(n);
                         }
                     } else if (mode === 'du-doan-3-số' && predictedPairs.length < 3) {
                          // Similar padding for 3-so if needed
                          const fallback = ["79", "33", "52"].filter(n => !predictedPairs.includes(n));
-                         while (predictedPairs.length < 3 && fallback.length > 0) predictedPairs.push(fallback.shift());
+                         while (predictedPairs.length < 3 && fallback.length > 0) {
+                             const n = fallback.shift();
+                             if (n) predictedPairs.push(n);
+                         }
                     }
 
                     confidence = data.confidence || 0;
@@ -228,12 +232,12 @@ CẢNH BÁO LÔ GAN: ${ganList}
 
     static async checkAccuracy(drawDate: string) {
         try {
-            const prediction = await queryOne<any>(
-                'SELECT id, predicted_pairs, actual_result FROM ai_predictions WHERE draw_date = ?',
+            const predictions = await query<any[]>(
+                'SELECT id, predicted_pairs, actual_result, model_used FROM ai_predictions WHERE draw_date = ?',
                 [drawDate]
             );
 
-            if (!prediction || prediction.actual_result) return;
+            if (!predictions || predictions.length === 0) return;
 
             const result = await queryOne<any>(
                 'SELECT * FROM xsmb_results WHERE draw_date = ?',
@@ -260,23 +264,30 @@ CẢNH BÁO LÔ GAN: ${ganList}
                 }
             });
 
-            const predicted = JSON.parse(prediction.predicted_pairs || '[]');
-            const matches = predicted.filter((num: string) => winningLotos.has(num));
-            const isCorrect = matches.length >= 5; // HoanhDong KPI 5+
+            for (const prediction of predictions) {
+                if (prediction.actual_result) continue;
 
-            await query(
-                `UPDATE ai_predictions 
-                 SET actual_result = ?, is_correct = ?, accuracy_notes = ?
-                 WHERE id = ?`,
-                [
-                    Array.from(winningLotos).sort().join(','),
-                    isCorrect ? 1 : 0,
-                    isCorrect ? `Trúng ${matches.length}/${predicted.length} loto (${matches.join(', ')})` : `Chỉ trúng ${matches.length}/${predicted.length} loto`,
-                    prediction.id
-                ]
-            );
+                const predicted = JSON.parse(prediction.predicted_pairs || '[]');
+                const matches = predicted.filter((num: string) => winningLotos.has(num));
+                
+                // KPI differs based on model
+                const isHoiDong = prediction.model_used === 'claude-3-haiku-hoi-dong';
+                const isCorrect = isHoiDong ? (matches.length >= 5) : (matches.length >= 2); 
 
-            console.log(`Accuracy updated for ${drawDate}: ${isCorrect ? 'WIN' : 'FAIL'} (${matches.length} hits)`);
+                await query(
+                    `UPDATE ai_predictions 
+                     SET actual_result = ?, is_correct = ?, accuracy_notes = ?
+                     WHERE id = ?`,
+                    [
+                        Array.from(winningLotos).sort().join(','),
+                        isCorrect ? 1 : 0,
+                        isCorrect ? `Trúng ${matches.length}/${predicted.length} loto (${matches.join(', ')})` : `Chỉ trúng ${matches.length}/${predicted.length} loto`,
+                        prediction.id
+                    ]
+                );
+
+                console.log(`Accuracy updated for ${drawDate} [${prediction.model_used}]: ${isCorrect ? 'WIN' : 'FAIL'} (${matches.length} hits)`);
+            }
 
         } catch (error) {
             console.error(`Error checking accuracy for ${drawDate}:`, error);

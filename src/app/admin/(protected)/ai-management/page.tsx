@@ -42,6 +42,7 @@ export default function AIManagementPage() {
     const [statistics, setStatistics] = useState<AIStatistics | null>(null);
     const [loading, setLoading] = useState(true);
     const [isRunningPrediction, setIsRunningPrediction] = useState(false);
+    const [isRunningHoiDong, setIsRunningHoiDong] = useState(false);
     const [isGeneratingArticle, setIsGeneratingArticle] = useState(false);
 
     // Fetch statistics on mount
@@ -107,6 +108,46 @@ export default function AIManagementPage() {
             toast.error('Lỗi kết nối hoặc network', { id: toastId });
         } finally {
             setIsRunningPrediction(false);
+        }
+    };
+
+    const handleRunHoiDong = async () => {
+        if (isRunningHoiDong) return;
+
+        setIsRunningHoiDong(true);
+        const toastId = toast.loading('Đang chạy phân tích Hội Đồng Bạc Nhớ (VIP)...');
+
+        try {
+            const response = await fetch('/api/admin/ai/run-prediction', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mode: 'hoi-dong' })
+            });
+
+            if (!response.ok) {
+                let errorMsg = `Lỗi server (${response.status})`;
+                try {
+                    const data = await response.json();
+                    errorMsg = data.error || errorMsg;
+                } catch (e) {
+                }
+                toast.error(errorMsg, { id: toastId });
+                return;
+            }
+
+            const data = await response.json();
+
+            if (data.success) {
+                toast.success('Dự đoán Hội Đồng hoàn tất!', { id: toastId });
+                await fetchStatistics();
+            } else {
+                toast.error(data.error || 'Dự đoán thất bại', { id: toastId });
+            }
+        } catch (error) {
+            console.error('Error running hoi-dong:', error);
+            toast.error('Lỗi kết nối hoặc network', { id: toastId });
+        } finally {
+            setIsRunningHoiDong(false);
         }
     };
 
@@ -317,12 +358,36 @@ export default function AIManagementPage() {
                             <>🔮 Chạy Dự Đoán AI</>
                         )}
                     </button>
+                    
+                    <button
+                        onClick={handleRunHoiDong}
+                        disabled={isRunningHoiDong}
+                        className={`
+                            p-6 rounded-lg font-semibold text-lg transition-all transform hover:scale-105
+                            ${isRunningHoiDong
+                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                : 'bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 shadow-lg'
+                            }
+                        `}
+                    >
+                        {isRunningHoiDong ? (
+                            <span className="flex items-center justify-center">
+                                <svg className="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Đang phân tích Hội Đồng...
+                            </span>
+                        ) : (
+                            <>👑 Chạy Hội Đồng Bạc Nhớ</>
+                        )}
+                    </button>
 
                     <button
                         onClick={handleGenerateArticle}
                         disabled={isGeneratingArticle}
                         className={`
-                            p-6 rounded-lg font-semibold text-lg transition-all transform hover:scale-105
+                            p-6 rounded-lg font-semibold text-lg md:col-span-2 transition-all transform hover:scale-105
                             ${isGeneratingArticle
                                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                                 : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 shadow-lg'

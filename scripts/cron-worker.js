@@ -121,12 +121,25 @@ console.log(' - 19:40: AI Prediction (/du-doan-ai) - phân tích sau kết quả
 cron.schedule('40 19 * * *', () => {
     console.log(`[${new Date().toISOString()}] Triggering AI Prediction (Early Update)...`);
     const { exec } = require('child_process');
-    exec('npm run run-ai', (error, stdout, stderr) => {
+    exec('npx tsx scripts/run-ai.ts null du-doan-3-số', (error, stdout, stderr) => {
         if (error) {
             console.error(`AI Analysis Error: ${error.message}`);
             return;
         }
         console.log(`AI Analysis Stdout: ${stdout}`);
+    });
+});
+
+// Hội Đồng Bạc Nhớ Prediction - /hoi-dong-bac-nho
+cron.schedule('0 8 * * *', () => {
+    console.log(`[${new Date().toISOString()}] Triggering Hội Đồng Bạc Nhớ Prediction...`);
+    const { exec } = require('child_process');
+    exec('npx tsx scripts/run-ai.ts null hoi-dong', (error, stdout, stderr) => {
+        if (error) {
+            console.error(`AI Analysis Error (Hội Đồng): ${error.message}`);
+            return;
+        }
+        console.log(`AI Analysis Stdout (Hội Đồng): ${stdout}`);
     });
 });
 

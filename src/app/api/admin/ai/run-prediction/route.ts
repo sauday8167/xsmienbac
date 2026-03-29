@@ -26,10 +26,9 @@ export async function POST(request: NextRequest) {
         if (mode) {
             result = await AIAnalyst.runDailyAnalysis(targetDate, mode);
         } else {
-            // Run sequentially to prevent Claude API Rate Limits & SQLite DB locks
-            const res1 = await AIAnalyst.runDailyAnalysis(targetDate, 'hoi-dong');
+            // Run only du-doan-3-số for AI prediction button, hoi-dong is automated via cron job
             const res2 = await AIAnalyst.runDailyAnalysis(targetDate, 'du-doan-3-số');
-            result = [res1, res2];
+            result = [res2];
         }
 
         return NextResponse.json({
