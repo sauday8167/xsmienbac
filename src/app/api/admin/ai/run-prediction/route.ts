@@ -21,15 +21,16 @@ export async function POST(request: NextRequest) {
         const targetDate = body.targetDate;
         const mode = body.mode; // 'hoi-dong' or 'du-doan-3-số'
 
-        console.log(`[ADMIN AI] ${admin.username} triggered AI prediction for date: ${targetDate || 'today'}, mode: ${mode || 'all'}`);
-
         // Run AI analysis
-        const result = mode 
-            ? await AIAnalyst.runDailyAnalysis(targetDate, mode)
-            : await Promise.all([
-                AIAnalyst.runDailyAnalysis(targetDate, 'hoi-dong'),
-                AIAnalyst.runDailyAnalysis(targetDate, 'du-doan-3-số')
-            ]);
+        let result;
+        if (mode) {
+            result = await AIAnalyst.runDailyAnalysis(targetDate, mode);
+        } else {
+            // Run sequentially to prevent Claude API Rate Limits & SQLite DB locks
+            const res1 = await AIAnalyst.runDailyAnalysis(targetDate, 'hoi-dong');
+            const res2 = await AIAnalyst.runDailyAnalysis(targetDate, 'du-doan-3-số');
+            result = [res1, res2];
+        }
 
         return NextResponse.json({
             success: true,

@@ -13,11 +13,10 @@ export async function POST() {
         await query('DELETE FROM ai_predictions WHERE draw_date = ?', [today]);
         console.log(`✅ Deleted old prediction for ${today}`);
 
-        // Step 2: Run AI analysis
-        await Promise.all([
-            AIAnalyst.runDailyAnalysis(undefined, 'hoi-dong'),
-            AIAnalyst.runDailyAnalysis(undefined, 'du-doan-3-số')
-        ]);
+        // Step 2: Run AI analysis (Sequentially instead of Promise.all to prevent Claude API Rate Limits & SQLite DB locks)
+        await AIAnalyst.runDailyAnalysis(undefined, 'hoi-dong');
+        await AIAnalyst.runDailyAnalysis(undefined, 'du-doan-3-số');
+
         console.log('✅ AI Analysis completed');
 
         return NextResponse.json({
