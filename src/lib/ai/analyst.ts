@@ -19,7 +19,7 @@ export class AIAnalyst {
             if (!targetDate) {
                 const dateObj = new Date(now);
                 // Nếu sau 18:30 (giờ quay xong), dự đoán cho ngày mai
-                if (parseInt(vnTime) >= 19) { 
+                if ((parseInt(vnTime) >= 19 && parseInt(vnTime) < 24)) { 
                     dateObj.setDate(dateObj.getDate() + 1);
                 }
                 targetDate = new Intl.DateTimeFormat('en-CA', {
@@ -283,3 +283,4 @@ CẢNH BÁO LÔ GAN: ${ganList}
         }
     }
 }
+
