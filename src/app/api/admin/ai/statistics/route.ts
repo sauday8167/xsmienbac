@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
 
         const accuracyRate = checkedPredictions > 0 ? (correctPredictions / checkedPredictions) * 100 : 0;
 
-        const recentPredictions = await query("SELECT id, draw_date, predicted_pairs, actual_result, is_correct, confidence_score, accuracy_notes, created_at FROM ai_predictions ORDER BY draw_date DESC LIMIT 10");
+        const recentPredictions = await query("SELECT id, draw_date, predicted_pairs, actual_result, is_correct, confidence_score, accuracy_notes, model_used, created_at FROM ai_predictions ORDER BY draw_date DESC, id DESC LIMIT 20");
 
         const formattedPredictions = recentPredictions.map((pred: any) => {
             let predictedPairs = [];
@@ -49,6 +49,7 @@ export async function GET(request: NextRequest) {
                 isCorrect: pred.is_correct === 1,
                 confidence: pred.confidence_score || 0,
                 notes: pred.accuracy_notes || "",
+                model: pred.model_used || "claude-3-haiku-3-so",
                 createdAt: pred.created_at
             };
         });

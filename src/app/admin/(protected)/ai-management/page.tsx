@@ -25,6 +25,7 @@ interface Prediction {
     isCorrect: boolean;
     confidence: number;
     notes: string;
+    model: string;
     createdAt: string;
 }
 
@@ -433,6 +434,7 @@ export default function AIManagementPage() {
                                 <th className="px-4 py-3 text-left font-semibold text-gray-700">Ngày</th>
                                 <th className="px-4 py-3 text-left font-semibold text-gray-700">Dự Đoán</th>
                                 <th className="px-4 py-3 text-left font-semibold text-gray-700">Kết Quả Thực</th>
+                                <th className="px-4 py-3 text-left font-semibold text-gray-700">Model</th>
                                 <th className="px-4 py-3 text-center font-semibold text-gray-700">Độ Tin Cậy</th>
                                 <th className="px-4 py-3 text-center font-semibold text-gray-700">Trạng Thái</th>
                             </tr>
@@ -463,6 +465,13 @@ export default function AIManagementPage() {
                                             </div>
                                         ) : (
                                             <span className="text-gray-400 text-xs">Chưa có</span>
+                                        )}
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        {pred.model === 'claude-3-haiku-hoi-dong' ? (
+                                            <span className="px-2 py-1 bg-red-100 text-red-700 rounded text-[10px] font-bold">HỘI ĐỒNG</span>
+                                        ) : (
+                                            <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-[10px] font-bold">AI 3-SỐ</span>
                                         )}
                                     </td>
                                     <td className="px-4 py-3 text-center">
