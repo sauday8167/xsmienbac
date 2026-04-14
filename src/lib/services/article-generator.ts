@@ -39,12 +39,22 @@ export class AutoArticleGenerator {
          // 3. Call AI with Retry Loop (Max 2 Attempts for quality)
          const refinedPrompt = `
             ROLE: Bạn là chuyên gia phân tích dữ liệu xổ số Miền Bắc.
-            MISSION: Viết bài phân tích chuyên sâu cho ngày ${formattedDate} dựa trên dữ liệu thật.
-            
-            QUY TẮC NỘI DUNG:
-            - Văn phong: Thân thiện, khách quan, không dùng từ ngữ "lô đề", "về bờ", "lộc lá".
-            - Tuyệt đối không dùng cụm từ: "chuyên gia", "20 năm kinh nghiệm".
-            - Sử dụng các thẻ HTML (h3, p, ul, li, b) để định dạng bài viết chuyên nghiệp.
+            MISSION: Viết bài phân tích soi cầu chuyên sâu chuẩn SEO cho ngày ${formattedDate}. Bạn phải viết bài RẤT DÀI, ÍT NHẤT 1500 TỪ dựa trên dữ liệu thật. Hãy đi sâu phân tích chi tiết từng con số, từng thống kê để đảm bảo bài viết đủ dài và chất lượng.
+
+            QUY TẮC NỘI DUNG VÀ SEO:
+            1. Văn phong: Khách quan, chuyên nghiệp. Không dùng từ ngữ xúi giục đánh bạc, "về bờ", "lộc lá". Bắt buộc có phần cảnh báo (Disclaimer) từ chối trách nhiệm ở cuối bài.
+            2. Cấu trúc bài viết: Phải sử dụng các thẻ <h2>, <h3> để chia bài viết (đẩy chốt số lên đầu). Phần phân tích bên dưới phải mở rộng, viết dài và phân tích kỹ lưỡng về chu kỳ loto, nhịp loto, loto gan để đạt đủ độ dài 1500 từ.
+            3. Chốt Số VIP (BẮT BUỘC CÓ): Bắt buộc liệt kê ở H2 hoặc H3 phần chốt số đầu bài:
+               - Bạch thủ lô: (1 số xuất sắc nhất)
+               - Song thủ lô: (1 cặp số đẹp)
+               - Lô kép / Cầu kẹp VIP: (1 cặp kép)
+               - Dàn đặc biệt 36 số: (LIỆT KÊ ĐẦY ĐỦ RÕ RÀNG 36 CON SỐ, TUYỆT ĐỐI KHÔNG ĐƯỢC VIẾT TẮT BẰNG DẤU BA CHẤM "...").
+            4. Phân tích Thuật toán: Thêm 1 thẻ H2 "Soi cầu Bạc Nhớ / Pascal" và đi sâu phân tích logic của 1-2 số tiềm năng từ thuật toán máy học.
+            5. Liên kết nội bộ (Internal Linking): BẮT BUỘC chèn tự nhiên các thẻ <a> lồng trong bài. Ví dụ:
+               - <a href="/" title="Kết quả XSMB">xổ số miền Bắc</a>
+               - <a href="/so-mo" title="Giải mã giấc mơ">Sổ mơ lô đề</a>
+               - <a href="/soi-cau-bac-nho" title="Soi cầu Bạc Nhớ">Soi cầu bạc nhớ</a>
+               - <a href="/thong-ke" title="Thống kê xổ số">Thống kê lô gan</a>
             
             DỮ LIỆU INPUT:
             ${JSON.stringify({
@@ -55,21 +65,12 @@ export class AutoArticleGenerator {
                 bacNho: context.bacNho.soDon.slice(0, 5)
             })}
 
-            ĐỊNH DẠNG PHẢN HỒI (CHỈ TRẢ VỀ JSON):
-            Bạn phải trả về DUY NHẤT một đối tượng JSON có cấu trúc như sau:
+            ĐỊNH DẠNG PHẢN HỒI (CHỈ TRẢ VỀ JSON DUY NHẤT KHÔNG KÈM TEXT NÀO KHÁC):
             {
-                "title": "Tiêu đề bài viết",
-                "excerpt": "Tóm tắt ngắn gọn cho SEO (100-150 ký tự)",
-                "meta_description": "Mô tả SEO chuẩn",
-                "content_html": "<div class='analysis-article'>... Nội dung chi tiết bài viết (ít nhất 1000 từ) ...</div>"
-            }
-
-            VÍ DỤ MẪU:
-            {
-                "title": "Phân Tích Soi Cầu XSMB ${formattedDate}",
-                "excerpt": "Nhận định chi tiết nhịp loto rơi và cầu bạc nhớ ngày ${formattedDate}.",
-                "meta_description": "Dự đoán XSMB ${formattedDate} chính xác nhất.",
-                "content_html": "<div class='analysis-article'><h3>Nhận định chung</h3><p>Hôm nay chúng ta thấy nhịp...</p></div>"
+                "title": "Dự đoán XSMB ${formattedDate} - Soi cầu chốt Bạch thủ, Song thủ VIP",
+                "excerpt": "Dự đoán KQXSMB ${formattedDate}. Chốt số Bạch thủ lô, Song thủ, Lô kép và Dàn đề đầy đủ 36 số. Phân tích chuẩn xác qua lô gan và bạc nhớ.",
+                "meta_description": "Xem trực tiếp dự đoán XSMB ngày ${formattedDate}. Soi cầu bạch thủ, song thủ lô, kép VIP. Cung cấp đầy đủ dàn đặc biệt 36 số chuẩn xác nhất hôm nay.",
+                "content_html": "<div class='analysis-article'><h2>Chốt số Dự đoán XSMB ${formattedDate} chính xác nhất</h2><h3>Bạch thủ lô VIP: <b>XX</b></h3><h3>Song thủ lô: <b>XX - XX</b></h3><h3>Lô kép VIP: <b>XX - XX</b></h3><h3>Dàn đề đặc biệt 36 số: <b>XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX</b></h3><h2>Phân tích dữ liệu & Thống kê loto chi tiết</h2><p>Khảo sát sâu vào bảng <a href='/thong-ke'>thống kê xổ số</a>...</p><h2>Soi cầu Bạc Nhớ & Cầu Kẹp</h2><p>Theo thuật toán <a href='/soi-cau-bac-nho'>soi cầu bạc nhớ</a>...</p><h2>Lời khuyên & Cảnh báo (Disclaimer)</h2><p><i>Tất cả các bộ số dự đoán phía trên chỉ mang tính chất thống kê, tham khảo. Xổ số là trò chơi giải trí, nghiêm cấm mọi hình thức đánh bạc trái pháp luật. Hãy mua vé số kiến thiết do nhà nước ban hành.</i></p></div>"
             }
          `;
 

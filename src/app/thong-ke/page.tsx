@@ -8,8 +8,8 @@ export async function generateMetadata() {
     if (metadata) return metadata;
 
     return {
-        title: 'Thống Kê Xổ Số Miền Bắc - Phân Tích Tần Suất Loto Chi Tiết',
-        description: 'Thống Kê Xổ Số Miền Bắc đầy đủ: Phân tích tần suất loto gan, nhịp lô tô, đầu đuôi và dự đoán giải đặc biệt ngày mai chính xác.',
+        title: 'Thống Kê Xổ Số Miền Bắc - Bảng Lô Gan & Lô Về Nhiều Đỉnh Nhất',
+        description: 'Hệ thống phân tích thống kê xổ số cực khủng. Liệt kê bảng loto gan cực đại miền bắc, lô ra nhiều, đầu đuôi câm. Cơ sở dữ liệu XSMB 1000 ngày siêu chuẩn xác.',
         alternates: {
             canonical: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://xosomienbac24h.com'}/thong-ke`,
         }

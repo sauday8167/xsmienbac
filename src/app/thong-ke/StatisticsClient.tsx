@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import type { LotoStats } from '@/types';
 import DbTomorrowStats from './components/DbTomorrowStats';
 import Prize1TomorrowStats from './components/Prize1TomorrowStats';
+import TrendChart from './components/TrendChart';
 import { LayoutDashboard, BarChart3, TrendingUp, Info, Trophy } from 'lucide-react';
 
 type MainTab = 'loto' | 'gdb-tomorrow' | 'prize1-tomorrow';
@@ -54,6 +55,9 @@ export default function StatisticsClient() {
 
         return (
             <div className="space-y-6">
+                {/* Trend Chart (New Section) */}
+                <TrendChart />
+
                 {/* Loto Controls */}
                 <div className="card bg-white border-slate-200">
                     <div className="flex flex-wrap items-center justify-between gap-6">

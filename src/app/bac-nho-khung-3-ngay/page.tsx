@@ -11,9 +11,10 @@ export const metadata: Metadata = {
     },
     openGraph: {
         title: 'Bạc Nhớ Khung 3 Ngày XSMB - Phân Tích Chu Kỳ',
-        description: 'Phân tích nuôi lô khung 3 ngày dựa trên dữ liệu bạc nhớ chuyên sâu.',
+        description: 'Phân tích nuôi lô khung 3 ngày dựa trên dữ liệu bạc nhớ chuyên sâu XSMB.',
         url: `${siteUrl}/bac-nho-khung-3-ngay`,
         type: 'website',
+        images: [{ url: `${siteUrl}/og-image.png`, width: 1200, height: 630, alt: 'Bạc Nhớ Khung 3 Ngày XSMB' }],
     }
 };
 

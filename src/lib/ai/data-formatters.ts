@@ -229,3 +229,13 @@ export function formatPredictionHistory(history: any[]): string {
 
     return text;
 }
+
+export function formatRarePairs(rarePairs: any[]): string {
+    if (!rarePairs || rarePairs.length === 0) return 'No rare pair data available.';
+
+    let text = '';
+    rarePairs.forEach((item, idx) => {
+        text += `${idx + 1}. **${item.pair.join(' & ')}** - History: ${item.frequency} times - Days Since: ${item.daysSince} days\n`;
+    });
+    return text;
+}

@@ -2,7 +2,7 @@
 import { KeyManager } from './key-manager';
 
 export class ClaudeClient {
-    static async generateContent(prompt: string, model: string = 'claude-3-haiku-20240307'): Promise<string | null> {
+    static async generateContent(prompt: string, model: string = 'claude-3-haiku-20240307', temperature: number = 0.8): Promise<string | null> {
         // 1. Get API Key
         const apiKey = await KeyManager.getActiveKey('claude');
         if (!apiKey) {
@@ -21,7 +21,8 @@ export class ClaudeClient {
                 body: JSON.stringify({
                     model: model,
                     max_tokens: 4000,
-                    system: "You are an expert Vietnamese lottery analyst.",
+                    temperature: temperature,
+                    system: "You are an expert Vietnamese lottery analyst focusing on high-precision statistical patterns.",
                     messages: [
                         { role: 'user', content: prompt }
                     ]

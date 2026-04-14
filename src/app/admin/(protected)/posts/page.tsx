@@ -16,6 +16,10 @@ export default function PostsPage() {
     const [posts, setPosts] = useState<Post[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
+    const [page, setPage] = useState(1);
+    const [total, setTotal] = useState(0);
+    const [totalPages, setTotalPages] = useState(1);
+    const [limit] = useState(10);
     const [deleteId, setDeleteId] = useState<number | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const router = useRouter();
@@ -23,10 +27,12 @@ export default function PostsPage() {
     const fetchPosts = async () => {
         try {
             setLoading(true);
-            const res = await fetch(`/api/admin/posts?search=${search}`);
+            const res = await fetch(`/api/admin/posts?search=${search}&page=${page}&limit=${limit}`);
             const data = await res.json();
             if (data.success) {
                 setPosts(data.data.posts);
+                setTotal(data.data.pagination.total);
+                setTotalPages(data.data.pagination.totalPages);
             }
         } catch (error) {
             console.error('Failed to fetch posts:', error);
@@ -36,8 +42,12 @@ export default function PostsPage() {
     };
 
     useEffect(() => {
-        fetchPosts();
+        setPage(1); // Reset to page 1 when searching
     }, [search]);
+
+    useEffect(() => {
+        fetchPosts();
+    }, [search, page]);
 
     const handleDelete = async (id: number) => {
         setDeleteId(id);
@@ -175,6 +185,50 @@ export default function PostsPage() {
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination UI */}
+                {!loading && total > 0 && (
+                    <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <div className="text-sm text-gray-500">
+                            Hiển thị <span className="font-medium">{(page - 1) * limit + 1}</span> - <span className="font-medium">{Math.min(page * limit, total)}</span> trong tổng số <span className="font-medium">{total}</span> bài viết
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <button
+                                onClick={() => setPage(p => Math.max(1, p - 1))}
+                                disabled={page === 1}
+                                className="p-2 border border-gray-200 rounded-lg hover:bg-white transition-colors disabled:opacity-50 disabled:hover:bg-transparent"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                </svg>
+                            </button>
+                            
+                            {[...Array(totalPages)].map((_, i) => (
+                                <button
+                                    key={i + 1}
+                                    onClick={() => setPage(i + 1)}
+                                    className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors ${
+                                        page === i + 1 
+                                            ? 'bg-lottery-red-600 text-white shadow-md shadow-red-200' 
+                                            : 'border border-gray-200 hover:bg-white text-gray-600'
+                                    }`}
+                                >
+                                    {i + 1}
+                                </button>
+                            ))}
+
+                            <button
+                                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                disabled={page === totalPages}
+                                className="p-2 border border-gray-200 rounded-lg hover:bg-white transition-colors disabled:opacity-50 disabled:hover:bg-transparent"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Custom Delete Confirmation Modal */}

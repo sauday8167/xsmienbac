@@ -1,14 +1,14 @@
-{
-  "siteName": "Xổ Số Miền Bắc",
-  "homeTitle": "Xổ Số Miền Bắc 24h – Kết Quả XSMB Nhanh & Chính Xác",
-  "homeDescription": "Cập nhật kết quả xổ số miền Bắc nhanh chóng, chính xác mỗi ngày. Tra cứu XSMB, thống kê và thông tin liên quan tại Xổ Số Miền Bắc 24h.",
-  "keywords": "xsmb, xổ số miền bắc, sxmb, kqxs miền bắc, kết quả xổ số",
-  "ogImage": "/uploads/1769190960458-du-doan-xo-so-mb24h.jpg",
-  "siteUrl": "https://xosomienbac24h.com",
-  "googleAnalyticsId": "G-7Z87X7D5GM",
-  "social": {
-    "facebook": "",
-    "youtube": "",
-    "zalo": ""
-  }
+﻿{
+    "siteName":  "Xổ Số Miền Bắc",
+    "homeTitle":  "Xổ Số Miền Bắc 24h – Kết Quả XSMB Nhanh \u0026 Chính Xác",
+    "homeDescription":  "Cập nhật kết quả xổ số miền Bắc nhanh chóng, chính xác mỗi ngày. Tra cứu XSMB, thống kê và thông tin liên quan tại Xổ Số Miền Bắc 24h.",
+    "keywords":  "xsmb, xổ số miền bắc, sxmb, kqxs miền bắc, kết quả xổ số",
+    "ogImage":  "/og-image.png",
+    "siteUrl":  "https://xosomienbac24h.com",
+    "googleAnalyticsId":  "G-7Z87X7D5GM",
+    "social":  {
+                   "facebook":  "",
+                   "youtube":  "",
+                   "zalo":  ""
+               }
 }

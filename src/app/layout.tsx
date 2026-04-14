@@ -16,6 +16,7 @@ import { AdSenseProvider } from '@/context/AdSenseContext';
 import MobileDrawer from '@/components/MobileDrawer';
 import MobileStickyAd from '@/components/MobileStickyAd';
 import CustomCodeInjector from '@/components/CustomCodeInjector';
+import NotificationManager from '@/components/NotificationManager';
 import JsonLd from '@/components/seo/JsonLd';
 import { generateOrganizationSchema, generateWebSiteSchema } from '@/lib/schema-generator';
 
@@ -214,6 +215,7 @@ export default async function RootLayout({
                         <MobileStickyAd />
                         <MobileBottomNav />
                         <MobileDrawer />
+                        <NotificationManager />
 
                         {customCode.footer && (
                             <CustomCodeInjector id="footer-custom-code" html={customCode.footer} />

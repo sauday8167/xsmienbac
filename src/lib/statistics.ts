@@ -129,3 +129,45 @@ export async function calculateFrequent(limit: number = 10, periods: number = 10
 
     return results.slice(0, limit);
 }
+
+/**
+ * Tìm các cặp số (Rare Pairs) hiếm khi xuất hiện cùng nhau nhưng có tần suất lịch sử tốt.
+ * Giúp AI tìm ra các con số "phá vỡ" sự lặp lại.
+ */
+export async function calculateRarePairs(limit: number = 20, historyDays: number = 365, silentDays: number = 14) {
+    const rows = await query<any[]>(`
+        SELECT * FROM xsmb_results 
+        ORDER BY draw_date DESC 
+        LIMIT ?
+    `, [historyDays]);
+
+    if (!rows || rows.length < silentDays) return [];
+
+    const pairCounts: Record<string, number> = {};
+    const lastSeenPair: Record<string, number> = {};
+
+    rows.forEach((row, index) => {
+        const lotos = Array.from(new Set(getLotoFromDraw(row))).sort();
+        for (let i = 0; i < lotos.length; i++) {
+            for (let j = i + 1; j < lotos.length; j++) {
+                const pair = `${lotos[i]},${lotos[j]}`;
+                pairCounts[pair] = (pairCounts[pair] || 0) + 1;
+                if (lastSeenPair[pair] === undefined) {
+                    lastSeenPair[pair] = index; // 0 là hôm nay
+                }
+            }
+        }
+    });
+
+    const results = Object.keys(pairCounts)
+        .map(pair => ({
+            pair: pair.split(','),
+            frequency: pairCounts[pair],
+            daysSince: lastSeenPair[pair]
+        }))
+        .filter(item => item.daysSince >= silentDays) // Đã "câm" ít nhất silentDays ngày
+        .sort((a, b) => b.frequency - a.frequency) // Ưu tiên cặp có tần suất lịch sử cao nhất
+        .slice(0, limit);
+
+    return results;
+}

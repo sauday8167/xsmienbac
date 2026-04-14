@@ -68,19 +68,27 @@ export default async function DailyResultPage({ params }: Props) {
         );
     }
 
-    // Lottery Schema
+    // Lottery Schema Enrichment 
     const lotterySchema = {
         "@context": "https://schema.org",
-        "@type": "Lottery",
+        "@type": "Event",
         "name": `Kết quả xổ số Miền Bắc ngày ${date.replace(/-/g, '/')}`,
-        "offeredBy": {
-            "@type": "Organization",
-            "name": "Xổ Số Kiến Thiết Miền Bắc"
+        "description": `Kết quả xổ số kiến thiết Miền Bắc mở thưởng ngày ${date.replace(/-/g, '/')}. Giải đặc biệt: ${result.special_prize}`,
+        "startDate": result.draw_date,
+        "location": {
+            "@type": "Place",
+            "name": "Hà Nội, Việt Nam"
         },
-        "description": `Kết quả xổ số kiến thiết Miền Bắc mở thưởng ngày ${date.replace(/-/g, '/')}`,
-        "significantLink": `${process.env.NEXT_PUBLIC_SITE_URL}/ket-qua-theo-ngay/${date}`,
-        "datePublished": result.draw_date,
-        "price": "10000 VND"
+        "organizer": {
+            "@type": "Organization",
+            "name": "Xổ Số Kiến Thiết Thủ Đô",
+            "url": "https://xosomienbac24h.com"
+        },
+        "url": `${siteUrl}/ket-qua-theo-ngay/${date}`,
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": `${siteUrl}/ket-qua-theo-ngay/${date}`
+        }
     };
 
     return (

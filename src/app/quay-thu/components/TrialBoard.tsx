@@ -5,6 +5,7 @@ import '../../../styles/lottery-animation.css';
 interface TrialBoardProps {
     results: string[]; // Flat array of 27 numbers
     statusArray: ('waiting' | 'rolling' | 'done')[];
+    winningNumbers?: string[]; // Numbers predicted by AI
 }
 
 // Helper for Section Headers
@@ -17,22 +18,29 @@ const PrizeHeader = ({ title }: { title: string }) => (
     </div>
 );
 
-export default function TrialBoard({ results, statusArray }: TrialBoardProps) {
+export default function TrialBoard({ results, statusArray, winningNumbers = [] }: TrialBoardProps) {
     const getVal = (idx: number) => results[idx] || '';
 
     // Render helper for single SpinningNumber
-    const renderNumber = (idx: number, digits: number, className: string = "", colorMode: 'base' | 'red' = 'base') => (
-        <SpinningNumber
-            key={idx}
-            finalValue={getVal(idx)}
-            isRevealed={statusArray[idx] === 'done'} // Keeps compatibility if internal use
-            forceStatus={statusArray[idx]} // This overrides internal logic
-            digitCount={digits}
-            colorMode={colorMode}
-            variant="text"
-            className={className}
-        />
-    );
+    const renderNumber = (idx: number, digits: number, className: string = "", colorMode: 'base' | 'red' = 'base') => {
+        const value = getVal(idx);
+        const loto = value.slice(-2);
+        const isWinning = winningNumbers.includes(loto);
+
+        return (
+            <SpinningNumber
+                key={idx}
+                finalValue={value}
+                isRevealed={statusArray[idx] === 'done'} // Keeps compatibility if internal use
+                forceStatus={statusArray[idx]} // This overrides internal logic
+                digitCount={digits}
+                colorMode={colorMode}
+                variant="text"
+                className={className}
+                isWinning={isWinning}
+            />
+        );
+    };
 
     return (
         <div className="bg-white max-w-3xl mx-auto font-sans mb-8">

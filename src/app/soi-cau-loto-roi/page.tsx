@@ -11,9 +11,10 @@ export const metadata: Metadata = {
     },
     openGraph: {
         title: 'Soi Cầu Loto Rơi Miền Bắc - Theo Dõi Nhịp Rơi',
-        description: 'Công cụ phân tích lô rơi chuyên nghiệp cho người chơi xổ số.',
+        description: 'Công cụ phân tích lô rơi chuyên nghiệp cho người chơi xổ số XSMB.',
         url: `${siteUrl}/soi-cau-loto-roi`,
         type: 'website',
+        images: [{ url: `${siteUrl}/og-image.png`, width: 1200, height: 630, alt: 'Soi Cầu Loto Rơi XSMB' }],
     }
 };
 

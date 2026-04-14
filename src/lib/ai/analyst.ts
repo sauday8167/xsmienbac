@@ -68,14 +68,22 @@ export class AIAnalyst {
 
             // 0.5.5 Dynamic Strategy
             let dynamicInstructions = "";
-            if (recentHitRate >= 40) {
+            if (recentHitRate >= 60) {
                 dynamicInstructions = `
-[CHIẾN THUẬT HIỆN TẠI: ĐÁNH THEO NHỊP CẦU THUẬN]
-Phong độ đang TỐT. Ưu tiên hội tụ chuyên sâu.`;
+[CHIẾN THUẬT: BẢO TOÀN PHONG ĐỘ]
+Phong độ cực cao. Ưu tiên bám sát các cầu đang chạy ổn định (Aggregated Predictions).`;
+            } else if (recentHitRate >= 40) {
+                dynamicInstructions = `
+[CHIẾN THUẬT: ĐÁNH THEO NHỊP CẦU THUẬN]
+Phong độ ổn định. Kết hợp giữa Cầu Thuận và một ít Loto Rơi.`;
+            } else if (recentHitRate >= 20) {
+                dynamicInstructions = `
+[CHIẾN THUẬT: TÌM ĐIỂM ĐẢO CHIỀU]
+Phong độ đang giảm. Hãy tìm các cặp Rare Pairs và Loto Gan sắp nổ. Tránh các cầu quá nóng đang bị gãy.`;
             } else {
                 dynamicInstructions = `
-[CHIẾN THUẬT HIỆN TẠI: CHỐT SỐ RỦI RO / BẺ CẦU]
-CẢNH BÁO: Phong độ đang thấp. Tìm kiếm dấu hiệu đảo chiều, lô gan hoặc giải đặc biệt biến động.`;
+[CHIẾN THUẬT: BẺ CẦU TOÀN DIỆN / ĐỘT PHÁ]
+CẢNH BÁO: Chuỗi trượt kéo dài. Bỏ qua các cầu truyền thống. Tập trung 100% vào các con số dị, hiếm gặp hoặc các nhịp biến động cực lớn ở Giải Đặc Biệt. Đã đến lúc phải thay đổi hoàn toàn tư duy chọn số.`;
             }
 
             // 0.6 Rules & Gan
@@ -109,30 +117,29 @@ CẢNH BÁO: Phong độ đang thấp. Tìm kiếm dấu hiệu đảo chiều, 
             const lotoCount = mode === 'hoi-dong' ? 'ĐÚNG 10 CẶP/SỐ LOTO' : '3 SỐ LOTO DUY NHẤT';
             
             let ANALYST_PROMPT = `
-VAI TRÒ: Bạn là Claude - Chuyên gia phân tích dữ liệu XSMB cấp cao.
-MỤC TIÊU TỐI THƯỢNG: Chốt dàn loto nổ từ ${kpiTarget} trở lên.
-PHONG CÁCH: Quyết đoán, chuyên nghiệp, sắc bén. Ngôn ngữ tự nhiên.
+VAI TRÒ: Bạn là "Claude Oracle" - Một hệ thống AI tối thượng chuyên giải mã các quy luật xác suất phức tạp của XSMB.
+MỤC TIÊU: Đạt KPI "${kpiTarget}" thông qua việc phân tích "Mật độ xác suất" (Probability Density).
+
+QUY TẮC TƯ DUY (BẮT BUỘC):
+1. CHIẾN THUẬT ĐA DẠNG: Tuyệt đối không chọn dàn số quá tập trung vào một đầu/đuôi trừ khi có bằng chứng cực mạnh về "Dòng chảy con số" (Number Flow).
+2. GIẢI MÃ NHIỄU: Phác họa sự khác biệt giữa "Số ảo" (ngẫu nhiên đơn thuần) và "Số có nhịp" (theo quy luật Bạc nhớ/Tần suất).
+3. LẬP LUẬN ĐỐI NGHỊCH: Trước khi chọn một số, hãy tự hỏi "Tại sao số này có thể KHÔNG về?" và chỉ chọn nếu bằng chứng ủng hộ mạnh hơn rủi ro.
 
 NHIỆM VỤ:
-1. Phân tích dữ liệu từ các nguồn Bạc Nhớ chuyên sâu.
-2. Tìm ra ĐÚNG 10 CẶP/SỐ LOTO có khả năng nổ cao nhất, mục tiêu "${kpiTarget}". 
-3. TUYỆT ĐỐI KHÔNG TRẢ VỀ THIẾU. NẾU KHÔNG ĐỦ 10 SỐ ĐẸP, HÃY CHỌN CÁC SỐ TIỀM NĂNG TIẾP THEO TRONG BẠC NHỚ.
-4. GIẢI THÍCH logic "Bẻ cầu" hoặc "Thuận cầu" cực kỳ thuyết phục cho dàn số này.
-5. QUAN TRỌNG: CHỈ TRẢ VỀ JSON, KHÔNG CÓ LỜI DẪN, KHÔNG CÓ CHÀO HỎI.
+1. Phân tích 300-1000 ngày dữ liệu để tìm ra ${lotoCount}.
+2. Ưu tiên các số có "Gia tốc tần suất" (Frequency Acceleration).
+3. Sử dụng Rare Pairs để tạo đột phá nếu phong độ gần đây thấp hoặc đang cần "Bẻ cầu".
 `;
 
             if (mode === 'du-doan-3-số') {
                 ANALYST_PROMPT = `
-VAI TRÒ: Bạn là Claude - Kỹ sư Thuật Toán Xác Suất & Machine Learning chuyên sâu về Xổ Số.
-MỤC TIÊU TỐI THƯỢNG: Trích xuất chính xác ${lotoCount} có Động lượng (Momentum) và Phân phối kỳ vọng (Expected Distribution) cao nhất để đạt KPI "${kpiTarget}".
-PHONG CÁCH: Khoa học dữ liệu, lập luận thuần túy bằng toán học, xác suất, độ trễ lô gan chuẩn và nhịp xung lực. TUYỆT ĐỐI KHÔNG dùng từ ngữ dân gian như "Bạc nhớ", "Cầu kèo", "Tâm linh", "Thuận/Bẻ cầu".
+VAI TRÒ: Bạn là "The Architect" - Chuyên gia giải mã các điểm kỳ dị (Singularities) trong chuỗi số ngẫu nhiên.
+MỤC TIÊU: Trích xuất ${lotoCount} có xác suất nổ cao nhất thông qua "Phân tích Động lực học".
 
-NHIỆM VỤ:
-1. Đánh giá Tần suất Vĩ mô (Frequency Over 30-50 days) để tìm các Loto đang có gia tốc rơi mạnh nhất. Ngược lại, tính toán độ trễ (Standard Deviation) của các Loto Gan để bắt điểm nổ (Breakout point).
-2. Tích hợp số liệu Loto Rơi, chu kỳ Giải Đặc Biệt/Giải Nhất vào mô hình toán học (Markov Chain / Regression) của bạn để loại trừ nhiễu.
-3. Chốt ĐÚNG 3 SỐ LOTO DUY NHẤT.
-4. Phần "summary" / "advice": Lập luận thuyết phục người xem bằng ngôn ngữ kỹ thuật học thống kê (động lượng phân phối, điểm bùng nổ xác suất, phương sai hẹp...). Thuyết phục hoàn toàn bằng số liệu.
-5. QUAN TRỌNG: CHỈ TRẢ VỀ JSON.
+QUY TẮC TƯ DUY:
+1. TOÁN HỌC KHÁNH KIỆT: Sử dụng Phương sai (Variance) và Độ lệch chuẩn để loại bỏ các số đang ở vùng "Quá nhiệt" nhưng sắp gãy.
+2. TÌM KIẾM ĐỘT BIẾN: Tập trung vào các con số đang tích lũy năng lượng sau một chuỗi ngày câm hoặc gan nhẹ.
+3. TỐI ƯU HÓA KPI: Mỗi con số được chọn phải có ít nhất 3 bằng chứng kỹ thuật (Bạc nhớ + Tần suất + Nhịp rơi) đồng quy.
 `;
             }
 
@@ -142,31 +149,35 @@ ${ANALYST_PROMPT}
 DỮ LIỆU ĐẦU VÀO:
 ${contextText}
 
-LỊCH SỬ THẮNG/THUA:
+LỊCH SỬ THẮNG/THUA GẦN ĐÂY:
 ${historyContext}
 
+[ĐIỀU PHỐI CHIẾN THUẬT]:
 ${dynamicInstructions}
 ${tacticalContext}
-CẢNH BÁO LÔ GAN: ${ganList}
+CẢNH BÁO LÔ GAN (Hạn chế chọn): ${ganList}
 
-ĐỊNH DẠNG JSON:
+LƯU Ý QUAN TRỌNG: Hãy đảm bảo dàn số cuối cùng có sự phân bổ hợp lý, không bị lặp lại những sai lầm của những ngày thua cuộc gần đây.
+
+ĐỊNH DẠNG JSON (BẮT BUỘC - KHÔNG ĐƯỢC SAI):
 {
-    "dan_loto": ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10"], 
+    "internal_reasoning": "Viết ít nhất 200 chữ về processes suy luận: So sánh các cầu đang chạy, lý do loại trừ các số rủi ro, và tại sao dàn số này lại tối ưu cho chiến thuật hiện tại. Hãy thể hiện tư duy chuyên gia.",
+    "dan_loto": ["XX", "YY", ...], 
     "confidence": 95,
     "analysis": {
-        "summary": "Phân tích vì sao dàn này sẽ nổ ${kpiTarget} dựa trên thống kê xác suất, động lượng (momentum), và quy luật phân phối.",
+        "summary": "Tóm tắt chiến thuật ngắn gọn (VD: Đánh vào nhịp rơi của đầu 2 và đầu 5).",
         "top_evidence": [
-            "Lý do chọn loto bằng thông số toán học...",
-            "Dấu hiệu đạt ngưỡng bùng nổ..."
+            "Bằng chứng thống kê quan trọng nhất...",
+            "Bằng chứng thứ hai..."
         ],
-        "advice": "Lời khuyên quản trị rủi ro & thuật toán hiện tại."
+        "advice": "Lời khuyên thực tế cho người chơi ngày hôm nay."
     }
 }
 `;
 
             // 4. Call Claude
-            console.log('Asking Claude for high-precision analysis...');
-            const rawResponse = await ClaudeClient.generateContent(prompt + "\n\nTRẢ VỀ JSON NGAY BÂY GIỜ:");
+            console.log('Asking Claude for high-precision analysis with reasoning...');
+            const rawResponse = await ClaudeClient.generateContent(prompt + "\n\nTRẢ VỀ JSON NGAY BÂY GIỜ:", undefined, 0.9);
 
             if (!rawResponse) throw new Error('Empty response from Claude');
 
@@ -186,24 +197,24 @@ CẢNH BÁO LÔ GAN: ${ganList}
                     predictedPairs = data.dan_loto || [];
                     
                     // Backend Validation & Padding
-                    if (mode === 'hoi-dong' && predictedPairs.length < 10) {
-                        console.warn(`AI returned only ${predictedPairs.length} numbers. Padding to 10...`);
-                        const allAvailable = [
-                            ...(context.bac_nho?.so_don?.map((x: any) => x.predictions?.[0]?.number) || []),
-                            ...(context.frequency?.hot_lotos?.map((x: any) => x.number) || [])
-                        ].filter(n => n && !predictedPairs.includes(n));
+                    if ((mode === 'hoi-dong' && predictedPairs.length < 10) || (mode === 'du-doan-3-số' && predictedPairs.length < 3)) {
+                        const targetLen = mode === 'hoi-dong' ? 10 : 3;
+                        console.warn(`AI returned only ${predictedPairs.length} numbers. Padding to ${targetLen}...`);
                         
-                        while (predictedPairs.length < 10 && allAvailable.length > 0) {
-                            const n = allAvailable.shift();
+                        const hot = (context.frequency?.hot_lotos || []).map((x: any) => x.number);
+                        const rare = (context.rare_pairs || []).flatMap((x: any) => x.pair);
+                        const fallback = ["00", "11", "22", "33", "44", "55", "66", "77", "88", "99"]; // Stable pairs
+                        
+                        // Mixed pool for padding
+                        const pool = Array.from(new Set([...rare, ...hot, ...fallback]))
+                            .filter(n => n && !predictedPairs.includes(n));
+                        
+                        while (predictedPairs.length < targetLen && pool.length > 0) {
+                            // Pick semi-randomly from the top of the pool to ensure diversity
+                            const idx = Math.floor(Math.random() * Math.min(pool.length, 5));
+                            const n = pool.splice(idx, 1)[0];
                             if (n) predictedPairs.push(n);
                         }
-                    } else if (mode === 'du-doan-3-số' && predictedPairs.length < 3) {
-                         // Similar padding for 3-so if needed
-                         const fallback = ["79", "33", "52"].filter(n => !predictedPairs.includes(n));
-                         while (predictedPairs.length < 3 && fallback.length > 0) {
-                             const n = fallback.shift();
-                             if (n) predictedPairs.push(n);
-                         }
                     }
 
                     confidence = data.confidence || 0;

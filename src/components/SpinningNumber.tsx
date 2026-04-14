@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
+import confetti from 'canvas-confetti';
 import '../styles/lottery-animation.css';
 
 interface SpinningNumberProps {
@@ -10,6 +11,7 @@ interface SpinningNumberProps {
     colorMode?: 'red' | 'base'; // 'red' for Special Prize, 'base' for others
     variant?: 'ball' | 'text';
     forceStatus?: 'waiting' | 'drum' | 'rolling' | 'done';
+    isWinning?: boolean;
 }
 
 export function SpinningNumber({
@@ -19,7 +21,8 @@ export function SpinningNumber({
     digitCount = 5,
     colorMode = 'base',
     variant = 'ball',
-    forceStatus
+    forceStatus,
+    isWinning = false
 }: SpinningNumberProps) {
     // Sanitize input: If value contains "đang cập nhật" or similar text, treat as waiting
     const isInvalidValue = finalValue && (
@@ -52,6 +55,34 @@ export function SpinningNumber({
         return result;
     }
 
+    const fireConfetti = () => {
+        const duration = 2 * 1000;
+        const animationEnd = Date.now() + duration;
+        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+        const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
+        const interval: any = setInterval(function () {
+            const timeLeft = animationEnd - Date.now();
+
+            if (timeLeft <= 0) {
+                return clearInterval(interval);
+            }
+
+            const particleCount = 50 * (timeLeft / duration);
+            confetti({
+                ...defaults,
+                particleCount,
+                origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+            });
+            confetti({
+                ...defaults,
+                particleCount,
+                origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+            });
+        }, 250);
+    };
+
     useEffect(() => {
         // If forceStatus is provided, we just manage displayValue based on it
         if (forceStatus) {
@@ -64,10 +95,9 @@ export function SpinningNumber({
             } else if (forceStatus === 'done') {
                 if (intervalRef.current) clearInterval(intervalRef.current);
                 if (safeFinalValue) setDisplayValue(safeFinalValue);
+                if (isWinning) fireConfetti();
             } else {
                 if (intervalRef.current) clearInterval(intervalRef.current);
-                // Waiting/drum -> maybe static hyphen or random depending on logic.
-                // For this specific 'text' + 'waiting' request, we want hyphen handled in render.
             }
             return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
         }
@@ -78,6 +108,7 @@ export function SpinningNumber({
                 if (internalStatus === 'waiting') {
                     setInternalStatus('done');
                     setDisplayValue(safeFinalValue);
+                    if (isWinning) fireConfetti();
                 } else {
                     clearInterval(intervalRef.current!);
                     setInternalStatus('rolling');
@@ -89,26 +120,32 @@ export function SpinningNumber({
                             clearInterval(intervalRef.current!);
                             setDisplayValue(safeFinalValue);
                             setInternalStatus('done');
+                            if (isWinning) fireConfetti();
                         }
                     }, 80);
                 }
             }
         }
-        // REMOVED: Auto-drum logic for waiting state
 
         return () => {
             if (intervalRef.current) clearInterval(intervalRef.current);
         };
-    }, [safeFinalValue, safeIsRevealed, digitCount, forceStatus, internalStatus, isInvalidValue]);
+    }, [safeFinalValue, safeIsRevealed, digitCount, forceStatus, internalStatus, isInvalidValue, isWinning]);
 
     // Render logic
     const renderDigits = (val: string, extraClass: string = '') => (
         <div className={`flex ${className}`}>
-            {val.split('').map((char, i) => (
-                <span key={i} className={`${baseClass} ${extraClass}`}>
-                    {char}
-                </span>
-            ))}
+            {val.split('').map((char, i) => {
+                let currentBallClass = baseClass;
+                if (status === 'done' && isWinning && isBall) {
+                    currentBallClass = 'loto-ball winning-ball';
+                }
+                return (
+                    <span key={i} className={`${currentBallClass} ${extraClass}`}>
+                        {char}
+                    </span>
+                );
+            })}
         </div>
     );
 

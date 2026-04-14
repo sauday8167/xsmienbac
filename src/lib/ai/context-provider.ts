@@ -1,5 +1,5 @@
 import { query, queryOne } from '@/lib/db';
-import { calculateLoGan, calculateFrequent } from '@/lib/statistics';
+import { calculateLoGan, calculateFrequent, calculateRarePairs } from '@/lib/statistics';
 import { analyzeLotoRoi } from '@/lib/loto-roi';
 import { analyzeAntigravityGdb } from '@/lib/gdb-analysis';
 import { getDbTomorrowStats } from '@/lib/db-tomorrow-stats';
@@ -95,7 +95,16 @@ export class ContextProvider {
             console.log('  - Analyzing first prize patterns...');
             const g1TomorrowStats = latestResult ? await getPrize1TomorrowStats(latestResult.prize_1) : null;
 
-            // 8. AGGREGATED PREDICTIONS (combines all methods with weighted scoring)
+            // 8.5 RARE PAIRS (Diversification context)
+            console.log('  - Finding potential rare pairs...');
+            const rarePairs = await calculateRarePairs(15, 365, 10);
+
+            // 8.6 Weekday Bias
+            const weekday = new Date(targetDate).getDay(); // 0=Sun, 1=Mon, ..., 5=Fri
+            const weekdays = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+            const weekdayName = weekdays[weekday];
+
+            // 9. AGGREGATED PREDICTIONS (combines all methods with weighted scoring)
             console.log('  - Running prediction aggregator...');
             let aggregated: any[] = [];
             if (mode === 'hoi-dong') {
@@ -161,8 +170,12 @@ export class ContextProvider {
                 // Aggregated
                 aggregated_predictions: aggregated,
 
+                // Rare Pairs
+                rare_pairs: rarePairs,
+
                 // History
-                history: history
+                history: history,
+                weekday: weekdayName
             };
 
         } catch (error) {
@@ -190,11 +203,12 @@ export class ContextProvider {
             formatDBStats,
             formatPrizeStats,
             formatAggregatedPredictions,
-            formatPredictionHistory
+            formatPredictionHistory,
+            formatRarePairs
         } = require('./data-formatters');
 
         let text = `# COMPREHENSIVE LOTTERY ANALYSIS\n\n`;
-        text += `Analysis Date: ${context.date}\n`;
+        text += `Analysis Date: ${context.date} (${context.weekday})\n`;
         text += `Data Source: ${context.yesterday} and previous 30 days\n\n`;
 
         // 0. History (Self-Correction) - PUT FIRST for emphasis
@@ -257,10 +271,11 @@ export class ContextProvider {
             text += `\n---\n\n`;
         }
 
-        // 8. Aggregated Predictions
-        if (mode === 'hoi-dong') {
-            text += `## 8. MULTI-METHOD AGGREGATED PREDICTIONS\n\n`;
-            text += formatAggregatedPredictions(context.aggregated_predictions);
+        // 9. Rare Pairs (Diversification)
+        if (context.rare_pairs && context.rare_pairs.length > 0) {
+            text += `## 9. RARE PAIRS (Diversification Opportunity)\n`;
+            text += `These pairs are statistically strong but haven't appeared together in 10+ days:\n\n`;
+            text += formatRarePairs(context.rare_pairs);
             text += `\n---\n\n`;
         }
 

@@ -231,3 +231,46 @@ cron.schedule('0 22 * * *', () => {
         console.log(`Auto News Check Stdout: ${stdout}`);
     });
 });
+
+// 16. 19:30 - Tự động viết tin tức Đầu/Đuôi Câm
+cron.schedule('30 19 * * *', () => {
+    console.log(`[${new Date().toISOString()}] Triggering Auto Write Ngach Cam (19:30)...`);
+    const { exec } = require('child_process');
+    exec('npx tsx scripts/auto-write-ngach-cam.ts', (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Auto Ngach Cam Error: ${error.message}`);
+            return;
+        }
+        console.log(`Auto Ngach Cam Stdout: ${stdout}`);
+    });
+});
+
+// 17. 19:40 - Tự động viết bài Lô Gan Cực Đại
+cron.schedule('40 19 * * *', () => {
+    console.log(`[${new Date().toISOString()}] Triggering Auto Write Lo Gan (19:40)...`);
+    const { exec } = require('child_process');
+    exec('npx tsx scripts/auto-write-lo-gan.ts', (err, stdout) => {
+        if (err) console.error(`Lo Gan Error: ${err.message}`);
+        else console.log(`Lo Gan Stdout: ${stdout}`);
+    });
+});
+
+// 18. 19:45 - Tự động viết bài Bạc Nhớ Lô Kẹp
+cron.schedule('45 19 * * *', () => {
+    console.log(`[${new Date().toISOString()}] Triggering Auto Write Bac Nho (19:45)...`);
+    const { exec } = require('child_process');
+    exec('npx tsx scripts/auto-write-bac-nho.ts', (err, stdout) => {
+        if (err) console.error(`Bac Nho Error: ${err.message}`);
+        else console.log(`Bac Nho Stdout: ${stdout}`);
+    });
+});
+
+// 19. 08:00 - Tự động giải mã Sổ Mơ
+cron.schedule('0 8 * * *', () => {
+    console.log(`[${new Date().toISOString()}] Triggering Auto Write So Mo (08:00)...`);
+    const { exec } = require('child_process');
+    exec('npx tsx scripts/auto-write-so-mo.ts', (err, stdout) => {
+        if (err) console.error(`So Mo Error: ${err.message}`);
+        else console.log(`So Mo Stdout: ${stdout}`);
+    });
+});

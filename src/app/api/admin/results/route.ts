@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { RowDataPacket, ResultSetHeader } from 'mysql2';
 
 export async function GET(request: Request) {
     try {
@@ -9,15 +8,15 @@ export async function GET(request: Request) {
         const limit = parseInt(searchParams.get('limit') || '10');
         const offset = (page - 1) * limit;
 
-        const rows = await query<RowDataPacket[]>(
+        const rows = await query<any[]>(
             'SELECT * FROM xsmb_results ORDER BY draw_date DESC LIMIT ? OFFSET ?',
             [limit, offset]
         );
 
-        const countResult = await query<RowDataPacket[]>(
+        const countResult = await query<any[]>(
             'SELECT COUNT(*) as total FROM xsmb_results'
         );
-        const total = countResult[0].total;
+        const total = countResult[0]?.total || 0;
 
         return NextResponse.json({
             success: true,

@@ -27,7 +27,7 @@ const DEFAULT_CONFIG = {
         content: "Thông tin chỉ mang tính chất tham khảo. Vui lòng đối chiếu với kết quả chính thức từ công ty xổ số.",
         highlight: "Chơi có trách nhiệm - Cảnh giác trò chơi may rủi!"
     },
-    copyright: "© 2024 XSMB - Xổ Số Miền Bắc. All rights reserved."
+    copyright: "© 2026 XSMB - Xổ Số Miền Bắc. All rights reserved."
 };
 
 async function ensureFile() {

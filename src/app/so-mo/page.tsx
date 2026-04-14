@@ -4,16 +4,17 @@ import SoMoClient from './SoMoClient';
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://xosomienbac24h.com';
 
 export const metadata: Metadata = {
-    title: 'Sổ Mơ Lô Đề - Giải Mã Giấc Mơ Tìm Số May Mắn XSMB',
-    description: 'Tra cứu sổ mơ lô đề toàn tập. Giải mã hơn 2000 giấc mơ phổ biến để tìm ra các cặp số may mắn tương ứng theo kinh nghiệm dân gian và thuật toán xác suất.',
+    title: 'Sổ Mơ Lô Đề Miền Bắc Thông Dụng Nhất Ai Cũng Nên Biết',
+    description: 'Từ điển sổ mơ đánh đề giải mã chính xác 2000 giấc mơ lô đề dân gian. Tìm xem nằm mơ thấy chó, mèo, rắn, đánh con gì dễ trúng nhất XSMB hôm nay.',
     alternates: {
         canonical: `${siteUrl}/so-mo`,
     },
     openGraph: {
-        title: 'Giải Mã Giấc Mơ - Sổ Mơ Đánh Đề',
-        description: 'Khám phá ý nghĩa giấc mơ và những con số tài lộc đi kèm.',
+        title: 'Sổ Mơ Lô Đề Miền Bắc Thông Dụng Nhất Ai Cũng Nên Biết',
+        description: 'Từ điển sổ mơ đánh đề giải mã chính xác 2000 giấc mơ lô đề dân gian. Tìm xem nằm mơ thấy chó, mèo, rắn, đánh con gì dễ trúng nhất XSMB hôm nay.',
         url: `${siteUrl}/so-mo`,
         type: 'website',
+        images: [{ url: `${siteUrl}/og-image.png`, width: 1200, height: 630, alt: 'Sổ Mơ Lô Đề Miền Bắc' }],
     }
 };
 

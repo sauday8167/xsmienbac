@@ -47,6 +47,14 @@
       "seoDescription": "Công cụ tạo dàn số học xổ số miền Bắc bằng thuật toán mô phỏng ngẫu nhiên, chỉ dùng để tham khảo thông tin."
     },
     {
+      "id": "11",
+      "href": "/cam-nang-soi-cau",
+      "label": "Cẩm Nang",
+      "description": "Hướng dẫn và mẹo chơi xổ số",
+      "seoTitle": "Cẩm Nang Soi Cầu XSMB – Bí Quyết Bắt Số Chuẩn Xách",
+      "seoDescription": "Tổng hợp các phương pháp soi cầu XSMB khoa học và chính xác nhất: Bạc nhớ, Pascal, Lô gan, Nuôi khung."
+    },
+    {
       "id": "7",
       "href": "/tin-tuc",
       "label": "Tin tức",
@@ -162,6 +170,12 @@
       "seoTitle": "Tra Cứu Sổ Mơ Xổ Số Miền Bắc – Thông Tin Tham Khảo",
       "seoDescription": "Xổ Số Miền Bắc tra cứu sổ mơ theo dạng tổng hợp thông tin, nội dung mang tính tham khảo, không dự đoán.",
       "id": "1768578601503"
+    },
+    {
+       "id": "cam-nang-m",
+       "href": "/cam-nang-soi-cau",
+       "label": "Cẩm Nang Soi Cầu",
+       "description": "Mẹo hay và phương pháp soi cầu"
     }
   ]
 }

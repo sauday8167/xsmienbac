@@ -10,10 +10,11 @@ export const metadata: Metadata = {
         canonical: `${siteUrl}/du-doan-ai`,
     },
     openGraph: {
-        title: 'Dự Đoán AI Siêu Chuẩn - Soi Cầu Claude AI',
+        title: 'Dự Đoán AI Siêu Chuẩn - Soi Cầu Claude AI Hôm Nay',
         description: 'Phân tích xổ số bằng AI giúp bạn có những bộ số với tỷ lệ nổ cao nhất.',
         url: `${siteUrl}/du-doan-ai`,
         type: 'website',
+        images: [{ url: `${siteUrl}/og-image.png`, width: 1200, height: 630, alt: 'Dự Đoán AI Xổ Số Miền Bắc' }],
     }
 };
 

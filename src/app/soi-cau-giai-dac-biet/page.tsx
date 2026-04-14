@@ -4,16 +4,17 @@ import GdbAnalysisClient from './GdbAnalysisClient';
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://xosomienbac24h.com';
 
 export const metadata: Metadata = {
-    title: 'Soi Cầu Giải Đặc Biệt XSMB - Dự Đoán Đầu Đuôi Đề Chính Xác',
-    description: 'Phân tích soi cầu giải đặc biệt miền Bắc. Thống kê chạm, tổng, đầu đuôi đề và dự đoán bộ số đặc biệt có xác suất về cao nhất hôm nay.',
+    title: 'Soi Cầu Giải Đặc Biệt KQXSMB - Bắt Dàn Đề 36 Số VIP',
+    description: 'Công cụ soi cầu tài lộc đặc biệt miền Bắc miễn phí. Phân tích cầu chạm (Touch), cầu kép (Double) cho dàn đề XSMB hằng ngày dựa trên thuật toán máy học.',
     alternates: {
         canonical: `${siteUrl}/soi-cau-giai-dac-biet`,
     },
     openGraph: {
-        title: 'Soi Cầu GĐB Miền Bắc - Chốt Số Đề Hôm Nay',
-        description: 'Phân tích chuyên sâu giải đặc biệt XSMB dựa trên dữ liệu lịch sử.',
+        title: 'Soi Cầu Giải Đặc Biệt KQXSMB - Bắt Dàn Đề 36 Số VIP',
+        description: 'Công cụ soi cầu tài lộc đặc biệt miền Bắc miễn phí. Phân tích cầu chạm (Touch), cầu kép (Double) cho dàn đề XSMB hằng ngày dựa trên thuật toán máy học.',
         url: `${siteUrl}/soi-cau-giai-dac-biet`,
         type: 'website',
+        images: [{ url: `${siteUrl}/og-image.png`, width: 1200, height: 630, alt: 'Soi Cầu Giải Đặc Biệt XSMB' }],
     }
 };
 
