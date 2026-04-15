@@ -109,10 +109,17 @@ console.log(' - 19:16: 730 Days Analysis');
 console.log(' - 19:28: 1000 Days Analysis');
 console.log(' - 19:40: AI Prediction (/du-doan-ai) - phân tích sau kết quả');
 
-// 1. Live Crawl: Every minute from 18:15 to 18:45
-// ... (omitted same part)
-
-// 2-5 ... (omitted same part)
+// 1. Live Crawl: Every 2 minutes from 18:10 to 18:45
+cron.schedule('*/2 18 * * *', () => {
+    const now = new Date();
+    const vnTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }));
+    const minute = vnTime.getMinutes();
+    
+    if (minute >= 10 && minute <= 45) {
+        console.log(`[${vnTime.toISOString()}] Triggering scheduled live crawl...`);
+        runTask();
+    }
+});
 
 // New Task: 18:47 - AI Council Accuracy Scoring (Deprecated - Removed logic)
 // cron.schedule('47 18 * * *', () => { ... });

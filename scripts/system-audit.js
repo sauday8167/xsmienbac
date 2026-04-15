@@ -32,7 +32,7 @@ async function audit() {
         console.log('API Keys:', JSON.stringify(keys));
 
         // 6. Recent Accuracy Records
-        const accuracy = await db.all("SELECT draw_date, accuracy_score FROM ai_predictions WHERE accuracy_score > 0 ORDER BY draw_date DESC LIMIT 3");
+        const accuracy = await db.all("SELECT draw_date, confidence_score FROM ai_predictions WHERE confidence_score > 0 ORDER BY draw_date DESC LIMIT 3");
         console.log('Recent Accuracy Records:', JSON.stringify(accuracy));
 
         console.log('--- AUDIT COMPLETE ---');

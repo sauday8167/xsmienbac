@@ -21,9 +21,11 @@ export default function HomeClient({ initialResult }: HomeClientProps) {
     const [phase, setPhase] = useState<string>('IDLE');
 
     const isDrawingTime = () => {
+        // Use Vietnam timezone (GMT+7) for time check
         const now = new Date();
-        const hour = now.getHours();
-        const minute = now.getMinutes();
+        const vnTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }));
+        const hour = vnTime.getHours();
+        const minute = vnTime.getMinutes();
         return hour === 18 && minute >= 10 && minute <= 40;
     };
 
