@@ -1,4 +1,4 @@
-import { ClaudeClient } from './claude-client';
+import { OpenRouterClient } from './openrouter-client';
 import { ContextProvider } from './context-provider';
 import { query, queryOne } from '@/lib/db';
 import { getLatestTacticalAdvice } from '../ai-learning';
@@ -176,8 +176,8 @@ LƯU Ý QUAN TRỌNG: Hãy đảm bảo dàn số cuối cùng có sự phân b�
 `;
 
             // 4. Call Claude
-            console.log('Asking Claude for high-precision analysis with reasoning...');
-            const rawResponse = await ClaudeClient.generateContent(prompt + "\n\nTRẢ VỀ JSON NGAY BÂY GIỜ:", undefined, 0.9);
+            console.log('Asking OpenRouter for high-precision analysis with reasoning...');
+            const rawResponse = await OpenRouterClient.generateContent(prompt + "\n\nTRẢ VỀ JSON NGAY BÂY GIỜ:", 0.9);
 
             if (!rawResponse) throw new Error('Empty response from Claude');
 
@@ -231,12 +231,12 @@ LƯU Ý QUAN TRỌNG: Hãy đảm bảo dàn số cuối cùng có sự phân b�
                 [targetDate, analysisContent, JSON.stringify(predictedPairs), confidence, modelKey]
             );
 
-            console.log(`AI Prediction (Claude) saved for ${targetDate} - KPI: 5+ Hits`);
+            console.log(`AI Prediction (OpenRouter) saved for ${targetDate} - KPI: 5+ Hits`);
 
             return { targetDate, predictedPairs, confidence, analysisContent };
 
         } catch (error) {
-            console.error('Claude Analysis Failed:', error);
+            console.error('OpenRouter Analysis Failed:', error);
             throw error;
         }
     }

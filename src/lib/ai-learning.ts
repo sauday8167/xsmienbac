@@ -1,5 +1,5 @@
 import { query, queryOne } from './db';
-import { ClaudeClient } from './ai/claude-client';
+import { OpenRouterClient } from './ai/openrouter-client';
 import { extractAllLotoNumbers } from './lottery-helpers';
 import { analyzeBacNhoCap3 } from './bac-nho-cap-3';
 import { analyzeBacNho2Ngay } from './bac-nho-2-ngay';
@@ -247,7 +247,7 @@ TRẢ VỀ JSON NGHIÊM NGẶT:
 }`;
 
     try {
-        const aiResponse = await ClaudeClient.generateContent(prompt);
+        const aiResponse = await OpenRouterClient.generateContent(prompt);
         if (!aiResponse) { console.warn('⚠️ Claude không trả về kết quả'); return; }
 
         const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);

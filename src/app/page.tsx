@@ -8,7 +8,12 @@ import HomeClient from './HomeClient';
 import { generateLotteryResultSchema } from '@/lib/schema-generator';
 import type { LotteryResult } from '@/types';
 
+import { unstable_noStore as noStore } from 'next/cache';
+
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://xosomienbac24h.com';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export const metadata: Metadata = {
     title: 'Xổ Số Miền Bắc (XSMB) - Trực Tiếp Kết Quả SXMB Hôm Nay Nhanh Số 1',
@@ -38,7 +43,10 @@ export const metadata: Metadata = {
  * Google Bot sẽ nhìn thấy đầy đủ bảng KQXS, thống kê, FAQ trong HTML đầu tiên.
  * HomeClient chỉ được mount để xử lý live-update trong giờ quay thưởng (18h10-18h40).
  */
-export default async function HomePage() {
+export default async function HomePage({ searchParams }: { searchParams: any }) {
+    // Force dynamic rendering - strictly no cache
+    noStore();
+
     // Fetch kết quả mới nhất từ DB trực tiếp — không qua API
     const latestResult = await getLatestResult();
 

@@ -1,8 +1,8 @@
 import { query, queryOne } from '../db';
-import { GeminiClient } from '../ai/gemini-client';
-import { ClaudeClient } from '../ai/claude-client';
+import { OpenRouterClient } from '../ai/openrouter-client';
 import { ArticleInputBuilder } from './article-input-builder';
 import { pingGoogleIndexing } from './google-indexing';
+import { ImageGenerator } from './image-generator';
 
 export class AutoArticleGenerator {
    static async generateDailyPost(targetDate: string) {
@@ -70,6 +70,7 @@ export class AutoArticleGenerator {
                 "title": "Dự đoán XSMB ${formattedDate} - Soi cầu chốt Bạch thủ, Song thủ VIP",
                 "excerpt": "Dự đoán KQXSMB ${formattedDate}. Chốt số Bạch thủ lô, Song thủ, Lô kép và Dàn đề đầy đủ 36 số. Phân tích chuẩn xác qua lô gan và bạc nhớ.",
                 "meta_description": "Xem trực tiếp dự đoán XSMB ngày ${formattedDate}. Soi cầu bạch thủ, song thủ lô, kép VIP. Cung cấp đầy đủ dàn đặc biệt 36 số chuẩn xác nhất hôm nay.",
+                "image_prompt": "A professional digital banner for a Vietnamese lottery prediction website. Dark gold and red theme, high-tech AI analysis graphs, symbols of luck like golden coins or high-speed data flow. Clean, sharp, 4k resolution.",
                 "content_html": "<div class='analysis-article'><h2>Chốt số Dự đoán XSMB ${formattedDate} chính xác nhất</h2><h3>Bạch thủ lô VIP: <b>XX</b></h3><h3>Song thủ lô: <b>XX - XX</b></h3><h3>Lô kép VIP: <b>XX - XX</b></h3><h3>Dàn đề đặc biệt 36 số: <b>XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX</b></h3><h2>Phân tích dữ liệu & Thống kê loto chi tiết</h2><p>Khảo sát sâu vào bảng <a href='/thong-ke'>thống kê xổ số</a>...</p><h2>Soi cầu Bạc Nhớ & Cầu Kẹp</h2><p>Theo thuật toán <a href='/soi-cau-bac-nho'>soi cầu bạc nhớ</a>...</p><h2>Lời khuyên & Cảnh báo (Disclaimer)</h2><p><i>Tất cả các bộ số dự đoán phía trên chỉ mang tính chất thống kê, tham khảo. Xổ số là trò chơi giải trí, nghiêm cấm mọi hình thức đánh bạc trái pháp luật. Hãy mua vé số kiến thiết do nhà nước ban hành.</i></p></div>"
             }
          `;
@@ -81,8 +82,8 @@ export class AutoArticleGenerator {
          while (attempts < MAX_ATTEMPTS) {
             attempts++;
             try {
-               console.log(`[AI-GENERATOR] Attempt ${attempts}/${MAX_ATTEMPTS}...`);
-               let aiResponse = await ClaudeClient.generateContent(refinedPrompt);
+               console.log(`[AI-GENERATOR] OpenRouter Attempt ${attempts}/${MAX_ATTEMPTS}...`);
+               let aiResponse = await OpenRouterClient.generateContent(refinedPrompt);
                
                if (!aiResponse) throw new Error('Empty AI response');
 
@@ -93,7 +94,7 @@ export class AutoArticleGenerator {
                
                // Quality validation
                if (article.title && article.content_html && article.content_html.length > 500) {
-                  console.log(`[AI-GENERATOR] Quality content received on attempt ${attempts}`);
+                  console.log(`[AI-GENERATOR] Quality content received from OpenRouter on attempt ${attempts}`);
                   break; 
                } else {
                   throw new Error('Content too short or missing fields');
@@ -101,14 +102,7 @@ export class AutoArticleGenerator {
             } catch (e) {
                console.warn(`[AI-GENERATOR] Attempt ${attempts} failed: ${e.message}`);
                if (attempts === MAX_ATTEMPTS) {
-                  console.log('[AI-GENERATOR] Final fallback to Gemini...');
-                  const geminiResponse = await GeminiClient.generateContent(refinedPrompt);
-                  const jsonMatch = geminiResponse?.match(/\{[\s\S]*\}/);
-                  if (jsonMatch) {
-                      article = JSON.parse(jsonMatch[0]);
-                  } else {
-                      throw new Error('All models failed to provide valid JSON');
-                  }
+                   throw new Error('OpenRouter failed to provide valid JSON after all attempts and models.');
                }
             }
          }
@@ -118,7 +112,15 @@ export class AutoArticleGenerator {
          if (!article.content_html) throw new Error('Could not generate article content');
          
          const slug = `du-doan-xsmb-${targetDate}`;
-         const thumbnail = '/images/ai-post-default.jpg';
+         
+         // 4. Generate Thumbnail Image
+         let thumbnail = '/images/ai-post-default.jpg';
+         if (article.image_prompt) {
+            const generatedImage = await ImageGenerator.generateAndSaveImage(article.image_prompt, slug);
+            if (generatedImage) {
+               thumbnail = generatedImage;
+            }
+         }
          const status = 'published';
          const now = new Date().toISOString();
 

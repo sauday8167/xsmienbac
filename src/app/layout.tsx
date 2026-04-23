@@ -30,17 +30,19 @@ export const viewport = {
 };
 
 export async function generateMetadata(): Promise<Metadata> {
-    const configPath = join(process.cwd(), 'src/data/seo-config.json');
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://xosomienbac24h.com';
     let seoConfig = {
         ogImage: '/logo-v5.png',
-        siteUrl: 'https://xosomienbac24h.com'
+        siteUrl: siteUrl
     };
 
     try {
+        const configPath = join(process.cwd(), 'src/data/seo-config.json');
         const content = await readFile(configPath, 'utf8');
-        seoConfig = { ...seoConfig, ...JSON.parse(content) };
+        const parsed = JSON.parse(content);
+        seoConfig = { ...seoConfig, ...parsed };
     } catch (e) {
-        console.error('Failed to load SEO config in layout');
+        // Silently fallback without spamming logs during build
     }
 
     let brandingConfig = { favicon: '' };
@@ -52,12 +54,12 @@ export async function generateMetadata(): Promise<Metadata> {
         // Ignore if file doesn't exist
     }
 
-    const siteUrl = seoConfig.siteUrl || process.env.NEXT_PUBLIC_SITE_URL || 'https://xosomienbac24h.com';
+    const effectiveSiteUrl = seoConfig.siteUrl || process.env.NEXT_PUBLIC_SITE_URL || 'https://xosomienbac24h.com';
     let ogImage = seoConfig.ogImage || '/logo-v5.png';
 
     // Ensure ogImage is absolute
     if (ogImage.startsWith('/')) {
-        ogImage = `${siteUrl}${ogImage}`;
+        ogImage = `${effectiveSiteUrl}${ogImage}`;
     }
 
     // Load Custom Code for Verification Tags (Google Search Console)
@@ -83,7 +85,7 @@ export async function generateMetadata(): Promise<Metadata> {
     // Only set metadataBase and default OG image
     // Each page will have its own title/description
     return {
-        metadataBase: new URL(siteUrl),
+        metadataBase: new URL(effectiveSiteUrl),
         // Homepage metadata (fallback for /)
         title: 'Xổ Số Miền Bắc - KQXS Miền Bắc Hôm Nay - Kết Quả SXMB Chính Xác',
         description: 'Xổ Số Miền Bắc (KQXS Miền Bắc) hôm nay nhanh nhất, chính xác nhất. Xem thống kê loto, soi cầu và phân tích chuyên sâu các cặp số đẹp.',
@@ -95,7 +97,7 @@ export async function generateMetadata(): Promise<Metadata> {
             type: 'website',
             siteName: 'XSMB 24h',
             locale: 'vi_VN',
-            url: siteUrl,
+            url: effectiveSiteUrl,
             images: [
                 {
                     url: ogImage,
@@ -144,7 +146,7 @@ export default async function RootLayout({
         const content = await readFile(configPath, 'utf8');
         customCode = JSON.parse(content);
     } catch (e) {
-        // Fallback
+        // Silently ignore during build
     }
 
     // Load SEO Config for Google Analytics
@@ -154,7 +156,7 @@ export default async function RootLayout({
         const content = await readFile(configPath, 'utf8');
         seoConfig = JSON.parse(content);
     } catch (e) {
-        // Ignore
+        // Silently ignore during build
     }
 
     return (

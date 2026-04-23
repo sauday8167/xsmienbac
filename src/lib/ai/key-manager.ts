@@ -34,6 +34,9 @@ export class KeyManager {
             } else if (provider === 'claude') {
                 const envKey = process.env.ANTHROPIC_API_KEY;
                 if (envKey) return envKey;
+            } else if (provider === 'openrouter') {
+                const envKey = process.env.OPENROUTER_API_KEY;
+                if (envKey) return envKey;
             }
 
             return null;

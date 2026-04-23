@@ -39,7 +39,21 @@ async function audit() {
     } catch (e) {
         console.error('Audit Error:', e.message);
     } finally {
-        await db.close();
+        if (db) {
+            // Check file stats before closing or after
+            try {
+                const fs = require('fs');
+                const stats = fs.statSync(path.join(__dirname, '../database/xsmb.sqlite'));
+                console.log('--- FILE SYSTEM CHECK ---');
+                console.log('Database File Size:', stats.size, 'bytes');
+                console.log('Database Last Modified:', stats.mtime);
+                console.log('Current Server Time:', new Date());
+            } catch (fsErr) {
+                console.error('File Stats Error:', fsErr.message);
+            }
+            await db.close();
+        }
+        console.log('--- AUDIT COMPLETE ---');
     }
 }
 
