@@ -150,7 +150,8 @@ cron.schedule('0 8 * * *', () => {
     });
 });
 
-// 8. 17:00 - Fetch Số Hot Trong Ngày
+// 8. 17:00 - Fetch Số Hot Trong Ngày (Disabled - Script missing)
+/*
 cron.schedule('0 17 * * *', () => {
     console.log(`[${new Date().toISOString()}] Triggering Fetch Số Hot Trong Ngày...`);
     const { exec } = require('child_process');
@@ -164,7 +165,7 @@ cron.schedule('0 17 * * *', () => {
     });
 });
 
-// 9. 18:50 - Verify Số Hot Results
+// 9. 18:50 - Verify Số Hot Results (Disabled - Script missing)
 cron.schedule('50 18 * * *', () => {
     console.log(`[${new Date().toISOString()}] Triggering Verify Số Hot Results (Post-Result)...`);
     const { exec } = require('child_process');
@@ -176,6 +177,7 @@ cron.schedule('50 18 * * *', () => {
         console.log(`Verify Số Hot Stdout: ${stdout}`);
     });
 });
+*/
 
 // 10. 16:30 - Fetch Hội Đồng Bạc Nhớ Predictions (Deprecated)
 // cron.schedule('30 16 * * *', () => { ... });
