@@ -4,6 +4,10 @@ const { open } = require('sqlite');
 const path = require('path');
 const { crawlMinhNgoc, formatDateForDb } = require('./crawl-history');
 
+// State flags to prevent concurrent heavy tasks
+let isCalculatingBacNho = false;
+let lastBacNhoDate = null;
+
 async function runTask() {
     console.log(`[${new Date().toISOString()}] Starting cron task...`);
 
@@ -65,22 +69,37 @@ async function runTask() {
 
             // Trigger Bac Nho Pre-calculation - ONLY if Special Prize is present (End of Live)
             if (result.special_prize && result.special_prize.length > 0) {
-                try {
-                    console.log('Triggering Bac Nho calculation...');
-                    const { exec } = require('child_process');
-                    exec('npm run calculate-bac-nho', { env: { ...process.env, NODE_OPTIONS: '--max-old-space-size=6144' } }, (error, stdout, stderr) => {
-                        if (error) {
-                            console.error(`Calculation error: ${error.message}`);
-                            return;
-                        }
-                        if (stderr) {
-                            console.error(`Calculation stderr: ${stderr}`);
-                            return;
-                        }
-                        console.log(`Calculation stdout: ${stdout}`);
-                    });
-                } catch (err) {
-                    console.error('Failed to trigger calculation:', err);
+                const todayStr = result.draw_date;
+
+                if (lastBacNhoDate === todayStr) {
+                    console.log(`[${todayStr}] Bac Nho calculation already completed for today. Skipping.`);
+                } else if (isCalculatingBacNho) {
+                    console.log(`[${todayStr}] Bac Nho calculation is already in progress. Skipping concurrent run.`);
+                } else {
+                    try {
+                        console.log('Triggering Bac Nho calculation (Lock Acquired)...');
+                        isCalculatingBacNho = true;
+                        
+                        const { exec } = require('child_process');
+                        // Reduced to 4096 (4GB) to ensure 8GB VPS stability
+                        exec('npm run calculate-bac-nho', { 
+                            env: { ...process.env, NODE_OPTIONS: '--max-old-space-size=4096' } 
+                        }, (error, stdout, stderr) => {
+                            isCalculatingBacNho = false; // Release lock
+                            
+                            if (error) {
+                                console.error(`Calculation error: ${error.message}`);
+                                return;
+                            }
+                            
+                            lastBacNhoDate = todayStr; // Mark as done for today
+                            console.log(`Calculation completed successfully for ${todayStr}.`);
+                            if (stdout) console.log(`Calculation output: ${stdout.substring(0, 500)}...`);
+                        });
+                    } catch (err) {
+                        isCalculatingBacNho = false;
+                        console.error('Failed to trigger calculation:', err);
+                    }
                 }
             }
         } else {

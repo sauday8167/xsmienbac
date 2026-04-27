@@ -74,10 +74,23 @@ export class OpenRouterClient {
                     return data.choices[0].message.content;
                 }
 
+
                 console.warn(`[OpenRouter] Model ${model} returned empty content. Skipping...`);
             } catch (error: any) {
                 console.error(`[OpenRouter] Error with model ${model}:`, error.message);
             }
+        }
+
+        console.warn('[OpenRouter] All models failed. Falling back to Gemini...');
+        try {
+            const { GeminiClient } = await import('./gemini-client');
+            const fallbackResult = await GeminiClient.generateContent(prompt);
+            if (fallbackResult) {
+                console.log('[OpenRouter] Gemini fallback success.');
+                return fallbackResult;
+            }
+        } catch (geminiError: any) {
+            console.error('[OpenRouter] Gemini fallback failed:', geminiError.message);
         }
 
         throw new Error('All OpenRouter free models failed or were unavailable.');

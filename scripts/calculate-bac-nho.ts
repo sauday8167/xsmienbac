@@ -76,7 +76,12 @@ async function calculateAll() {
                 
                 // Explicitly clear memory
                 result = null;
-                if (global.gc) global.gc();
+                const memUsed = process.memoryUsage().heapUsed / 1024 / 1024;
+                console.log(`[${days}] Saved ${name} to DB | Memory used: ${memUsed.toFixed(2)} MB`);
+                
+                if (typeof global.gc === 'function') {
+                    global.gc();
+                }
             };
 
             await runAndSave('1. Standard', 'standard', analyzeBacNho);
