@@ -17,6 +17,14 @@ module.exports = {
       env: {
         NODE_ENV: 'production'
       }
+    },
+    {
+      name: 'xsmb-live-worker',
+      script: 'node',
+      args: 'node_modules/tsx/dist/cli.mjs scripts/live-crawler-worker.ts',
+      env: {
+        NODE_ENV: 'production'
+      }
     }
   ]
 };
