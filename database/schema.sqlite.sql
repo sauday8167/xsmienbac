@@ -5,17 +5,18 @@ CREATE TABLE IF NOT EXISTS posts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
     slug TEXT NOT NULL UNIQUE,
-    content TEXT NOT NULL,
+    content TEXT,
     excerpt TEXT,
-    thumbnail TEXT,
     category TEXT DEFAULT 'news',
+    status TEXT DEFAULT 'draft',
+    thumbnail_url TEXT,
     meta_title TEXT,
     meta_description TEXT,
-    status TEXT DEFAULT 'draft',
-    views INTEGER DEFAULT 0,
+    author_id INTEGER,
+    published_at DATETIME,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    published_at DATETIME
+    views INTEGER DEFAULT 0
 );
 
 -- Table: admins
@@ -59,10 +60,20 @@ VALUES ('admin', '$2a$10$chTUgSiuCMS/pFb3CbWeUOUhFVmJsPst79yurspsDCCBzaXuXgUuq',
 CREATE TABLE IF NOT EXISTS api_keys (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     `key` TEXT NOT NULL UNIQUE,
+    provider TEXT DEFAULT 'google',
     status TEXT DEFAULT 'active',
     usage_count INTEGER DEFAULT 0,
     error_count INTEGER DEFAULT 0,
     last_used DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table: push_subscriptions
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    endpoint TEXT NOT NULL UNIQUE,
+    p256dh TEXT NOT NULL,
+    auth TEXT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

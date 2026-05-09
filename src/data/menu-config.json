@@ -73,6 +73,12 @@
       "seoDescription": "Phân tích bạc nhớ xổ số miền Bắc dựa trên dữ liệu kết quả đã quay, trình bày thống kê lịch sử mang tính tham khảo."
     },
     {
+      "id": "12",
+      "href": "/soi-cau-dan-de",
+      "label": "Soi Cầu Dàn Đề",
+      "description": "Bộ số tổng hợp từ nhiều phương pháp"
+    },
+    {
       "label": "Bạc nhớ khung 3 ngày",
       "href": "/bac-nho-khung-3-ngay",
       "description": "Phân tích bạc nhớ chu kỳ 3 ngày",
@@ -172,10 +178,10 @@
       "id": "1768578601503"
     },
     {
-       "id": "cam-nang-m",
-       "href": "/cam-nang-soi-cau",
-       "label": "Cẩm Nang Soi Cầu",
-       "description": "Mẹo hay và phương pháp soi cầu"
+      "id": "cam-nang-m",
+      "href": "/cam-nang-soi-cau",
+      "label": "Cẩm Nang Soi Cầu",
+      "description": "Mẹo hay và phương pháp soi cầu"
     }
   ]
 }

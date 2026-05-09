@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import LiveResultTable from '@/components/LiveResultTable';
 import StatisticsPanel from '@/components/StatisticsPanel';
 import GoogleAd from '@/components/GoogleAd';
+import YesterdayHighlights from '@/components/YesterdayHighlights';
 import type { LotteryResult } from '@/types';
 
 interface HomeClientProps {
@@ -21,17 +22,17 @@ export default function HomeClient({ initialResult }: HomeClientProps) {
     const [phase, setPhase] = useState<string>('IDLE');
 
     const isDrawingTime = () => {
-        // Use Vietnam timezone (GMT+7) for time check
         const now = new Date();
         const vnTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }));
         const hour = vnTime.getHours();
         const minute = vnTime.getMinutes();
-        return hour === 18 && minute >= 10 && minute <= 40;
+        // 18:05–18:45 Vietnam time
+        return hour === 18 && minute >= 5 && minute <= 45;
     };
 
     const fetchLiveResult = async () => {
         try {
-            const response = await fetch('/api/results/live');
+            const response = await fetch('/api/results/live', { cache: 'no-store' });
             const data = await response.json();
             if (data.success && data.data) {
                 setLiveResult(data.data);
@@ -42,11 +43,35 @@ export default function HomeClient({ initialResult }: HomeClientProps) {
     };
 
     useEffect(() => {
-        if (isDrawingTime()) {
-            fetchLiveResult();
-            const interval = setInterval(fetchLiveResult, 3000);
-            return () => clearInterval(interval);
-        }
+        let liveInterval: ReturnType<typeof setInterval> | null = null;
+
+        const maybeStartOrStop = () => {
+            if (isDrawingTime()) {
+                if (!liveInterval) {
+                    // Drawing time started — kick off live polling immediately
+                    fetchLiveResult();
+                    liveInterval = setInterval(fetchLiveResult, 2000); // 2s interval
+                }
+            } else {
+                if (liveInterval) {
+                    clearInterval(liveInterval);
+                    liveInterval = null;
+                    setIsLive(false);
+                }
+            }
+        };
+
+        // Check immediately on mount
+        maybeStartOrStop();
+
+        // Watcher: check every 10s so the page auto-activates when drawing time begins
+        // (handles users who opened the page before 18:05)
+        const watcher = setInterval(maybeStartOrStop, 10000);
+
+        return () => {
+            clearInterval(watcher);
+            if (liveInterval) clearInterval(liveInterval);
+        };
     }, []);
 
     return (
@@ -62,6 +87,9 @@ export default function HomeClient({ initialResult }: HomeClientProps) {
                     <LiveResultTable result={liveResult} revealedPrizes={new Set()} isLive={isLive} phase={phase} />
                 </section>
             )}
+
+            {/* Điểm nhấn kỳ gần nhất: lô kép, ba càng, đầu/đuôi */}
+            <YesterdayHighlights />
 
             {/* Thống kê đầu/đuôi */}
             <StatisticsPanel />

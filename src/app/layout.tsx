@@ -20,7 +20,7 @@ import NotificationManager from '@/components/NotificationManager';
 import JsonLd from '@/components/seo/JsonLd';
 import { generateOrganizationSchema, generateWebSiteSchema } from '@/lib/schema-generator';
 
-const inter = Inter({ subsets: ['latin', 'vietnamese'] })
+const inter = Inter({ subsets: ['latin', 'vietnamese'], display: 'swap' })
 
 export const viewport = {
     themeColor: '#dc2626',
@@ -159,6 +159,19 @@ export default async function RootLayout({
         // Silently ignore during build
     }
 
+    // Load AdSense config
+    let adsenseConfig = { publisherId: '' };
+    try {
+        const adsensePath = join(process.cwd(), 'src/data/adsense.json');
+        const content = await readFile(adsensePath, 'utf8');
+        adsenseConfig = JSON.parse(content);
+    } catch (e) {
+        // Ignore
+    }
+    const realPublisherId = adsenseConfig.publisherId && !adsenseConfig.publisherId.includes('0000000000000000')
+        ? adsenseConfig.publisherId
+        : null;
+
     return (
         <html lang="vi">
             {/* ... head ... */}
@@ -184,12 +197,14 @@ export default async function RootLayout({
                     </>
                 )}
 
-                {/* Google AdSense Script */}
-                <script
-                    async
-                    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-0000000000000000"
-                    crossOrigin="anonymous"
-                />
+                {/* Google AdSense Script - only load when real publisher ID is configured */}
+                {realPublisherId && (
+                    <script
+                        async
+                        src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${realPublisherId}`}
+                        crossOrigin="anonymous"
+                    />
+                )}
 
                 <UIProvider>
                     <AdSenseProvider>

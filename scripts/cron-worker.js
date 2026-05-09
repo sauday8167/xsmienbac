@@ -67,6 +67,20 @@ async function runTask() {
             //     console.error('Failed to trigger article generation:', err);
             // }
 
+            // Send push notification when special prize is available
+            if (result.special_prize && result.special_prize.length > 0) {
+                const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+                fetch(`${siteUrl}/api/push/send`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: 'XSMB — Kết quả đã có!',
+                        body: `Giải đặc biệt hôm nay: ${result.special_prize}`,
+                        url: '/'
+                    })
+                }).then(r => r.json()).then(r => console.log('Push sent:', r.sent, 'subscribers')).catch(() => {});
+            }
+
             // Trigger Bac Nho Pre-calculation - ONLY if Special Prize is present (End of Live)
             if (result.special_prize && result.special_prize.length > 0) {
                 const todayStr = result.draw_date;
@@ -126,7 +140,29 @@ console.log(' - 18:52: 180 Days Analysis');
 console.log(' - 19:04: 365 Days Analysis');
 console.log(' - 19:16: 730 Days Analysis');
 console.log(' - 19:28: 1000 Days Analysis');
+console.log(' - 19:05: Post-draw Analysis (phân tích kết quả sau khi có KQ)');
 console.log(' - 19:40: AI Prediction (/du-doan-ai) - phân tích sau kết quả');
+console.log(' - Thứ 2 08:30: Thống kê theo thứ trong tuần');
+
+// 6. 19:05 - Post-draw Analysis (phân tích kết quả XSMB ngay sau khi có KQ)
+cron.schedule('5 19 * * *', () => {
+    console.log(`[${new Date().toISOString()}] Triggering Post-draw Analysis (19:05)...`);
+    const { exec } = require('child_process');
+    exec('npx tsx scripts/auto-write-ket-qua.ts', (err, stdout) => {
+        if (err) console.error(`Post-draw Analysis Error: ${err.message}`);
+        else console.log(`Post-draw Analysis Stdout: ${stdout}`);
+    });
+});
+
+// 7. Thứ 2 08:30 - Thống kê theo thứ trong tuần (chỉ chạy thứ 2)
+cron.schedule('30 8 * * 1', () => {
+    console.log(`[${new Date().toISOString()}] Triggering Thống kê theo thứ (Thứ 2 08:30)...`);
+    const { exec } = require('child_process');
+    exec('npx tsx scripts/auto-write-thu-trong-tuan.ts', (err, stdout) => {
+        if (err) console.error(`Thu Trong Tuan Error: ${err.message}`);
+        else console.log(`Thu Trong Tuan Stdout: ${stdout}`);
+    });
+});
 
 // 1. Live Crawl: Every 2 minutes from 18:10 to 18:45
 cron.schedule('*/2 18 * * *', () => {
@@ -270,16 +306,6 @@ cron.schedule('30 19 * * *', () => {
             return;
         }
         console.log(`Auto Ngach Cam Stdout: ${stdout}`);
-    });
-});
-
-// 17. 19:40 - Tự động viết bài Lô Gan Cực Đại
-cron.schedule('40 19 * * *', () => {
-    console.log(`[${new Date().toISOString()}] Triggering Auto Write Lo Gan (19:40)...`);
-    const { exec } = require('child_process');
-    exec('npx tsx scripts/auto-write-lo-gan.ts', (err, stdout) => {
-        if (err) console.error(`Lo Gan Error: ${err.message}`);
-        else console.log(`Lo Gan Stdout: ${stdout}`);
     });
 });
 

@@ -11,7 +11,7 @@ import { processContentImages } from '@/lib/image-seo';
 async function getPost(slug: string): Promise<Post | null> {
     try {
         const post = await queryOne<Post>(
-            'SELECT * FROM posts WHERE slug = ?',
+            'SELECT *, thumbnail_url as thumbnail FROM posts WHERE slug = ?',
             [slug]
         );
 
@@ -34,7 +34,7 @@ async function getPost(slug: string): Promise<Post | null> {
 async function getRelatedPosts(category: string, currentId: number): Promise<Post[]> {
     try {
         const posts = await query<Post[]>(
-            'SELECT * FROM posts WHERE category = ? AND id != ? AND status = ? ORDER BY published_at DESC LIMIT 3',
+            'SELECT *, thumbnail_url as thumbnail FROM posts WHERE category = ? AND id != ? AND status = ? ORDER BY published_at DESC LIMIT 3',
             [category, currentId, 'published']
         );
         return posts || [];
@@ -102,6 +102,12 @@ export async function generateMetadata(
                 'max-image-preview': 'large',
                 'max-snippet': -1,
             },
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title: post.meta_title || post.title,
+            description: post.meta_description || post.excerpt || '',
+            images: [imageUrl],
         },
         alternates: {
             canonical: postUrl,

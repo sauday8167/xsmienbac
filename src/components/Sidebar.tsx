@@ -161,7 +161,6 @@ export default function Sidebar() {
                     {sidebarItems.length === 0 && [
                         { href: '/ket-qua-theo-ngay', label: 'Kết quả theo ngày', icon: 'calendar' },
                         { href: '/thong-ke', label: 'Thống kê lô tô', icon: 'chart' },
-                        { href: '/hoi-dong-bac-nho', label: 'Hội Đồng Bạc Nhớ', icon: 'bulb' },
                         { href: '/do-ve-so', label: 'Dò vé số', icon: 'check' },
                         { href: '/quay-thu', label: 'Quay thử số', icon: 'refresh' },
                         { href: '/du-doan', label: 'Tần Suất Lô Tô', icon: 'bulb' },

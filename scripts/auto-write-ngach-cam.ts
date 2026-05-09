@@ -125,7 +125,7 @@ async function main() {
                 articleJson.title,
                 articleJson.meta_description,
                 thumbnail,
-                'tin-tuc',
+                'soi-cau',
                 'published',
                 now, now, now
             ]);

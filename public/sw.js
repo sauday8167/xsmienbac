@@ -1,94 +1,46 @@
-/**
- * Copyright 2018 Google Inc. All Rights Reserved.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *     http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+// Service Worker — XSMB 24h (Push Notifications)
+const CACHE = ‘xsmb-v1’;
 
-// If the loader is already loaded, just stop.
-if (!self.define) {
-  let registry = {};
+self.addEventListener(‘install’, () => self.skipWaiting());
+self.addEventListener(‘activate’, e => e.waitUntil(self.clients.claim()));
 
-  // Used for `eval` and `importScripts` where we can't get script URL by other means.
-  // In both cases, it's safe to use a global var because those functions are synchronous.
-  let nextDefineUri;
-
-  const singleRequire = (uri, parentUri) => {
-    uri = new URL(uri + ".js", parentUri).href;
-    return registry[uri] || (
-      
-        new Promise(resolve => {
-          if ("document" in self) {
-            const script = document.createElement("script");
-            script.src = uri;
-            script.onload = resolve;
-            document.head.appendChild(script);
-          } else {
-            nextDefineUri = uri;
-            importScripts(uri);
-            resolve();
-          }
-        })
-      
-      .then(() => {
-        let promise = registry[uri];
-        if (!promise) {
-          throw new Error(`Module ${uri} didn’t register its module`);
-        }
-        return promise;
-      })
+// Basic fetch caching for offline support
+self.addEventListener(‘fetch’, e => {
+    if (e.request.method !== ‘GET’) return;
+    if (e.request.url.includes(‘/api/’)) return; // skip API calls
+    e.respondWith(
+        caches.match(e.request).then(cached => cached || fetch(e.request))
     );
-  };
+});
 
-  self.define = (depsNames, factory) => {
-    const uri = nextDefineUri || ("document" in self ? document.currentScript.src : "") || location.href;
-    if (registry[uri]) {
-      // Module is already loading or loaded.
-      return;
+// Push notification handler
+self.addEventListener(‘push’, function(event) {
+    let payload = { title: ‘XSMB 24h’, body: ‘Kết quả xổ số đã có!’, url: ‘/’ };
+    if (event.data) {
+        try { payload = { ...payload, ...event.data.json() }; } catch { payload.body = event.data.text(); }
     }
-    let exports = {};
-    const require = depUri => singleRequire(depUri, uri);
-    const specialDeps = {
-      module: { uri },
-      exports,
-      require
-    };
-    registry[uri] = Promise.all(depsNames.map(
-      depName => specialDeps[depName] || require(depName)
-    )).then(deps => {
-      factory(...deps);
-      return exports;
-    });
-  };
-}
-define(['./workbox-7144475a'], (function (workbox) { 'use strict';
+    event.waitUntil(
+        self.registration.showNotification(payload.title, {
+            body: payload.body,
+            icon: ‘/favicon.ico’,
+            badge: ‘/favicon.ico’,
+            data: { url: payload.url || ‘/’ },
+            vibrate: [200, 100, 200],
+            tag: ‘xsmb-result’,
+            renotify: true,
+        })
+    );
+});
 
-  importScripts();
-  self.skipWaiting();
-  workbox.clientsClaim();
-  workbox.registerRoute("/", new workbox.NetworkFirst({
-    "cacheName": "start-url",
-    plugins: [{
-      cacheWillUpdate: async ({
-        response: e
-      }) => e && "opaqueredirect" === e.type ? new Response(e.body, {
-        status: 200,
-        statusText: "OK",
-        headers: e.headers
-      }) : e
-    }]
-  }), 'GET');
-  workbox.registerRoute(/.*/i, new workbox.NetworkOnly({
-    "cacheName": "dev",
-    plugins: []
-  }), 'GET');
-  self.__WB_DISABLE_DEV_LOGS = true;
-
-}));
-//# sourceMappingURL=sw.js.map
+// Notification click — open or focus window
+self.addEventListener(‘notificationclick’, function(event) {
+    event.notification.close();
+    const url = event.notification.data?.url || ‘/’;
+    event.waitUntil(
+        clients.matchAll({ type: ‘window’, includeUncontrolled: true }).then(list => {
+            const existing = list.find(c => c.url.startsWith(self.location.origin));
+            if (existing) { existing.navigate(url); return existing.focus(); }
+            return clients.openWindow(url);
+        })
+    );
+});

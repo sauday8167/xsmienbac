@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import SoDonTab from './components/SoDonTab';
+
 import Cap2Tab from './components/Cap2Tab';
 import Cap3Tab from './components/Cap3Tab';
 import BacNho2NgayTab from './components/BacNho2NgayTab';
@@ -10,10 +10,10 @@ import JsonLd from '@/components/seo/JsonLd';
 import { generateManualArticleSchema, generateBreadcrumbSchema, generateFAQSchema } from '@/lib/schema-generator';
 import TopicHub from '@/components/TopicHub';
 
-type TabType = 'so-don' | 'cap-2' | 'cap-3' | '2-ngay' | '3-ngay';
+type TabType = 'cap-2' | 'cap-3' | '2-ngay' | '3-ngay';
 
 export default function SoiCauBacNhoClient() {
-    const [activeTab, setActiveTab] = useState<TabType>('so-don');
+    const [activeTab, setActiveTab] = useState<TabType>('cap-2');
 
     const breadcrumbs = [
         { name: 'Trang chủ', item: '/' },
@@ -31,7 +31,7 @@ export default function SoiCauBacNhoClient() {
             <JsonLd data={generateBreadcrumbSchema(breadcrumbs)} />
             <JsonLd data={generateFAQSchema([
                 { question: 'Bạc nhớ xổ số là gì?', answer: 'Bạc nhớ xổ số là phương pháp thống kê dựa trên xu hướng lặp lại của các cặp số trong lịch sử kết quả XSMB.' },
-                { question: 'Nên dùng bạc nhớ loại nào để chốt số?', answer: 'Nên kết hợp nhiều loại: dùng Số Đơn để có danh sách rộng, Cặp 2 để lọc bớt, và Cặp 3 để chốt.' },
+                { question: 'Nên dùng bạc nhớ loại nào để chốt số?', answer: 'Nên kết hợp nhiều loại: dùng Cặp 2 để lọc bớt, và Cặp 3 để chốt.' },
             ])} />
             
             <div className="flex flex-col md:flex-row items-center justify-between gap-6">
@@ -46,7 +46,7 @@ export default function SoiCauBacNhoClient() {
             <div className="card overflow-hidden">
                 <div className="border-b border-lottery-gray-200 overflow-x-auto scrollbar-hide">
                     <nav className="flex -mb-px min-w-max md:min-w-0">
-                        {(['so-don', 'cap-2', 'cap-3', '2-ngay', '3-ngay'] as TabType[]).map(tab => (
+                        {(['cap-2', 'cap-3', '2-ngay', '3-ngay'] as TabType[]).map(tab => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
@@ -59,7 +59,6 @@ export default function SoiCauBacNhoClient() {
                                 `}
                             >
                                 <span className="flex items-center gap-2">
-                                    {tab === 'so-don' && '🔢 Bạc Nhớ Số Đơn'}
                                     {tab === 'cap-2' && '🎲 Bạc Nhớ Cặp 2'}
                                     {tab === 'cap-3' && '🎰 Bạc Nhớ Cặp 3'}
                                     {tab === '2-ngay' && '📅 Bạc Nhớ 2 Ngày'}
@@ -71,7 +70,6 @@ export default function SoiCauBacNhoClient() {
                 </div>
 
                 <div className="p-6">
-                    {activeTab === 'so-don' && <SoDonTab />}
                     {activeTab === 'cap-2' && <Cap2Tab />}
                     {activeTab === 'cap-3' && <Cap3Tab />}
                     {activeTab === '2-ngay' && <BacNho2NgayTab />}

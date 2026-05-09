@@ -3,32 +3,25 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import type { BacNhoCap3Data, BacNhoCap3Pattern } from '@/types/bac-nho-types';
 
-interface Props {
-}
-
-export default function Cap3Tab({ }: Props) {
+export default function Cap3Tab() {
     const [data, setData] = useState<BacNhoCap3Data | null>(null);
     const [loading, setLoading] = useState(true);
     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
     const [filterRate, setFilterRate] = useState<number>(40);
+    const [minAppearances, setMinAppearances] = useState<number>(3);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 20;
     const [selectedDays, setSelectedDays] = useState<number>(100);
     const [viewMode, setViewMode] = useState<'percentage' | 'hitCount'>('percentage');
 
-    useEffect(() => {
-        fetchData();
-    }, [selectedDays]);
+    useEffect(() => { fetchData(); }, [selectedDays]);
 
     const fetchData = async () => {
         try {
             setLoading(true);
             const response = await fetch(`/api/bac-nho-khung-3-ngay/cap-3?days=${selectedDays}`);
             const result = await response.json();
-
-            if (result.success && result.data) {
-                setData(result.data);
-            }
+            if (result.success && result.data) setData(result.data);
         } catch (error) {
             console.error('Error fetching Bạc Nhớ Cặp 3:', error);
         } finally {
@@ -36,14 +29,10 @@ export default function Cap3Tab({ }: Props) {
         }
     };
 
-    const toggleRow = (tripleKey: string) => {
-        const newExpanded = new Set(expandedRows);
-        if (newExpanded.has(tripleKey)) {
-            newExpanded.delete(tripleKey);
-        } else {
-            newExpanded.add(tripleKey);
-        }
-        setExpandedRows(newExpanded);
+    const toggleRow = (key: string) => {
+        const s = new Set(expandedRows);
+        s.has(key) ? s.delete(key) : s.add(key);
+        setExpandedRows(s);
     };
 
     const getCorrelationColor = (rate: number) => {
@@ -53,60 +42,56 @@ export default function Cap3Tab({ }: Props) {
         return 'bg-gray-400';
     };
 
+    const getSampleBadge = (appearances: number) => {
+        if (appearances < 3) return { cls: 'text-red-600 bg-red-50 border-red-200', label: '⚠️ Ít mẫu' };
+        if (appearances < 8) return { cls: 'text-yellow-600 bg-yellow-50 border-yellow-200', label: '⚡ Vừa đủ' };
+        return { cls: 'text-green-600 bg-green-50 border-green-200', label: '✅ Tin cậy' };
+    };
+
     const tripleToKey = (triple: [string, string, string]) => `${triple[0]}-${triple[1]}-${triple[2]}`;
 
-    // Optimized processing with useMemo - MUST BE AT TOP LEVEL
-    const processedData = useMemo(() => {
-        if (!data) return { patterns: [], predictions: [] };
+    const consensusNumbers = useMemo(() => {
+        if (!data) return [];
+        const voteMap = new Map<string, { voteCount: number; totalRate: number }>();
+        data.todayPredictions.forEach(({ predictions }) => {
+            const sample = predictions[0]?.totalAppearances || 0;
+            if (sample < minAppearances) return;
+            predictions
+                .filter(p => p.correlationRate >= Math.max(filterRate, 1))
+                .slice(0, 5)
+                .forEach(pred => {
+                    const cur = voteMap.get(pred.number) || { voteCount: 0, totalRate: 0 };
+                    voteMap.set(pred.number, { voteCount: cur.voteCount + 1, totalRate: cur.totalRate + pred.correlationRate });
+                });
+        });
+        return Array.from(voteMap.entries())
+            .map(([number, s]) => ({ number, voteCount: s.voteCount, avgRate: Math.round(s.totalRate / s.voteCount * 10) / 10 }))
+            .filter(x => x.voteCount >= 2)
+            .sort((a, b) => b.voteCount - a.voteCount || b.avgRate - a.avgRate)
+            .slice(0, 10);
+    }, [data, filterRate, minAppearances]);
 
-        // Filter patterns - for Cap 3, we only show patterns with at least 1 apperance
-        const patterns = data.patterns
-            .map(p => ({
-                ...p,
-                followNumbers: p.followNumbers.filter(fn => !filterRate || fn.correlationRate >= filterRate)
-            }))
-            .filter(p => p.totalTriggerAppearances >= 1 && p.followNumbers.length > 0);
+    if (loading) return <div className="flex justify-center items-center min-h-[400px]"><div className="spinner"></div></div>;
+    if (!data) return <div className="text-center text-lottery-gray-600">Không có dữ liệu</div>;
 
-        // Filter Predictions
-        const predictions = data.todayPredictions
+    const filteredPatterns = data.patterns
+        .map(p => ({ ...p, followNumbers: p.followNumbers.filter(fn => fn.correlationRate >= Math.max(filterRate, 1)) }))
+        .filter(p => p.totalTriggerAppearances >= minAppearances && p.followNumbers.length > 0);
+
+    const buildPredictions = (sortKey: 'correlationRate' | 'hitCount') =>
+        data.todayPredictions
             .map(p => ({
                 ...p,
                 predictions: p.predictions
-                    .filter(pred => !filterRate || pred.correlationRate >= filterRate)
-                    .sort((a, b) => viewMode === 'percentage' 
-                        ? b.correlationRate - a.correlationRate 
-                        : b.hitCount - a.hitCount
-                    )
+                    .filter(pred => pred.correlationRate >= Math.max(filterRate, 1) && pred.totalAppearances >= minAppearances)
+                    .sort((a, b) => b[sortKey] - a[sortKey])
             }))
             .filter(p => p.predictions.length > 0)
-            .sort((a, b) => {
-                const valA = viewMode === 'percentage' ? (a.predictions[0]?.correlationRate || 0) : (a.predictions[0]?.hitCount || 0);
-                const valB = viewMode === 'percentage' ? (b.predictions[0]?.correlationRate || 0) : (b.predictions[0]?.hitCount || 0);
-                return valB - valA;
-            });
+            .sort((a, b) => (b.predictions[0]?.[sortKey] || 0) - (a.predictions[0]?.[sortKey] || 0));
 
-        return { patterns, predictions };
-    }, [data, filterRate, viewMode]);
-
-    if (loading) {
-        return (
-            <div className="flex justify-center items-center min-h-[400px]">
-                <div className="spinner"></div>
-            </div>
-        );
-    }
-
-    if (!data) {
-        return <div className="text-center text-lottery-gray-600">Không có dữ liệu</div>;
-    }
-
-    const displayedPredictions = processedData.predictions;
-    const filteredPatterns = processedData.patterns;
-
-    // Pagination
+    const displayedPredictions = viewMode === 'percentage' ? buildPredictions('correlationRate') : buildPredictions('hitCount');
     const totalPages = Math.ceil(filteredPatterns.length / itemsPerPage);
-    const startIdx = (currentPage - 1) * itemsPerPage;
-    const paginatedPatterns = filteredPatterns.slice(startIdx, startIdx + itemsPerPage);
+    const paginatedPatterns = filteredPatterns.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
     return (
         <div className="space-y-6">
@@ -114,17 +99,11 @@ export default function Cap3Tab({ }: Props) {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="bg-gradient-to-br from-green-50 to-green-100 border-l-4 border-green-600 p-4 rounded-lg">
                     <div className="text-sm text-lottery-gray-600 mb-1">Ngày phân tích mới nhất</div>
-                    <div className="text-2xl font-bold text-green-600">
-                        {new Date(data.overview.latestDate).toLocaleDateString('vi-VN')}
-                    </div>
+                    <div className="text-2xl font-bold text-green-600">{new Date(data.overview.latestDate).toLocaleDateString('vi-VN')}</div>
                 </div>
                 <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 border-l-4 border-indigo-600 p-4 rounded-lg">
                     <label className="text-sm text-lottery-gray-600 mb-2 block">Phân tích dữ liệu</label>
-                    <select
-                        value={selectedDays}
-                        onChange={(e) => setSelectedDays(Number(e.target.value))}
-                        className="input w-full font-bold text-indigo-600"
-                    >
+                    <select value={selectedDays} onChange={(e) => setSelectedDays(Number(e.target.value))} className="input w-full font-bold text-indigo-600">
                         <option value={100}>100 Ngày</option>
                         <option value={180}>180 Ngày</option>
                         <option value={365}>365 Ngày</option>
@@ -142,121 +121,124 @@ export default function Cap3Tab({ }: Props) {
                 </div>
             </div>
 
-            {/* Today's Predictions with Toggle */}
-            {processedData.predictions.length > 0 && (
-                <div className="bg-gradient-to-br from-yellow-50 to-orange-50 border-l-4 border-orange-500 p-6 rounded-lg">
-                    {/* Toggle Buttons */}
-                    <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-                        <h2 className="text-2xl font-bold text-orange-700">
-                            🔥 Dự Đoán Hôm Nay (Dựa Vào Bộ 3 Hôm Qua)
-                        </h2>
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => setViewMode('percentage')}
-                                className={`px-4 py-2 rounded-lg font-semibold transition-all ${viewMode === 'percentage'
-                                    ? 'bg-orange-600 text-white shadow-md'
-                                    : 'bg-white text-orange-600 border-2 border-orange-300 hover:border-orange-500'
-                                    }`}
-                            >
-                                📊 Tỷ Lệ % Cao Nhất
-                            </button>
-                            <button
-                                onClick={() => setViewMode('hitCount')}
-                                className={`px-4 py-2 rounded-lg font-semibold transition-all ${viewMode === 'hitCount'
-                                    ? 'bg-purple-600 text-white shadow-md'
-                                    : 'bg-white text-purple-600 border-2 border-purple-300 hover:border-purple-500'
-                                    }`}
-                            >
-                                ⭐ Số Lần Nhiều Nhất
-                            </button>
+            {/* Baseline notice */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 text-xs text-blue-700 flex items-center gap-2">
+                <span>ℹ️</span>
+                <span>Baseline ngẫu nhiên XSMB ≈ <strong>27%</strong>. Bộ 3 xuất hiện ít hơn — cần cẩn thận với tỷ lệ cao từ ít mẫu.</span>
+            </div>
+
+            {/* Consensus Numbers */}
+            {consensusNumbers.length > 0 && (
+                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-300 p-5 rounded-xl">
+                    <div className="flex items-center gap-3 mb-4">
+                        <span className="text-2xl">🏆</span>
+                        <div>
+                            <h2 className="text-lg font-bold text-indigo-800">Top Số Đồng Thuận Hôm Nay</h2>
+                            <p className="text-xs text-indigo-600">Số được nhiều bộ 3 trigger độc lập cùng dự đoán — đáng tin hơn từng bộ riêng lẻ</p>
                         </div>
                     </div>
-
-                    {/* Predictions Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {displayedPredictions.slice(0, 9).map(({ yesterdayTriple, predictions }) => (
-                            <div
-                                key={tripleToKey(yesterdayTriple)}
-                                className={`bg-white rounded-lg p-4 shadow-md border-2 transition-colors ${viewMode === 'percentage'
-                                    ? 'border-orange-200 hover:border-orange-400'
-                                    : 'border-purple-200 hover:border-purple-400'
-                                    }`}
-                            >
-                                <div className="text-sm text-gray-600 mb-2">
-                                    Hôm qua có bộ 3: <span className={`font-bold text-base ${viewMode === 'percentage' ? 'text-orange-600' : 'text-purple-600'
-                                        }`}>
-                                        {yesterdayTriple[0]} + {yesterdayTriple[1]} + {yesterdayTriple[2]}
-                                    </span>
-                                </div>
-
-                                {/* Conditional rendering based on viewMode */}
-                                {viewMode === 'percentage' ? (
-                                    // View mode: Tỷ lệ %
-                                    predictions.slice(0, 3).map((pred, idx) => (
-                                        <div key={pred.number} className="mb-2">
-                                            <div className="text-base font-semibold text-green-700">
-                                                {idx === 0 && '➊ '}
-                                                {idx === 1 && '➋ '}
-                                                {idx === 2 && '➌ '}
-                                                Số {pred.number} - {pred.correlationRate.toFixed(1)}%
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <div className="flex-1 bg-gray-200 rounded-full h-2">
-                                                    <div
-                                                        className={`h-2 rounded-full ${getCorrelationColor(pred.correlationRate)}`}
-                                                        style={{ width: `${Math.min(pred.correlationRate, 100)}%` }}
-                                                    ></div>
-                                                </div>
-                                                <span className="text-xs text-gray-500">{pred.hitCount}/{pred.totalAppearances}</span>
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    // View mode: Số lần xuất hiện (CHỈ hiển thị hitCount, KHÔNG hiển thị %)
-                                    predictions.slice(0, 3).map((pred, idx) => (
-                                        <div key={pred.number} className="mb-2">
-                                            <div className="text-base font-semibold text-blue-700">
-                                                {idx === 0 && '🥇 '}
-                                                {idx === 1 && '🥈 '}
-                                                {idx === 2 && '🥉 '}
-                                                Số {pred.number} - {pred.hitCount} lần
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <div className="flex-1 bg-gray-200 rounded-full h-2">
-                                                    <div
-                                                        className="bg-purple-500 h-2 rounded-full"
-                                                        style={{
-                                                            width: `${Math.min((pred.hitCount / pred.totalAppearances) * 100, 100)}%`
-                                                        }}
-                                                    ></div>
-                                                </div>
-                                                <span className="text-xs text-gray-500">
-                                                    {pred.hitCount}/{pred.totalAppearances}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
+                    <div className="flex flex-wrap gap-3">
+                        {consensusNumbers.map((item, idx) => (
+                            <div key={item.number} className={`flex flex-col items-center p-3 rounded-xl border-2 min-w-[68px] ${
+                                idx === 0 ? 'bg-yellow-100 border-yellow-400 shadow-md' :
+                                idx === 1 ? 'bg-gray-100 border-gray-400' :
+                                idx === 2 ? 'bg-orange-100 border-orange-400' :
+                                'bg-white border-indigo-200'
+                            }`}>
+                                <div className="text-xs mb-0.5">{idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`}</div>
+                                <div className={`text-2xl font-black ${idx === 0 ? 'text-yellow-700' : idx === 1 ? 'text-gray-600' : idx === 2 ? 'text-orange-700' : 'text-indigo-700'}`}>{item.number}</div>
+                                <div className="text-xs font-bold text-indigo-600 mt-1">{item.voteCount} bộ</div>
+                                <div className="text-xs text-gray-500">avg {item.avgRate}%</div>
                             </div>
                         ))}
                     </div>
                 </div>
             )}
 
+            {/* Today's Predictions */}
+            {displayedPredictions.length > 0 && (
+                <div className="bg-gradient-to-br from-yellow-50 to-orange-50 border-l-4 border-orange-500 p-6 rounded-lg">
+                    <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+                        <h2 className="text-2xl font-bold text-orange-700">🔥 Dự Đoán Hôm Nay (Dựa Vào Bộ 3 Hôm Qua)</h2>
+                        <div className="flex gap-2">
+                            <button onClick={() => setViewMode('percentage')} className={`px-4 py-2 rounded-lg font-semibold transition-all ${viewMode === 'percentage' ? 'bg-orange-600 text-white shadow-md' : 'bg-white text-orange-600 border-2 border-orange-300 hover:border-orange-500'}`}>
+                                📊 Tỷ Lệ % Cao Nhất
+                            </button>
+                            <button onClick={() => setViewMode('hitCount')} className={`px-4 py-2 rounded-lg font-semibold transition-all ${viewMode === 'hitCount' ? 'bg-purple-600 text-white shadow-md' : 'bg-white text-purple-600 border-2 border-purple-300 hover:border-purple-500'}`}>
+                                ⭐ Số Lần Nhiều Nhất
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {displayedPredictions.slice(0, 9).map(({ yesterdayTriple, predictions }) => {
+                            const sample = predictions[0]?.totalAppearances || 0;
+                            const badge = getSampleBadge(sample);
+                            return (
+                                <div key={tripleToKey(yesterdayTriple)} className={`bg-white rounded-lg p-4 shadow-md border-2 ${viewMode === 'percentage' ? 'border-orange-200 hover:border-orange-400' : 'border-purple-200 hover:border-purple-400'}`}>
+                                    <div className="flex items-center justify-between mb-1">
+                                        <div className="text-sm text-gray-600">
+                                            Hôm qua có bộ 3: <span className={`font-bold text-base ${viewMode === 'percentage' ? 'text-orange-600' : 'text-purple-600'}`}>{yesterdayTriple[0]} + {yesterdayTriple[1]} + {yesterdayTriple[2]}</span>
+                                        </div>
+                                        <span className={`text-[10px] px-1.5 py-0.5 rounded border font-semibold ${badge.cls}`}>{badge.label}</span>
+                                    </div>
+                                    <div className="text-xs text-gray-400 mb-3">Xuất hiện {sample} lần trong lịch sử</div>
+
+                                    {viewMode === 'percentage' ? (
+                                        predictions.slice(0, 3).map((pred, idx) => (
+                                            <div key={pred.number} className="mb-2">
+                                                <div className="text-base font-semibold text-green-700">
+                                                    {idx === 0 ? '➊ ' : idx === 1 ? '➋ ' : '➌ '}Số {pred.number} — {pred.correlationRate.toFixed(1)}%
+                                                    <span className="text-xs text-gray-400 ml-1">(+{(pred.correlationRate - 27).toFixed(0)}% vs random)</span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="flex-1 bg-gray-200 rounded-full h-2">
+                                                        <div className={`h-2 rounded-full ${getCorrelationColor(pred.correlationRate)}`} style={{ width: `${Math.min(pred.correlationRate, 100)}%` }}></div>
+                                                    </div>
+                                                    <span className="text-xs text-gray-500">{pred.hitCount}/{pred.totalAppearances}</span>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        predictions.slice(0, 3).map((pred, idx) => (
+                                            <div key={pred.number} className="mb-2">
+                                                <div className="text-base font-semibold text-blue-700">
+                                                    {idx === 0 ? '🥇 ' : idx === 1 ? '🥈 ' : '🥉 '}Số {pred.number} — {pred.hitCount} lần
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="flex-1 bg-gray-200 rounded-full h-2">
+                                                        <div className="bg-purple-500 h-2 rounded-full" style={{ width: `${Math.min((pred.hitCount / pred.totalAppearances) * 100, 100)}%` }}></div>
+                                                    </div>
+                                                    <span className="text-xs text-gray-500">{pred.hitCount}/{pred.totalAppearances}</span>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
             {/* All Patterns Table */}
             <div>
-                <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                     <h2 className="text-2xl font-bold text-lottery-gray-800">Patterns Bộ 3</h2>
-                    <select
-                        value={filterRate}
-                        onChange={(e) => setFilterRate(Number(e.target.value))}
-                        className="input w-auto"
-                    >
-                        <option value={0}>Tất cả tỷ lệ</option>
-                        <option value={70}>≥ 70%</option>
-                        <option value={50}>≥ 50%</option>
-                        <option value={30}>≥ 30%</option>
-                    </select>
+                    <div className="flex flex-wrap gap-2">
+                        <select value={minAppearances} onChange={(e) => { setMinAppearances(Number(e.target.value)); setCurrentPage(1); }} className="input w-auto text-sm">
+                            <option value={1}>Mọi bộ 3</option>
+                            <option value={3}>≥ 3 lần xuất hiện</option>
+                            <option value={5}>≥ 5 lần</option>
+                            <option value={10}>≥ 10 lần</option>
+                        </select>
+                        <select value={filterRate} onChange={(e) => { setFilterRate(Number(e.target.value)); setCurrentPage(1); }} className="input w-auto">
+                            <option value={0}>Tất cả tỷ lệ</option>
+                            <option value={70}>≥ 70%</option>
+                            <option value={50}>≥ 50%</option>
+                            <option value={30}>≥ 30%</option>
+                        </select>
+                    </div>
                 </div>
 
                 {/* Desktop View: Table */}
@@ -273,34 +255,25 @@ export default function Cap3Tab({ }: Props) {
                         <tbody>
                             {paginatedPatterns.map((pattern, index) => {
                                 const tripleKey = tripleToKey(pattern.triggerTriple);
+                                const badge = getSampleBadge(pattern.totalTriggerAppearances);
                                 return (
                                     <React.Fragment key={tripleKey}>
-                                        <tr
-                                            className={`border-b border-lottery-gray-200 hover:bg-lottery-gray-50 cursor-pointer ${index % 2 === 0 ? 'bg-white' : 'bg-lottery-gray-50'
-                                                }`}
-                                            onClick={() => toggleRow(tripleKey)}
-                                        >
+                                        <tr className={`border-b border-lottery-gray-200 hover:bg-lottery-gray-50 cursor-pointer ${index % 2 === 0 ? 'bg-white' : 'bg-lottery-gray-50'}`} onClick={() => toggleRow(tripleKey)}>
                                             <td className="px-4 py-3">
-                                                <span className="stats-number text-base font-bold">
-                                                    {pattern.triggerTriple[0]} + {pattern.triggerTriple[1]} + {pattern.triggerTriple[2]}
-                                                </span>
+                                                <span className="stats-number text-base font-bold">{pattern.triggerTriple[0]} + {pattern.triggerTriple[1]} + {pattern.triggerTriple[2]}</span>
                                             </td>
-                                            <td className="px-4 py-3 font-semibold">{pattern.totalTriggerAppearances} lần</td>
+                                            <td className="px-4 py-3">
+                                                <span className="font-semibold">{pattern.totalTriggerAppearances} lần</span>
+                                                <span className={`ml-2 text-[10px] px-1.5 py-0.5 rounded border font-semibold ${badge.cls}`}>{badge.label}</span>
+                                            </td>
                                             <td className="px-4 py-3">
                                                 <div className="space-y-1">
                                                     {pattern.followNumbers.slice(0, 3).map((fn, idx) => (
                                                         <div key={fn.number} className="flex items-center gap-2">
-                                                            <span className="font-bold text-green-600 w-8">
-                                                                {idx === 0 && '➊'}
-                                                                {idx === 1 && '➋'}
-                                                                {idx === 2 && '➌'}
-                                                            </span>
+                                                            <span className="font-bold text-green-600 w-8">{idx === 0 ? '➊' : idx === 1 ? '➋' : '➌'}</span>
                                                             <span className="font-semibold">{fn.number}</span>
                                                             <div className="flex-1 bg-gray-200 rounded-full h-2 min-w-[60px]">
-                                                                <div
-                                                                    className={`h-2 rounded-full ${getCorrelationColor(fn.correlationRate)}`}
-                                                                    style={{ width: `${Math.min(fn.correlationRate, 100)}%` }}
-                                                                ></div>
+                                                                <div className={`h-2 rounded-full ${getCorrelationColor(fn.correlationRate)}`} style={{ width: `${Math.min(fn.correlationRate, 100)}%` }}></div>
                                                             </div>
                                                             <span className="text-sm font-semibold">{fn.correlationRate.toFixed(1)}%</span>
                                                         </div>
@@ -308,9 +281,7 @@ export default function Cap3Tab({ }: Props) {
                                                 </div>
                                             </td>
                                             <td className="px-4 py-3 text-center">
-                                                <button className="text-green-600 hover:text-green-800">
-                                                    {expandedRows.has(tripleKey) ? '▼' : '▶'}
-                                                </button>
+                                                <button className="text-green-600 hover:text-green-800">{expandedRows.has(tripleKey) ? '▼' : '▶'}</button>
                                             </td>
                                         </tr>
                                         {expandedRows.has(tripleKey) && (
@@ -322,14 +293,9 @@ export default function Cap3Tab({ }: Props) {
                                                             {pattern.followNumbers.map((fn) => (
                                                                 <div key={fn.number} className="bg-white p-2 rounded border border-green-200">
                                                                     <div className="font-bold text-lottery-red-600">{fn.number}</div>
-                                                                    <div className="text-xs text-gray-600">
-                                                                        {fn.hitCount} lần - {fn.correlationRate.toFixed(1)}%
-                                                                    </div>
+                                                                    <div className="text-xs text-gray-600">{fn.hitCount} lần - {fn.correlationRate.toFixed(1)}%</div>
                                                                     <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
-                                                                        <div
-                                                                            className={`h-1.5 rounded-full ${getCorrelationColor(fn.correlationRate)}`}
-                                                                            style={{ width: `${Math.min(fn.correlationRate, 100)}%` }}
-                                                                        ></div>
+                                                                        <div className={`h-1.5 rounded-full ${getCorrelationColor(fn.correlationRate)}`} style={{ width: `${Math.min(fn.correlationRate, 100)}%` }}></div>
                                                                     </div>
                                                                 </div>
                                                             ))}
@@ -349,56 +315,41 @@ export default function Cap3Tab({ }: Props) {
                 <div className="md:hidden space-y-4">
                     {paginatedPatterns.map((pattern) => {
                         const tripleKey = tripleToKey(pattern.triggerTriple);
+                        const badge = getSampleBadge(pattern.totalTriggerAppearances);
                         return (
-                            <div
-                                key={tripleKey}
-                                className="bg-white rounded-xl shadow-sm border border-lottery-gray-200 overflow-hidden"
-                            >
-                                <div
-                                    className="p-4 flex items-center justify-between bg-lottery-gray-50/50 cursor-pointer"
-                                    onClick={() => toggleRow(tripleKey)}
-                                >
+                            <div key={tripleKey} className="bg-white rounded-xl shadow-sm border border-lottery-gray-200 overflow-hidden">
+                                <div className="p-4 flex items-center justify-between bg-lottery-gray-50/50 cursor-pointer" onClick={() => toggleRow(tripleKey)}>
                                     <div className="flex items-center gap-4">
                                         <div className="min-w-[5rem] h-12 px-2 rounded-full bg-lottery-red-600 flex items-center justify-center text-white text-[13px] font-bold shadow-sm whitespace-nowrap">
                                             {pattern.triggerTriple[0]}-{pattern.triggerTriple[1]}-{pattern.triggerTriple[2]}
                                         </div>
                                         <div>
                                             <div className="text-xs text-lottery-gray-500 font-semibold uppercase">Bộ 3 trigger</div>
-                                            <div className="font-bold text-lottery-gray-800">{pattern.totalTriggerAppearances} lần xuất hiện</div>
+                                            <div className="font-bold text-lottery-gray-800">{pattern.totalTriggerAppearances} lần
+                                                <span className={`ml-2 text-[10px] px-1.5 py-0.5 rounded border font-semibold ${badge.cls}`}>{badge.label}</span>
+                                            </div>
                                         </div>
                                     </div>
                                     <div className={`text-lottery-red-600 transition-transform ${expandedRows.has(tripleKey) ? 'rotate-180' : ''}`}>
-                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                        </svg>
+                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                                     </div>
                                 </div>
-
                                 <div className="p-4 border-t border-lottery-gray-100">
                                     <div className="text-xs font-bold text-green-700 uppercase mb-3">Top số dự đoán (D):</div>
                                     <div className="space-y-3">
                                         {pattern.followNumbers.slice(0, 3).map((fn, idx) => (
                                             <div key={fn.number}>
                                                 <div className="flex justify-between items-end mb-1">
-                                                    <span className="font-bold text-lottery-gray-800">
-                                                        {idx === 0 && '➊ '}
-                                                        {idx === 1 && '➋ '}
-                                                        {idx === 2 && '➌ '}
-                                                        Số {fn.number}
-                                                    </span>
+                                                    <span className="font-bold text-lottery-gray-800">{idx === 0 ? '➊ ' : idx === 1 ? '➋ ' : '➌ '}Số {fn.number}</span>
                                                     <span className="text-sm font-bold text-green-600">{fn.correlationRate.toFixed(1)}%</span>
                                                 </div>
                                                 <div className="w-full bg-gray-100 rounded-full h-2">
-                                                    <div
-                                                        className={`h-2 rounded-full ${getCorrelationColor(fn.correlationRate)}`}
-                                                        style={{ width: `${Math.min(fn.correlationRate, 100)}%` }}
-                                                    ></div>
+                                                    <div className={`h-2 rounded-full ${getCorrelationColor(fn.correlationRate)}`} style={{ width: `${Math.min(fn.correlationRate, 100)}%` }}></div>
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
-
                                 {expandedRows.has(tripleKey) && (
                                     <div className="p-4 bg-green-50/50 border-t border-green-100 animate-fade-in">
                                         <div className="text-xs font-bold text-green-700 uppercase mb-3">Tất cả các số liên quan:</div>
@@ -420,23 +371,9 @@ export default function Cap3Tab({ }: Props) {
                 {/* Pagination */}
                 {totalPages > 1 && (
                     <div className="flex justify-center items-center gap-2 mt-4">
-                        <button
-                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                            disabled={currentPage === 1}
-                            className="px-3 py-1 bg-lottery-red-600 text-white rounded disabled:bg-gray-300 disabled:cursor-not-allowed"
-                        >
-                            ← Trước
-                        </button>
-                        <span className="text-sm text-lottery-gray-600">
-                            Trang {currentPage} / {totalPages}
-                        </span>
-                        <button
-                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                            disabled={currentPage === totalPages}
-                            className="px-3 py-1 bg-lottery-red-600 text-white rounded disabled:bg-gray-300 disabled:cursor-not-allowed"
-                        >
-                            Sau →
-                        </button>
+                        <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-3 py-1 bg-lottery-red-600 text-white rounded disabled:bg-gray-300 disabled:cursor-not-allowed">← Trước</button>
+                        <span className="text-sm text-lottery-gray-600">Trang {currentPage} / {totalPages}</span>
+                        <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="px-3 py-1 bg-lottery-red-600 text-white rounded disabled:bg-gray-300 disabled:cursor-not-allowed">Sau →</button>
                     </div>
                 )}
             </div>

@@ -5,14 +5,12 @@ import path from 'path';
 import { analyzeBacNho } from '../src/lib/bac-nho';
 import { analyzeBacNho2Ngay } from '../src/lib/bac-nho-2-ngay';
 import { analyzeBacNho3Ngay } from '../src/lib/bac-nho-3-ngay';
-import { analyzeBacNhoSoDon } from '../src/lib/bac-nho-so-don';
 import { analyzeBacNhoCap2 } from '../src/lib/bac-nho-cap-2';
 import { analyzeBacNhoCap3 } from '../src/lib/bac-nho-cap-3';
 import { analyzeBacNho2NgayKhung3Ngay } from '../src/lib/bac-nho-khung-3-ngay-2-ngay';
 import { analyzeBacNho3NgayKhung3Ngay } from '../src/lib/bac-nho-khung-3-ngay-3-ngay';
 import { analyzeBacNhoCap2Khung3Ngay } from '../src/lib/bac-nho-khung-3-ngay-cap-2';
 import { analyzeBacNhoCap3Khung3Ngay } from '../src/lib/bac-nho-khung-3-ngay-cap-3';
-import { analyzeBacNhoSoDonKhung3Ngay } from '../src/lib/bac-nho-khung-3-ngay-so-don';
 import { query, queryOne, closePool } from '../src/lib/db';
 
 async function cleanupOldRecords(type: string) {
@@ -87,14 +85,12 @@ async function calculateAll() {
             await runAndSave('1. Standard', 'standard', analyzeBacNho);
             await runAndSave('2. 2 Ngay', '2-ngay', analyzeBacNho2Ngay);
             await runAndSave('3. 3 Ngay', '3-ngay', analyzeBacNho3Ngay);
-            await runAndSave('4. So Don', 'so-don', analyzeBacNhoSoDon);
             await runAndSave('5. Cap 2', 'cap-2', analyzeBacNhoCap2);
             await runAndSave('6. Cap 3', 'cap-3', analyzeBacNhoCap3);
             await runAndSave('7. Khung 3 Ngay - 2 Ngay', 'khung-3-ngay-2-ngay', analyzeBacNho2NgayKhung3Ngay);
             await runAndSave('8. Khung 3 Ngay - 3 Ngay', 'khung-3-ngay-3-ngay', analyzeBacNho3NgayKhung3Ngay);
             await runAndSave('9. Khung 3 Ngay - Cap 2', 'khung-3-ngay-cap-2', analyzeBacNhoCap2Khung3Ngay);
             await runAndSave('10. Khung 3 Ngay - Cap 3', 'khung-3-ngay-cap-3', analyzeBacNhoCap3Khung3Ngay);
-            await runAndSave('11. Khung 3 Ngay - So Don', 'khung-3-ngay-so-don', analyzeBacNhoSoDonKhung3Ngay);
 
             console.log(`[${days}] Range completed in ${(Date.now() - rangeStartTime) / 1000}s`);
         }

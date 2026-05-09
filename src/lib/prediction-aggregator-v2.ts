@@ -32,7 +32,6 @@ export async function aggregatePredictionsV2(): Promise<AggregatedPrediction[]> 
         await scoreFromDayOfMonth(scoreMap, 0.7, 11); // 11 pts
 
         // Pattern Analysis
-        await scoreFromBacNhoSoDon(scoreMap, 1.2, 18); // 18 pts
         await scoreFromGapAnalysis(scoreMap, 0.6, 8); // 8 pts
         await scoreFromCycleConvergence(scoreMap, 1.0, 12); // 12 pts (NEW)
 
@@ -193,64 +192,6 @@ async function scoreFromDayOfMonth(
     }
 }
 
-/**
- * Score from Bạc Nhớ Số Đơn analysis
- */
-async function scoreFromBacNhoSoDon(
-    scoreMap: Map<string, { score: number; sources: Set<string> }>,
-    weight: number,
-    maxPoints: number
-) {
-    try {
-        const latestResult = await query<any[]>(
-            `SELECT * FROM xsmb_results ORDER BY draw_date DESC LIMIT 1`,
-            []
-        );
-
-        if (latestResult.length === 0) return;
-
-        const result = latestResult[0];
-        const todayNumbers = [
-            result.special_prize?.slice(-2),
-            result.prize_1?.slice(-2),
-            ...(JSON.parse(result.prize_2 || '[]').map((n: string) => n.slice(-2))),
-        ].filter(Boolean).map(n => n.padStart(2, '0'));
-
-        const predictions = new Map<string, number>();
-
-        for (const triggerNum of todayNumbers.slice(0, 5)) {
-            const historicalData = await query<any[]>(
-                `SELECT r2.* FROM xsmb_results r1
-                 JOIN xsmb_results r2 ON date(r1.draw_date, '+1 day') = r2.draw_date
-                 WHERE (r1.special_prize LIKE ? OR r1.prize_1 LIKE ? 
-                        OR r1.prize_2 LIKE ? OR r1.prize_3 LIKE ?)
-                 ORDER BY r2.draw_date DESC LIMIT 100`,
-                [`%${triggerNum}`, `%${triggerNum}`, `%${triggerNum}%`, `%${triggerNum}%`]
-            );
-
-            historicalData.forEach(nextDayResult => {
-                const nextNumbers = extractAllNumbers(nextDayResult);
-                nextNumbers.forEach(num => {
-                    predictions.set(num, (predictions.get(num) || 0) + 1);
-                });
-            });
-        }
-
-        const sorted = Array.from(predictions.entries())
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 10);
-
-        sorted.forEach(([num, _], index) => {
-            const entry = scoreMap.get(num);
-            if (entry) {
-                entry.score += (maxPoints - (index * 2)) * weight;
-                entry.sources.add('Bạc Nhớ');
-            }
-        });
-    } catch (error) {
-        console.error('Error in bac nho scoring:', error);
-    }
-}
 
 /**
  * Score from gap analysis (numbers that haven't appeared recently)

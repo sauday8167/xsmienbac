@@ -28,9 +28,9 @@ export function initCronJobs(): void {
         });
     }, { timezone: "Asia/Ho_Chi_Minh" });
 
-    // 2. Fetch Hội Đồng Bạc Nhớ at 00:00 (Next day morning)
+    // 2. Trigger AI Predictions at 00:00
     cron.schedule('0 0 * * *', () => {
-        console.log('[Cron] 🧠 Starting Scheduled Hội Đồng Bạc Nhớ calculation (Midnight)...');
+        console.log('[Cron] 🧠 Starting Scheduled AI Prediction (Midnight)...');
         exec('npx tsx scripts/fetch-bac-nho.ts', (error, stdout, stderr) => {
             if (error) console.error('[Cron] ❌ Prediction calculation failed:', error);
             else console.log('[Cron] ✅ Prediction calculation completed.');

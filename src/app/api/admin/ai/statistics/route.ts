@@ -15,10 +15,10 @@ export async function GET(request: NextRequest) {
         }
 
         const modelInfo = {
-            name: "Claude AI Engine",
-            provider: "Anthropic / Claude 3 Haiku",
-            version: "v2.5 (Automated)",
-            description: "Hệ thống AI phân tích Bạc Nhớ chuyên sâu, tự động tổng hợp dữ liệu và viết bài dự đoán XSMB hàng ngày lúc 21:00."
+            name: "Claude Sonnet 4.6 (Primary)",
+            provider: "Anthropic → OpenRouter (Gemini 2.5 Flash / Grok-4 fallback)",
+            version: "claude-sonnet-4-6",
+            description: "Viết bài dự đoán bằng Claude Sonnet 4.6 (Anthropic). Nếu Claude lỗi, tự động fallback sang OpenRouter với Gemini 2.5 Flash, rồi Grok-4. Dự đoán số chạy vào 21:00 hàng ngày."
         };
 
         const totalStats = await queryOne("SELECT COUNT(*) as total FROM ai_predictions");

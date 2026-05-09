@@ -11,8 +11,7 @@
     "worker": "node scripts/cron-worker.js",
     "live-worker": "npx tsx scripts/live-crawler-worker.ts",
     "calculate-bac-nho": "tsx scripts/calculate-bac-nho.ts",
-    "run-ai": "tsx scripts/run-ai.ts",
-    "run-council": "node scripts/run-council.js"
+    "run-ai": "tsx scripts/run-ai.ts"
   },
   "dependencies": {
     "@ducanh2912/next-pwa": "^10.2.9",
@@ -46,6 +45,7 @@
     "tailwindcss": "^3.4.1",
     "tesseract.js": "^7.0.0",
     "tsconfig-paths": "^4.2.0",
+    "web-push": "^3.6.7",
     "xlsx": "^0.18.5",
     "youtube-transcript": "^1.2.1"
   },
@@ -58,6 +58,7 @@
     "@types/react": "^18.2.48",
     "@types/react-datepicker": "^6.0.3",
     "@types/react-dom": "^18.2.18",
+    "@types/web-push": "^3.6.4",
     "eslint": "^8.56.0",
     "eslint-config-next": "14.2.0",
     "pm2": "^6.0.14",

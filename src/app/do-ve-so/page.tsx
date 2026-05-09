@@ -1,5 +1,7 @@
 import { Metadata } from 'next';
 import CheckTicketClient from './CheckTicketClient';
+import JsonLd from '@/components/seo/JsonLd';
+import { generateBreadcrumbSchema } from '@/lib/schema-generator';
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://xosomienbac24h.com';
 
@@ -14,9 +16,24 @@ export const metadata: Metadata = {
         description: 'Kiểm tra vé số của bạn có trúng giải hay không một cách dễ dàng và nhanh chóng.',
         url: `${siteUrl}/do-ve-so`,
         type: 'website',
-    }
+    },
+    twitter: {
+        card: 'summary_large_image',
+        title: 'Dò Vé Số Online - Kiểm Tra Kết Quả Xổ Số Nhanh Nhất',
+        description: 'Kiểm tra vé số của bạn có trúng giải hay không một cách dễ dàng và nhanh chóng.',
+    },
 };
 
+const breadcrumbs = [
+    { name: 'Trang chủ', item: '/' },
+    { name: 'Dò Vé Số', item: '/do-ve-so' },
+];
+
 export default function CheckTicketPage() {
-    return <CheckTicketClient />;
+    return (
+        <>
+            <JsonLd data={generateBreadcrumbSchema(breadcrumbs)} />
+            <CheckTicketClient />
+        </>
+    );
 }

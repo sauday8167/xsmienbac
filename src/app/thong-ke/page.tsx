@@ -12,7 +12,12 @@ export async function generateMetadata() {
         description: 'Hệ thống phân tích thống kê xổ số cực khủng. Liệt kê bảng loto gan cực đại miền bắc, lô ra nhiều, đầu đuôi câm. Cơ sở dữ liệu XSMB 1000 ngày siêu chuẩn xác.',
         alternates: {
             canonical: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://xosomienbac24h.com'}/thong-ke`,
-        }
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title: 'Thống Kê Xổ Số Miền Bắc - Bảng Lô Gan & Lô Về Nhiều Đỉnh Nhất',
+            description: 'Thống kê XSMB: bảng lô gan, tần suất xuất hiện, đầu đuôi câm. Cơ sở dữ liệu 1000 ngày chính xác.',
+        },
     };
 }
 

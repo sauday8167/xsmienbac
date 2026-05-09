@@ -3,6 +3,7 @@
 import { useUI } from '@/context/UIContext';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 
 export default function MobileDrawer() {
@@ -71,7 +72,7 @@ export default function MobileDrawer() {
                 <div className="bg-lottery-red-600 p-4 text-white flex items-center justify-between sticky top-0 z-10 shadow-md">
                     <div className="flex items-center space-x-2">
                         {branding.logo ? (
-                            <img src={branding.logo} alt="Logo" className="w-8 h-8 bg-white rounded-full p-0.5" />
+                            <Image src={branding.logo} alt="Logo" width={32} height={32} className="w-8 h-8 bg-white rounded-full p-0.5" />
                         ) : null}
                         <span className="font-bold text-lg">{branding.siteName || 'Menu'}</span>
                     </div>

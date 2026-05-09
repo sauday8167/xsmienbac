@@ -46,9 +46,6 @@ async function main() {
         // 3. Chốt số cho ngày targetDate
         console.log('--- Phase 3: Prediction ---');
         
-        console.log('🚀 [AI Predict] Đang tạo dự đoán HỘI ĐỒNG (10 số)...');
-        await AIAnalyst.runDailyAnalysis(targetDate, 'hoi-dong');
-
         console.log('🚀 [AI Predict] Đang tạo dự đoán 3 SỐ...');
         const result3 = await AIAnalyst.runDailyAnalysis(targetDate, 'du-doan-3-số');
         

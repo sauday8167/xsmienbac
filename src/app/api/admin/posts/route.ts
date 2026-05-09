@@ -10,7 +10,7 @@ export async function GET(request: Request) {
         const offset = (page - 1) * limit;
         const search = searchParams.get('search') || '';
 
-        let sql = 'SELECT * FROM posts';
+        let sql = 'SELECT *, thumbnail_url as thumbnail FROM posts';
         let countSql = 'SELECT COUNT(*) as total FROM posts';
         let params: any[] = [];
 

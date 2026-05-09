@@ -2,15 +2,18 @@
 import { KeyManager } from './key-manager';
 
 export class ClaudeClient {
-    static async generateContent(prompt: string, model: string = 'claude-3-haiku-20240307', temperature: number = 0.8): Promise<string | null> {
-        // 1. Get API Key
+    static async generateContent(
+        prompt: string,
+        model: string = 'claude-sonnet-4-6',
+        temperature: number = 0.8,
+        maxTokens: number = 8000
+    ): Promise<string | null> {
         const apiKey = await KeyManager.getActiveKey('claude');
         if (!apiKey) {
             throw new Error('No active Claude API keys available');
         }
 
         try {
-            // 2. Call Anthropic API
             const response = await fetch('https://api.anthropic.com/v1/messages', {
                 method: 'POST',
                 headers: {
@@ -19,29 +22,20 @@ export class ClaudeClient {
                     'content-type': 'application/json'
                 },
                 body: JSON.stringify({
-                    model: model,
-                    max_tokens: 4000,
-                    temperature: temperature,
-                    system: "You are an expert Vietnamese lottery analyst focusing on high-precision statistical patterns.",
-                    messages: [
-                        { role: 'user', content: prompt }
-                    ]
+                    model,
+                    max_tokens: maxTokens,
+                    temperature,
+                    system: 'You are an expert Vietnamese lottery analyst. Always respond in Vietnamese. If asked for JSON, return ONLY valid JSON with no extra text.',
+                    messages: [{ role: 'user', content: prompt }]
                 })
             });
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 const status = response.status;
-
-                // Handle Rate Limits
-                if (status === 429) {
-                    await KeyManager.reportError(apiKey, 'rate_limit');
-                } else if (status === 403 || status === 401) {
-                    await KeyManager.reportError(apiKey, 'quota');
-                } else {
-                    await KeyManager.reportError(apiKey, 'other');
-                }
-
+                if (status === 429) await KeyManager.reportError(apiKey, 'rate_limit');
+                else if (status === 403 || status === 401) await KeyManager.reportError(apiKey, 'quota');
+                else await KeyManager.reportError(apiKey, 'other');
                 throw new Error(`Anthropic API Error: ${status} - ${JSON.stringify(errorData)}`);
             }
 

@@ -1,8 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import ReactMarkdown from 'react-markdown';
-import rehypeRaw from 'rehype-raw';
 
 interface AIPrediction {
     draw_date: string;
@@ -22,36 +20,49 @@ interface AIHistory {
 export default function AIPredictionClient() {
     const [prediction, setPrediction] = useState<AIPrediction | null>(null);
     const [history, setHistory] = useState<AIHistory[]>([]);
+    const [realAccuracy, setRealAccuracy] = useState<number | null>(null);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // Fetch latest
                 const resLatest = await fetch('/api/ai-prediction/latest', { cache: 'no-store' });
                 const dataLatest = await resLatest.json();
                 if (dataLatest.success) {
                     setPrediction(dataLatest.data);
                 } else {
-                    // Provide a default empty state instead of null so it stops loading
                     setPrediction({
                         draw_date: new Date().toISOString(),
-                        analysis_content: JSON.stringify({ summary: dataLatest.error || 'Dữ liệu AI đang được tính toán, vui lòng quay lại sau.', evidence: [], advice: 'Hệ thống đang chờ lệnh chạy AI đầu tiên.'}),
+                        analysis_content: JSON.stringify({
+                            summary: dataLatest.error || 'Dữ liệu AI đang được tính toán, vui lòng quay lại sau.',
+                            top_evidence: [],
+                            advice: 'Hệ thống đang chờ lệnh chạy AI đầu tiên.'
+                        }),
                         predicted_pairs: '[]',
                         confidence_score: 0
                     });
                 }
 
-                // Fetch history
                 const resHistory = await fetch('/api/ai-prediction/history', { cache: 'no-store' });
                 const dataHistory = await resHistory.json();
                 if (dataHistory.success) {
-                    setHistory(dataHistory.data);
+                    const hist: AIHistory[] = dataHistory.data;
+                    setHistory(hist);
+
+                    // Tính accuracy thực tế từ các ngày đã có kết quả
+                    const verified = hist.filter(h => h.actual_result !== null);
+                    if (verified.length > 0) {
+                        const wins = verified.filter(h => h.is_correct === 1).length;
+                        setRealAccuracy(Math.round((wins / verified.length) * 100));
+                    }
                 }
-            } catch (error) {
-                console.error('Failed to load AI data');
+            } catch {
                 setPrediction({
                     draw_date: new Date().toISOString(),
-                    analysis_content: JSON.stringify({ summary: 'Lỗi kết nối tới máy chủ AI.', evidence: [], advice: 'Lỗi mạng.'}),
+                    analysis_content: JSON.stringify({
+                        summary: 'Lỗi kết nối tới máy chủ AI.',
+                        top_evidence: [],
+                        advice: 'Lỗi mạng.'
+                    }),
                     predicted_pairs: '[]',
                     confidence_score: 0
                 });
@@ -70,28 +81,40 @@ export default function AIPredictionClient() {
             const match = content.match(/```json\s*([\s\S]*?)\s*```/);
             const jsonStr = match ? match[1] : content;
             const data = JSON.parse(jsonStr);
-
             return {
-                summary: data.analysis?.summary || data.reasoning || "Đang cập nhật phân tích...",
-                evidence: data.analysis?.top_evidence || data.key_insights || [],
-                advice: data.analysis?.advice || "",
-                convergence: data.method_convergence
+                summary: data.summary || data.analysis?.summary || data.reasoning || 'Đang cập nhật phân tích...',
+                evidence: data.top_evidence || data.analysis?.top_evidence || data.key_insights || [],
+                advice: data.advice || data.analysis?.advice || '',
+                top7Detail: data.top7_detail || null,
             };
-        } catch (e) {
+        } catch {
             return null;
         }
     };
 
-    const getPredictedPairs = () => {
+    const getPredictedPairs = (): string[] => {
         if (!prediction) return [];
         try {
             return typeof prediction.predicted_pairs === 'string'
                 ? JSON.parse(prediction.predicted_pairs)
                 : prediction.predicted_pairs;
-        } catch (e) {
+        } catch {
             return [];
         }
     };
+
+    const getVotingScores = (): Record<string, number> => {
+        if (!prediction) return {};
+        try {
+            const data = JSON.parse(prediction.analysis_content);
+            return data.voting_scores || {};
+        } catch {
+            return {};
+        }
+    };
+
+    const accuracyDisplay = realAccuracy !== null ? `${realAccuracy}%` : '–';
+    const verifiedCount = history.filter(h => h.actual_result !== null).length;
 
     return (
         <div className="max-w-3xl mx-auto space-y-8 pb-12 font-sans">
@@ -101,13 +124,13 @@ export default function AIPredictionClient() {
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
                     </span>
-                    Claude AI Engine v2.5
+                    Statistical Voting Engine v2
                 </div>
                 <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">
-                    Hội Đồng Dự Đoán <span className="text-red-600">AI Siêu Chuẩn</span>
+                    Dự Đoán <span className="text-red-600">Thống Kê Bỏ Phiếu</span>
                 </h1>
                 <p className="text-gray-500 max-w-lg mx-auto text-sm">
-                    Hệ thống tích hợp Claude 3 Haiku với cơ chế lọc Bạc Nhớ chuyên sâu để đạt KPI nổ 2+ nháy chỉ với 3 loto. 
+                    6 phương pháp thống kê độc lập cùng bỏ phiếu cho từng số, chọn ra 7 số có tổng điểm cao nhất để đạt KPI 2+ nháy.
                 </p>
             </div>
 
@@ -127,43 +150,53 @@ export default function AIPredictionClient() {
                                 </div>
                                 <div className="text-right">
                                     <div className="bg-red-500/10 border border-red-500/20 px-3 py-1 rounded-lg">
-                                        <span className="text-red-400 text-[10px] font-bold">MỤC TIÊU KPI: 2+ NHÁY</span>
+                                        <span className="text-red-400 text-[10px] font-bold">MỤC TIÊU KPI: 2+ NHÁY với 7 số</span>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="flex flex-wrap justify-center gap-8 mb-12">
-                                {getPredictedPairs().slice(0, 3).map((num: string, idx: number) => (
-                                    <div key={idx} className="group relative">
-                                        <div className="absolute -inset-4 bg-gradient-to-tr from-red-600 to-amber-500 rounded-full blur-xl opacity-40 group-hover:opacity-100 transition duration-500"></div>
-                                        <div className="relative w-20 h-20 md:w-28 md:h-28 bg-white text-slate-900 rounded-full flex items-center justify-center font-black text-4xl md:text-5xl shadow-2xl border-4 border-slate-900">
-                                            {num}
-                                        </div>
-                                        {idx === 0 && (
-                                            <div className="absolute -top-3 -right-3 bg-red-600 text-[10px] font-black px-2 py-1 rounded-md rotate-12 shadow-lg border border-red-400 uppercase">
-                                                Tâm Điểm
+                            {/* 7 số dự đoán — grid flex-wrap */}
+                            {(() => {
+                                const pairs = getPredictedPairs();
+                                const vScores = getVotingScores();
+                                return (
+                                    <div className="flex flex-wrap justify-center gap-4 mb-10">
+                                        {pairs.map((num: string, idx: number) => (
+                                            <div key={idx} className="group relative flex flex-col items-center">
+                                                <div className={`absolute -inset-3 rounded-full blur-xl opacity-30 group-hover:opacity-80 transition duration-500 ${idx === 0 ? 'bg-gradient-to-tr from-red-600 to-amber-500' : 'bg-gradient-to-tr from-blue-600 to-purple-500'}`}></div>
+                                                <div className={`relative w-16 h-16 md:w-20 md:h-20 text-slate-900 rounded-full flex items-center justify-center font-black text-3xl md:text-4xl shadow-2xl border-4 border-slate-900 ${idx === 0 ? 'bg-gradient-to-br from-amber-300 to-amber-500' : 'bg-white'}`}>
+                                                    {num}
+                                                </div>
+                                                {idx === 0 && (
+                                                    <div className="absolute -top-2 -right-2 bg-red-600 text-[8px] font-black px-1.5 py-0.5 rounded rotate-12 shadow-lg border border-red-400 uppercase">
+                                                        #1
+                                                    </div>
+                                                )}
+                                                {vScores[num] !== undefined && (
+                                                    <span className="mt-1.5 text-[10px] font-bold text-slate-400">{vScores[num]}đ</span>
+                                                )}
                                             </div>
-                                        )}
+                                        ))}
                                     </div>
-                                ))}
-                            </div>
+                                );
+                            })()}
 
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-8 border-t border-slate-800/50">
                                 <div className="p-3 bg-slate-800/40 rounded-2xl border border-slate-700/50">
-                                    <div className="text-xs text-slate-500 font-bold uppercase mb-1">Độ chính xác</div>
-                                    <div className="text-xl font-black text-green-400">95.8%</div>
+                                    <div className="text-xs text-slate-500 font-bold uppercase mb-1">Xác suất KPI</div>
+                                    <div className="text-xl font-black text-green-400">~60%</div>
                                 </div>
                                 <div className="p-3 bg-slate-800/40 rounded-2xl border border-slate-700/50">
                                     <div className="text-xs text-slate-500 font-bold uppercase mb-1">Engine</div>
-                                    <div className="text-xl font-black text-purple-400">CLAUDE</div>
+                                    <div className="text-xl font-black text-purple-400">STATS</div>
                                 </div>
                                 <div className="p-3 bg-slate-800/40 rounded-2xl border border-slate-700/50">
-                                    <div className="text-xs text-slate-500 font-bold uppercase mb-1">Rủi ro</div>
-                                    <div className="text-xl font-black text-yellow-400">LOW</div>
+                                    <div className="text-xs text-slate-500 font-bold uppercase mb-1">Số chọn</div>
+                                    <div className="text-xl font-black text-yellow-400">7 số</div>
                                 </div>
                                 <div className="p-3 bg-slate-800/40 rounded-2xl border border-slate-700/50">
-                                    <div className="text-xs text-slate-500 font-bold uppercase mb-1">Tình trạng</div>
-                                    <div className="text-xl font-black text-blue-400">Stable</div>
+                                    <div className="text-xs text-slate-500 font-bold uppercase mb-1">Phương pháp</div>
+                                    <div className="text-xl font-black text-blue-400">6 votes</div>
                                 </div>
                             </div>
                         </div>
@@ -183,9 +216,9 @@ export default function AIPredictionClient() {
                                                     <span className="w-8 h-8 bg-red-600 text-white rounded-lg flex items-center justify-center">
                                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                                                     </span>
-                                                    <h3 className="font-black text-red-900 uppercase tracking-tight text-sm">Góc Chiến Thuật (Claude AI)</h3>
+                                                    <h3 className="font-black text-red-900 uppercase tracking-tight text-sm">Phân tích thống kê</h3>
                                                 </div>
-                                                <span className="text-[10px] font-bold bg-red-200 text-red-700 px-2 py-0.5 rounded">ULTRA-PRECISE</span>
+                                                <span className="text-[10px] font-bold bg-red-200 text-red-700 px-2 py-0.5 rounded">6 PHƯƠNG PHÁP</span>
                                             </div>
                                             <div className="p-6">
                                                 <div className="bg-red-50/30 p-4 rounded-xl border border-red-100/50 italic text-red-900 leading-relaxed text-sm">
@@ -222,17 +255,17 @@ export default function AIPredictionClient() {
                                 <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/20">
                                     <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
                                 </div>
-                                <h4 className="font-black text-[10px] uppercase tracking-widest mb-2 opacity-80">Mentor Claude</h4>
+                                <h4 className="font-black text-[10px] uppercase tracking-widest mb-2 opacity-80">Lời khuyên</h4>
                                 <div className="text-lg font-black mb-3">LƯU Ý CHIẾN THUẬT</div>
                                 <div className="text-[11px] text-slate-300 leading-normal italic">
                                     {(() => {
                                         const data = getAnalysisData(prediction.analysis_content);
-                                        return data?.advice || "Đang chốt lời khuyên...";
+                                        return data?.advice || 'Đang chốt lời khuyên...';
                                     })()}
                                 </div>
                                 <div className="mt-4 pt-4 border-t border-white/10">
                                     <div className="text-[10px] font-bold text-slate-400 uppercase mb-1">Mục tiêu:</div>
-                                    <div className="text-xs font-black text-red-500">2 - 3 NHÁY</div>
+                                    <div className="text-xs font-black text-red-500">2+ NHÁY với 7 số</div>
                                 </div>
                             </div>
                         </div>
@@ -244,7 +277,7 @@ export default function AIPredictionClient() {
                         <div className="w-16 h-16 bg-gray-200 rounded-full"></div>
                     </div>
                     <h2 className="text-xl font-medium text-gray-900">Đang tải dữ liệu...</h2>
-                    <p className="text-gray-500 mt-2">Đang kết nối đến Mentor Claude...</p>
+                    <p className="text-gray-500 mt-2">Đang tải kết quả phân tích thống kê...</p>
                 </div>
             )}
 
@@ -252,8 +285,12 @@ export default function AIPredictionClient() {
                 <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
                     <h3 className="text-2xl font-black text-gray-900 tracking-tight uppercase">Nhật ký dự đoán</h3>
                     <div className="flex gap-2">
-                        <span className="bg-green-100 text-green-700 text-[10px] font-black px-2 py-1 rounded">ACCURACY: 92%</span>
-                        <span className="bg-gray-100 text-gray-700 text-[10px] font-black px-2 py-1 rounded">MEM: 10D</span>
+                        <span className="bg-green-100 text-green-700 text-[10px] font-black px-2 py-1 rounded">
+                            THỰC TẾ: {accuracyDisplay}
+                        </span>
+                        <span className="bg-gray-100 text-gray-700 text-[10px] font-black px-2 py-1 rounded">
+                            {verifiedCount > 0 ? `${verifiedCount} NGÀY ĐÃ KIỂM TRA` : 'CHƯA CÓ DỮ LIỆU'}
+                        </span>
                     </div>
                 </div>
 
@@ -262,13 +299,15 @@ export default function AIPredictionClient() {
                         <thead className="bg-gray-50 border-b border-gray-100">
                             <tr>
                                 <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Thời gian</th>
-                                <th className="px-6 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Hội đồng chọn</th>
+                                <th className="px-6 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">7 số đã chọn</th>
                                 <th className="px-6 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Trạng thái</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
                             {history.slice(0, 10).map((item, idx) => {
-                                const predicted = JSON.parse(item.predicted_pairs || '[]');
+                                const predicted: string[] = (() => {
+                                    try { return JSON.parse(item.predicted_pairs || '[]'); } catch { return []; }
+                                })();
                                 const isWin = item.is_correct === 1;
                                 const hasResult = !!item.actual_result;
 
@@ -278,14 +317,14 @@ export default function AIPredictionClient() {
                                             {formatShortDate(item.draw_date)}
                                         </td>
                                         <td className="px-6 py-5">
-                                            <div className="flex justify-center gap-2">
-                                                {predicted.slice(0, 5).map((n: string, i: number) => {
+                                            <div className="flex flex-wrap justify-center gap-1.5">
+                                                {predicted.map((n: string, i: number) => {
                                                     const isMatched = item.accuracy_notes?.includes(n);
                                                     return (
                                                         <span key={i} className={`text-xs font-black w-8 h-8 rounded-lg flex items-center justify-center shadow-sm border ${isMatched
                                                             ? 'bg-red-600 text-white border-red-500 scale-110'
                                                             : 'bg-white text-gray-500 border-gray-100'
-                                                            }`}>
+                                                        }`}>
                                                             {n}
                                                         </span>
                                                     );
@@ -297,7 +336,7 @@ export default function AIPredictionClient() {
                                                 <div className={`inline-flex items-center gap-1.5 font-black text-[10px] px-3 py-1 rounded-full ${isWin
                                                     ? 'bg-green-100 text-green-700'
                                                     : 'bg-gray-100 text-gray-400'
-                                                    }`}>
+                                                }`}>
                                                     <span className={`w-1.5 h-1.5 rounded-full ${isWin ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></span>
                                                     {isWin ? 'SUCCESS' : 'FAILED'}
                                                 </div>
@@ -314,14 +353,15 @@ export default function AIPredictionClient() {
                     </table>
                 </div>
             </div>
-            
+
             <div className="mt-10 p-6 bg-gray-50 rounded-xl border border-gray-100 text-sm text-gray-700 leading-relaxed text-justify shadow-sm">
-                <h2 className="text-lg font-bold text-gray-900 mb-3">Giới thiệu về Dự Đoán AI</h2>
+                <h2 className="text-lg font-bold text-gray-900 mb-3">Giới thiệu về Dự Đoán Thống Kê</h2>
                 <p>
-                    Bước vào kỷ nguyên số với <strong>Dự Đoán AI</strong> – ứng dụng tiên phong trong việc sử dụng Trí Tuệ Nhân Tạo (Artificial Intelligence) và Học Máy (Machine Learning) để phân tích xổ số.
-                    Hệ thống AI của chúng tôi không biết "mệt mỏi", liên tục học hỏi từ hàng triệu bản ghi kết quả trong quá khứ để tìm ra các mô hình số học phức tạp mà mắt thường không thể nhìn thấy.
-                    Dự đoán AI mang đến những nhận định khách quan, loại bỏ hoàn toàn yếu tố cảm xúc lan man.
-                    Hàng ngày, Claude AI sẽ cung cấp 3 bộ số tiềm năng nhất với tỷ lệ nổ cao.
+                    Hệ thống <strong>Bỏ Phiếu Thống Kê (Statistical Voting Engine)</strong> sử dụng 6 phương pháp phân tích dữ liệu độc lập —
+                    lô rơi GĐB, tần suất 30 ngày, Bạc Nhớ nhiều khung, lô gan chín, bias theo thứ trong tuần, và mô hình follow-up GĐB —
+                    để bỏ phiếu cho từng số từ 00–99. 7 số có tổng điểm bỏ phiếu cao nhất được chọn mỗi ngày.
+                    Với 7 số, xác suất cơ sở để đạt KPI 2+ nháy tăng từ ~18% (3 số) lên ~60%, phản ánh đúng thực tế thống kê xổ số.
+                    AI chỉ đóng vai trò viết phần giải thích ngắn gọn — không tham gia chọn số.
                 </p>
             </div>
         </div>

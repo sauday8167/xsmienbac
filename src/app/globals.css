@@ -223,6 +223,10 @@ html {
   @apply bg-orange-100 text-orange-800;
 }
 
+.badge-dream {
+  @apply bg-indigo-100 text-indigo-800;
+}
+
 /* Accessibility / SEO Utilities */
 .sr-only {
   position: absolute;

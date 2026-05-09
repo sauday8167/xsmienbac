@@ -1,4 +1,5 @@
 import { query, queryOne } from '../db';
+import { ClaudeClient } from '../ai/claude-client';
 import { OpenRouterClient } from '../ai/openrouter-client';
 import { ArticleInputBuilder } from './article-input-builder';
 import { pingGoogleIndexing } from './google-indexing';
@@ -76,35 +77,46 @@ export class AutoArticleGenerator {
          `;
 
          let article: any = {};
-         let attempts = 0;
-         const MAX_ATTEMPTS = 2;
 
-         while (attempts < MAX_ATTEMPTS) {
-            attempts++;
+         // Chain: 1. Claude (primary) → 2. OpenRouter paid (Gemini 2.5 Flash, Grok-4)
+         const providers = [
+            {
+               name: 'Claude (claude-sonnet-4-6)',
+               call: () => ClaudeClient.generateContent(refinedPrompt, 'claude-sonnet-4-6', 0.8, 8000)
+            },
+            {
+               name: 'OpenRouter Paid (Gemini/Grok)',
+               call: () => OpenRouterClient.generateContent(refinedPrompt)
+            }
+         ];
+
+         let lastError = '';
+         for (const provider of providers) {
             try {
-               console.log(`[AI-GENERATOR] OpenRouter Attempt ${attempts}/${MAX_ATTEMPTS}...`);
-               let aiResponse = await OpenRouterClient.generateContent(refinedPrompt);
-               
+               console.log(`[AI-GENERATOR] Trying ${provider.name}...`);
+               const aiResponse = await provider.call();
+
                if (!aiResponse) throw new Error('Empty AI response');
 
                const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
                if (!jsonMatch) throw new Error('No JSON object found in response');
 
-               article = JSON.parse(jsonMatch[0]);
-               
-               // Quality validation
-               if (article.title && article.content_html && article.content_html.length > 500) {
-                  console.log(`[AI-GENERATOR] Quality content received from OpenRouter on attempt ${attempts}`);
-                  break; 
-               } else {
-                  throw new Error('Content too short or missing fields');
+               const parsed = JSON.parse(jsonMatch[0]);
+               if (!parsed.title || !parsed.content_html || parsed.content_html.length < 500) {
+                  throw new Error('Content too short or missing required fields');
                }
-            } catch (e) {
-               console.warn(`[AI-GENERATOR] Attempt ${attempts} failed: ${e.message}`);
-               if (attempts === MAX_ATTEMPTS) {
-                   throw new Error('OpenRouter failed to provide valid JSON after all attempts and models.');
-               }
+
+               article = parsed;
+               console.log(`[AI-GENERATOR] Success with ${provider.name}`);
+               break;
+            } catch (e: any) {
+               lastError = e.message;
+               console.warn(`[AI-GENERATOR] ${provider.name} failed: ${e.message}`);
             }
+         }
+
+         if (!article.title) {
+            throw new Error(`All AI providers failed. Last error: ${lastError}`);
          }
 
          // Final mapping and fallbacks

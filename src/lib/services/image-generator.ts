@@ -30,7 +30,20 @@ export class ImageGenerator {
                 return null;
             }
 
+            // Validate content-type — reject HTML error pages masquerading as images
+            const contentType = response.headers.get('content-type') || '';
+            if (!contentType.startsWith('image/')) {
+                console.error(`[ImageGenerator] Invalid content-type: ${contentType} — skipping save`);
+                return null;
+            }
+
             const buffer = Buffer.from(await response.arrayBuffer());
+
+            // Extra guard: reject files < 5KB (likely error pages)
+            if (buffer.length < 5000) {
+                console.error(`[ImageGenerator] Image too small (${buffer.length} bytes) — likely an error page, skipping`);
+                return null;
+            }
 
             // Ensure directory exists
             const uploadDir = join(process.cwd(), 'public/uploads');

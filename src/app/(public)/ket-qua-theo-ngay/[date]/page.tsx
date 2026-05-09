@@ -1,5 +1,7 @@
 import { notFound } from 'next/navigation';
 import ResultTable from '@/components/ResultTable';
+import ResultShareBar from '@/components/ResultShareBar';
+import PredictionCompare from '@/components/PredictionCompare';
 import JsonLd from '@/components/seo/JsonLd';
 import Link from 'next/link';
 
@@ -18,14 +20,33 @@ async function getResultByDate(date: string) {
         });
         const data = await res.json();
         return data.success ? data.data : null;
-    } catch (error) {
+    } catch {
         return null;
     }
 }
 
+function extractAllLoto(result: any): string[] {
+    const parseSafe = (val: any): string[] => {
+        if (!val) return [];
+        if (Array.isArray(val)) return val.map(String);
+        try { const p = JSON.parse(val); return Array.isArray(p) ? p.map(String) : [String(val)]; }
+        catch { return [String(val)]; }
+    };
+    const all = [
+        result.special_prize,
+        result.prize_1,
+        ...parseSafe(result.prize_2),
+        ...parseSafe(result.prize_3),
+        ...parseSafe(result.prize_4),
+        ...parseSafe(result.prize_5),
+        ...parseSafe(result.prize_6),
+        ...parseSafe(result.prize_7),
+    ].filter(Boolean);
+    return all.map(n => String(n).slice(-2));
+}
+
 export async function generateMetadata({ params }: Props) {
     const { date } = params;
-    // Format date from dd-mm-yyyy to dd/mm/yyyy
     const displayDate = date.replace(/-/g, '/');
 
     return {
@@ -38,20 +59,21 @@ export async function generateMetadata({ params }: Props) {
             title: `Kết quả xổ số Miền Bắc ngày ${displayDate}`,
             description: `Kết quả XSMB ngày ${displayDate} chính xác 100%.`,
             url: `${siteUrl}/ket-qua-theo-ngay/${date}`,
-        }
+        },
+        twitter: {
+            card: 'summary_large_image' as const,
+            title: `Kết quả xổ số Miền Bắc ngày ${displayDate}`,
+            description: `Kết quả XSMB ngày ${displayDate} chính xác 100%. Xem trực tiếp ngay.`,
+        },
     };
 }
 
 export default async function DailyResultPage({ params }: Props) {
     const { date } = params;
-    // Validate date format dd-mm-yyyy
     if (!/^\d{2}-\d{2}-\d{4}$/.test(date)) {
         notFound();
     }
 
-    // Convert dd-mm-yyyy to yyyy-mm-dd for API call if needed, 
-    // but our API seems to handle both or we should standardize.
-    // Based on previous code, let's assume API handles yyyy-mm-dd.
     const parts = date.split('-');
     const apiDate = `${parts[2]}-${parts[1]}-${parts[0]}`; // yyyy-mm-dd
 
@@ -68,41 +90,40 @@ export default async function DailyResultPage({ params }: Props) {
         );
     }
 
-    // Lottery Schema Enrichment 
+    const allLoto = extractAllLoto(result);
+    const displayDate = date.replace(/-/g, '/');
+    const pageUrl = `${siteUrl}/ket-qua-theo-ngay/${date}`;
+
     const lotterySchema = {
         "@context": "https://schema.org",
         "@type": "Event",
-        "name": `Kết quả xổ số Miền Bắc ngày ${date.replace(/-/g, '/')}`,
-        "description": `Kết quả xổ số kiến thiết Miền Bắc mở thưởng ngày ${date.replace(/-/g, '/')}. Giải đặc biệt: ${result.special_prize}`,
+        "name": `Kết quả xổ số Miền Bắc ngày ${displayDate}`,
+        "description": `Kết quả xổ số kiến thiết Miền Bắc mở thưởng ngày ${displayDate}. Giải đặc biệt: ${result.special_prize}`,
         "startDate": result.draw_date,
-        "location": {
-            "@type": "Place",
-            "name": "Hà Nội, Việt Nam"
-        },
-        "organizer": {
-            "@type": "Organization",
-            "name": "Xổ Số Kiến Thiết Thủ Đô",
-            "url": "https://xosomienbac24h.com"
-        },
-        "url": `${siteUrl}/ket-qua-theo-ngay/${date}`,
-        "mainEntityOfPage": {
-            "@type": "WebPage",
-            "@id": `${siteUrl}/ket-qua-theo-ngay/${date}`
-        }
+        "location": { "@type": "Place", "name": "Hà Nội, Việt Nam" },
+        "organizer": { "@type": "Organization", "name": "Xổ Số Kiến Thiết Thủ Đô", "url": "https://xosomienbac24h.com" },
+        "url": pageUrl,
+        "mainEntityOfPage": { "@type": "WebPage", "@id": pageUrl }
     };
 
     return (
         <div className="container mx-auto px-4 py-8">
             <JsonLd data={lotterySchema} />
 
-            <div className="flex flex-col items-center mb-8">
+            <div className="flex flex-col items-center mb-6">
                 <h1 className="text-2xl md:text-3xl font-bold text-lottery-red-700 text-center mb-2">
-                    KẾT QUẢ XỔ SỐ MIỀN BẮC NGÀY {date.replace(/-/g, '/')}
+                    KẾT QUẢ XỔ SỐ MIỀN BẮC NGÀY {displayDate}
                 </h1>
                 <div className="w-24 h-1 bg-gray-200 rounded-full"></div>
             </div>
 
+            {/* Share bar */}
+            <ResultShareBar drawDate={displayDate} specialPrize={result.special_prize} shareUrl={pageUrl} />
+
             <ResultTable result={result} />
+
+            {/* Prediction comparison */}
+            <PredictionCompare apiDate={apiDate} specialPrize={result.special_prize} allLoto={allLoto} />
 
             <div className="mt-8 text-center">
                 <Link
@@ -113,10 +134,9 @@ export default async function DailyResultPage({ params }: Props) {
                 </Link>
             </div>
 
-            {/* SEO Content */}
             <div className="mt-8 p-6 bg-gray-50 rounded-xl text-sm text-gray-700 leading-relaxed text-justify">
                 <p>
-                    Kết quả xổ số Miền Bắc ngày <strong>{date.replace(/-/g, '/')}</strong> được cập nhật trực tiếp từ trường quay số.
+                    Kết quả xổ số Miền Bắc ngày <strong>{displayDate}</strong> được cập nhật trực tiếp từ trường quay số.
                     Để xem lại kết quả của các ngày trước, vui lòng chọn ngày mong muốn tại trang tra cứu theo ngày.
                     Kết quả được lưu trữ vĩnh viễn giúp bạn dễ dàng tra cứu và soi cầu bạc nhớ cho các kỳ quay tiếp theo.
                 </p>

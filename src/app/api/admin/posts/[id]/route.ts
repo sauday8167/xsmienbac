@@ -8,7 +8,7 @@ export async function GET(
 ) {
     try {
         const id = params.id;
-        const post = await queryOne('SELECT * FROM posts WHERE id = ?', [id]);
+        const post = await queryOne('SELECT *, thumbnail_url as thumbnail FROM posts WHERE id = ?', [id]);
 
         if (!post) {
             return NextResponse.json<ApiResponse>({

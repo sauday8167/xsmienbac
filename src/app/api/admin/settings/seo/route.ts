@@ -21,6 +21,12 @@ const DEFAULT_CONFIG = {
     }
 };
 
+function parseJsonSafe(raw: string) {
+    // Strip UTF-8 BOM if present
+    const content = raw.charCodeAt(0) === 0xFEFF ? raw.slice(1) : raw;
+    return JSON.parse(content);
+}
+
 async function ensureFile() {
     if (!existsSync(DATA_DIR)) {
         await mkdir(DATA_DIR, { recursive: true });
@@ -34,7 +40,7 @@ export async function GET() {
     await ensureFile();
     try {
         const data = await readFile(FILE_PATH, 'utf8');
-        return NextResponse.json({ success: true, data: JSON.parse(data) });
+        return NextResponse.json({ success: true, data: parseJsonSafe(data) });
     } catch (error) {
         return NextResponse.json({ success: false, error: 'Lỗi khi tải cấu hình' }, { status: 500 });
     }
@@ -44,7 +50,7 @@ export async function POST(request: Request) {
     await ensureFile();
     try {
         const body = await request.json();
-        const currentData = JSON.parse(await readFile(FILE_PATH, 'utf8'));
+        const currentData = parseJsonSafe(await readFile(FILE_PATH, 'utf8'));
         const newData = { ...currentData, ...body };
 
         await writeFile(FILE_PATH, JSON.stringify(newData, null, 2));

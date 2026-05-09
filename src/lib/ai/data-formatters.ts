@@ -89,13 +89,6 @@ export function formatBacNhoData(bacNho: any): string {
 
     let text = '### Bạc Nhớ (Silver Memory) Analysis:\n\n';
 
-    if (bacNho.so_don && bacNho.so_don.length > 0) {
-        text += `**Single Numbers** from yesterday:\n`;
-        text += `${bacNho.so_don.slice(0, 10).map((item: any) =>
-            `**${item.pattern}** (${item.frequency} times, avg ${item.avgDaysApart}d apart)`
-        ).join(', ')}\n\n`;
-    }
-
     if (bacNho.cap_2 && bacNho.cap_2.length > 0) {
         text += `**Pair-2** patterns:\n`;
         text += `${bacNho.cap_2.slice(0, 5).map((item: any) =>
@@ -194,10 +187,6 @@ export function format3DayBacNho(bacNho3Day: any): string {
     if (!bacNho3Day) return 'No 3-day Bạc Nhớ data';
 
     let text = '### Bạc Nhớ Khung 3 Ngày (3-Day Frame):\n\n';
-
-    if (bacNho3Day.so_don && bacNho3Day.so_don.length > 0) {
-        text += `**Single**: ${bacNho3Day.so_don.slice(0, 10).map((i: any) => i.pattern).join(', ')}\n`;
-    }
 
     if (bacNho3Day.cap_2 && bacNho3Day.cap_2.length > 0) {
         text += `**Pair-2**: ${bacNho3Day.cap_2.slice(0, 5).map((i: any) => i.pattern).join(', ')}\n`;

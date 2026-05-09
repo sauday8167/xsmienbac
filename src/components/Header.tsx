@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import GoogleAd from './GoogleAd';
+import PushSubscribeButton from './PushSubscribeButton';
 
 interface Banner {
     id: string;
@@ -49,7 +50,6 @@ export default function Header() {
                         { href: '/ket-qua-theo-ngay', label: 'Kết quả theo ngày' },
                         { href: '/thong-ke', label: 'Thống kê' },
                         { href: '/soi-cau-bac-nho', label: 'Soi Cầu Bạc Nhớ' },
-                        { href: '/hoi-dong-bac-nho', label: 'Hội Đồng Bạc Nhớ' },
                         { href: '/bac-nho-khung-3-ngay', label: 'Bạc Nhớ Khung 3 Ngày' },
                         { href: '/tin-tuc', label: 'Tin tức' },
                         { href: '/quay-thu', label: 'Quay thử' },
@@ -64,7 +64,6 @@ export default function Header() {
                     { href: '/ket-qua-theo-ngay', label: 'Kết quả theo ngày' },
                     { href: '/thong-ke', label: 'Thống kê' },
                     { href: '/soi-cau-bac-nho', label: 'Soi Cầu Bạc Nhớ' },
-                    { href: '/hoi-dong-bac-nho', label: 'Hội Đồng Bạc Nhớ' },
                     { href: '/bac-nho-khung-3-ngay', label: 'Bạc Nhớ Khung 3 Ngày' },
                     { href: '/tin-tuc', label: 'Tin tức' },
                     { href: '/quay-thu', label: 'Quay thử' },
@@ -141,6 +140,7 @@ export default function Header() {
                                             alt={`${branding.siteName || 'XSMB'} - Xổ Số Miền Bắc 24h`}
                                             width={80}
                                             height={80}
+                                            priority
                                             className="relative w-16 h-16 md:w-20 md:h-20 object-contain drop-shadow-lg transform group-hover:scale-105 transition-transform duration-300"
                                         />
                                     </div>
@@ -156,14 +156,15 @@ export default function Header() {
                                 </div>
                             </Link>
 
-                            <div className="hidden lg:flex flex-col items-end text-white/90 text-right">
+                            <div className="hidden lg:flex flex-col items-end text-white/90 text-right gap-2">
                                 <div className="flex items-center space-x-2 bg-black/10 px-3 py-1.5 rounded-full border border-white/10">
                                     <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
                                     <p className="font-bold text-sm tracking-tight">Kết quả trực tiếp - Siêu nhanh</p>
                                 </div>
-                                <p className="text-[10px] mt-1 font-medium text-lottery-red-100 uppercase tracking-tighter min-h-[16px]">
+                                <p className="text-[10px] font-medium text-lottery-red-100 uppercase tracking-tighter min-h-[16px]">
                                     {mounted ? new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}
                                 </p>
+                                <PushSubscribeButton />
                             </div>
 
                             {/* Mobile Menu Button */}

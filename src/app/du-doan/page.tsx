@@ -1,5 +1,7 @@
 import { Metadata } from 'next';
 import DuDoanClient from './DuDoanClient';
+import JsonLd from '@/components/seo/JsonLd';
+import { generateBreadcrumbSchema } from '@/lib/schema-generator';
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://xosomienbac24h.com';
 
@@ -18,10 +20,22 @@ export const metadata: Metadata = {
     },
     twitter: {
         card: 'summary_large_image',
+        title: 'Dự Đoán Xổ Số Miền Bắc - Phân Tích Thống Kê Big Data',
+        description: 'Top 10 số xác suất cao nhất XSMB, phân tích big data 100 ngày, lô gan chờ nổ.',
         images: [`${siteUrl}/og-image.png`],
     },
 };
 
+const breadcrumbs = [
+    { name: 'Trang chủ', item: '/' },
+    { name: 'Dự Đoán Xổ Số', item: '/du-doan' },
+];
+
 export default function DuDoanPage() {
-    return <DuDoanClient />;
+    return (
+        <>
+            <JsonLd data={generateBreadcrumbSchema(breadcrumbs)} />
+            <DuDoanClient />
+        </>
+    );
 }

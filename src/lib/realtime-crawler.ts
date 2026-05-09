@@ -496,52 +496,69 @@ function selectBestResult(results: (RealtimeXSMB | null)[]): RealtimeXSMB | null
     return validResults[0];
 }
 
-// --- RACING SYSTEM ---
+// --- RACING SYSTEM (Early-exit: resolve as soon as a good result arrives) ---
 export async function crawlAllAPIsRacing(): Promise<RealtimeXSMB | null> {
-    console.log('[Racing] Starting parallel API calls...');
     const startTime = Date.now();
+    const collected: (RealtimeXSMB | null)[] = [];
+    let done = false;
+    let resolveRace!: (r: RealtimeXSMB | null) => void;
 
-    // Start all API calls in parallel
-    const apiPromises = [
-        crawlApi1().catch(() => null),
-        crawlApi2().catch(() => null),
-        crawlApi3().catch(() => null),
-        crawlApi4().catch(() => null),
-        crawlApi5().catch(() => null),
-        crawlApi6().catch(() => null),
-        crawlApi7().catch(() => null),
-    ];
-
-    // Wait for all to complete (with timeout)
-    const allResults = await Promise.all(apiPromises);
-    const duration = Date.now() - startTime;
-
-    // Log results
-    allResults.forEach((result, idx) => {
-        if (result) {
-            const completeness = getResultCompleteness(result);
-            console.log(`[Racing] API ${idx + 1} (${result.source}): ✅ ${completeness}% complete`);
-        } else {
-            console.log(`[Racing] API ${idx + 1}: ❌ Failed`);
-        }
+    const racePromise = new Promise<RealtimeXSMB | null>((res) => {
+        resolveRace = res;
     });
 
-    // Select best result
-    const bestResult = selectBestResult(allResults);
+    const onResult = (result: RealtimeXSMB | null, idx: number) => {
+        if (result) {
+            const score = getResultCompleteness(result);
+            console.log(`[Racing] API ${idx + 1} (${result.source}): ✅ ${score}% in ${Date.now() - startTime}ms`);
+        } else {
+            console.log(`[Racing] API ${idx + 1}: ❌ (${Date.now() - startTime}ms)`);
+        }
 
-    if (bestResult) {
-        console.log(`[Racing] Best result: ${bestResult.source} (${getResultCompleteness(bestResult)}% complete) in ${duration}ms`);
-    } else {
-        console.log(`[Racing] No valid results found in ${duration}ms`);
-    }
+        collected.push(result);
 
-    return bestResult;
+        // Resolve early if we have a high-quality result (score >= 60 = at least prizes 1-7)
+        if (!done && result && getResultCompleteness(result) >= 60) {
+            done = true;
+            resolveRace(result);
+        }
+    };
+
+    // Priority order: fastest/most reliable APIs first
+    // API-3 (kqxs.vn) and API-4 (xskt.com.vn) are typically fastest
+    // API-1 (onrender) is slowest — start last, longer timeout
+    crawlApi3().then(r => onResult(r, 2)).catch(() => onResult(null, 2));
+    crawlApi4().then(r => onResult(r, 3)).catch(() => onResult(null, 3));
+    crawlApi6().then(r => onResult(r, 5)).catch(() => onResult(null, 5));
+    crawlApi7().then(r => onResult(r, 6)).catch(() => onResult(null, 6));
+    crawlApi2().then(r => onResult(r, 1)).catch(() => onResult(null, 1));
+    crawlApi5().then(r => onResult(r, 4)).catch(() => onResult(null, 4));
+    crawlApi1().then(r => onResult(r, 0)).catch(() => onResult(null, 0)); // slowest last
+
+    // Hard timeout: 4s — take best available if no high-quality result yet
+    const timeoutPromise = new Promise<RealtimeXSMB | null>((res) =>
+        setTimeout(() => {
+            if (!done) {
+                done = true;
+                const best = selectBestResult(collected);
+                console.log(`[Racing] Timeout 4s — best: ${best?.source || 'none'} (${best ? getResultCompleteness(best) : 0}%)`);
+                res(best);
+            } else {
+                res(null); // already resolved by early exit
+            }
+        }, 4000)
+    );
+
+    const result = await Promise.race([racePromise, timeoutPromise]);
+    const duration = Date.now() - startTime;
+    console.log(`[Racing] Done in ${duration}ms — source: ${result?.source || 'none'}`);
+
+    return result;
 }
 
 /**
  * Main crawler function - Uses racing system or fallback
  */
 export async function crawlLiveXSMB(): Promise<RealtimeXSMB | null> {
-    // Use racing system for better speed and reliability
     return await crawlAllAPIsRacing();
 }

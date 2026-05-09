@@ -11,6 +11,9 @@ const getCategoryBadge = (cat: string) => {
         'soi-cau': 'badge-soi-cau',
         'tips': 'badge-tips',
         'analysis': 'badge-analysis',
+        'dream': 'badge-dream',
+        'tin-tuc': 'badge-news',
+        'phan-tich': 'badge-analysis',
     };
     return badges[cat] || 'badge-news';
 };
@@ -21,6 +24,9 @@ const getCategoryLabel = (cat: string) => {
         'soi-cau': 'Soi cầu',
         'tips': 'Mẹo hay',
         'analysis': 'Phân tích',
+        'dream': 'Sổ Mơ',
+        'tin-tuc': 'Tin tức',
+        'phan-tich': 'Phân tích',
     };
     return labels[cat] || cat;
 };
@@ -87,6 +93,8 @@ export function NewsClient() {
                         { val: 'news', label: 'Tin tức' },
                         { val: 'analysis', label: 'Phân tích' },
                         { val: 'tips', label: 'Mẹo hay' },
+                        { val: 'dream', label: 'Sổ Mơ' },
+                        { val: 'phan-tich', label: 'Phân tích thống kê' },
                     ].map(({ val, label }) => (
                         <button
                             key={val}

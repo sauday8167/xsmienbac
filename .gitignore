@@ -21,7 +21,14 @@ yarn-error.log*
 # Environment
 .env
 .env.local
+.env.production
 .env.*.local
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# Build info
+tsconfig.tsbuildinfo
 
 # IDE
 .vscode/
