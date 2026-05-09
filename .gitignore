@@ -74,3 +74,7 @@ temp/
 src/data/bac-nho-*.json
 src/data/cache/*.json
 google-indexing-key.json
+
+# Large computed data files (>50MB, generated at runtime)
+src/data/bac-nho-cap-2*.json
+src/data/bac-nho-khung-3-ngay-cap-2*.json
