@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { queryOne } from '@/lib/db';
+import { query, queryOne } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import type { ApiResponse } from '@/types';
@@ -47,6 +47,13 @@ export async function POST(request: Request) {
                     success: false,
                     error: 'Tên đăng nhập hoặc mật khẩu không đúng',
                 }, { status: 401 });
+            }
+
+            // Cập nhật thời điểm đăng nhập gần nhất (không chặn đăng nhập nếu lỗi)
+            try {
+                await query('UPDATE admins SET last_login = CURRENT_TIMESTAMP WHERE id = ?', [admin.id]);
+            } catch (e) {
+                console.error('Cập nhật last_login thất bại:', e);
             }
 
             // Generate JWT token
