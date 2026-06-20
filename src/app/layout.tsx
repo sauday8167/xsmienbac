@@ -89,7 +89,6 @@ export async function generateMetadata(): Promise<Metadata> {
         // Homepage metadata (fallback for /)
         title: 'Xổ Số Miền Bắc - KQXS Miền Bắc Hôm Nay - Kết Quả SXMB Chính Xác',
         description: 'Xổ Số Miền Bắc (KQXS Miền Bắc) hôm nay nhanh nhất, chính xác nhất. Xem thống kê loto, soi cầu và phân tích chuyên sâu các cặp số đẹp.',
-        keywords: 'xổ số miền bắc, xsmb, sxmb, kqxs miền bắc, kết quả xổ số',
         verification: {
             google: googleVerification || undefined,
         },

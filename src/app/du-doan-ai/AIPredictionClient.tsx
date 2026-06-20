@@ -85,7 +85,7 @@ export default function AIPredictionClient() {
                 summary: data.summary || data.analysis?.summary || data.reasoning || 'Đang cập nhật phân tích...',
                 evidence: data.top_evidence || data.analysis?.top_evidence || data.key_insights || [],
                 advice: data.advice || data.analysis?.advice || '',
-                top7Detail: data.top7_detail || null,
+                topDetail: data.top_detail || null,
             };
         } catch {
             return null;
@@ -130,7 +130,7 @@ export default function AIPredictionClient() {
                     Dự Đoán <span className="text-red-600">Thống Kê Bỏ Phiếu</span>
                 </h1>
                 <p className="text-gray-500 max-w-lg mx-auto text-sm">
-                    6 phương pháp thống kê độc lập cùng bỏ phiếu cho từng số, chọn ra 7 số có tổng điểm cao nhất để đạt KPI 2+ nháy.
+                    3 phương pháp Bạc Nhớ (Cặp 3, 2 Ngày, 3 Ngày) từ trang Soi Cầu Bạc Nhớ cùng bỏ phiếu cho từng số, chọn ra 5 số đồng thuận cao nhất.
                 </p>
             </div>
 
@@ -150,12 +150,12 @@ export default function AIPredictionClient() {
                                 </div>
                                 <div className="text-right">
                                     <div className="bg-red-500/10 border border-red-500/20 px-3 py-1 rounded-lg">
-                                        <span className="text-red-400 text-[10px] font-bold">MỤC TIÊU KPI: 2+ NHÁY với 7 số</span>
+                                        <span className="text-red-400 text-[10px] font-bold">MỤC TIÊU KPI: 2+ NHÁY với 5 số</span>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* 7 số dự đoán — grid flex-wrap */}
+                            {/* 5 số dự đoán — grid flex-wrap */}
                             {(() => {
                                 const pairs = getPredictedPairs();
                                 const vScores = getVotingScores();
@@ -183,8 +183,8 @@ export default function AIPredictionClient() {
 
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-8 border-t border-slate-800/50">
                                 <div className="p-3 bg-slate-800/40 rounded-2xl border border-slate-700/50">
-                                    <div className="text-xs text-slate-500 font-bold uppercase mb-1">Xác suất KPI</div>
-                                    <div className="text-xl font-black text-green-400">~60%</div>
+                                    <div className="text-xs text-slate-500 font-bold uppercase mb-1">Mục tiêu</div>
+                                    <div className="text-xl font-black text-green-400">2+ nháy</div>
                                 </div>
                                 <div className="p-3 bg-slate-800/40 rounded-2xl border border-slate-700/50">
                                     <div className="text-xs text-slate-500 font-bold uppercase mb-1">Engine</div>
@@ -192,11 +192,11 @@ export default function AIPredictionClient() {
                                 </div>
                                 <div className="p-3 bg-slate-800/40 rounded-2xl border border-slate-700/50">
                                     <div className="text-xs text-slate-500 font-bold uppercase mb-1">Số chọn</div>
-                                    <div className="text-xl font-black text-yellow-400">7 số</div>
+                                    <div className="text-xl font-black text-yellow-400">5 số</div>
                                 </div>
                                 <div className="p-3 bg-slate-800/40 rounded-2xl border border-slate-700/50">
-                                    <div className="text-xs text-slate-500 font-bold uppercase mb-1">Phương pháp</div>
-                                    <div className="text-xl font-black text-blue-400">6 votes</div>
+                                    <div className="text-xs text-slate-500 font-bold uppercase mb-1">Nguồn dữ liệu</div>
+                                    <div className="text-xl font-black text-blue-400">Bạc Nhớ</div>
                                 </div>
                             </div>
                         </div>
@@ -218,7 +218,7 @@ export default function AIPredictionClient() {
                                                     </span>
                                                     <h3 className="font-black text-red-900 uppercase tracking-tight text-sm">Phân tích thống kê</h3>
                                                 </div>
-                                                <span className="text-[10px] font-bold bg-red-200 text-red-700 px-2 py-0.5 rounded">6 PHƯƠNG PHÁP</span>
+                                                <span className="text-[10px] font-bold bg-red-200 text-red-700 px-2 py-0.5 rounded">3 TAB BẠC NHỚ</span>
                                             </div>
                                             <div className="p-6">
                                                 <div className="bg-red-50/30 p-4 rounded-xl border border-red-100/50 italic text-red-900 leading-relaxed text-sm">
@@ -265,7 +265,7 @@ export default function AIPredictionClient() {
                                 </div>
                                 <div className="mt-4 pt-4 border-t border-white/10">
                                     <div className="text-[10px] font-bold text-slate-400 uppercase mb-1">Mục tiêu:</div>
-                                    <div className="text-xs font-black text-red-500">2+ NHÁY với 7 số</div>
+                                    <div className="text-xs font-black text-red-500">2+ NHÁY với 5 số</div>
                                 </div>
                             </div>
                         </div>
@@ -299,7 +299,7 @@ export default function AIPredictionClient() {
                         <thead className="bg-gray-50 border-b border-gray-100">
                             <tr>
                                 <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Thời gian</th>
-                                <th className="px-6 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">7 số đã chọn</th>
+                                <th className="px-6 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">5 số đã chọn</th>
                                 <th className="px-6 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Trạng thái</th>
                             </tr>
                         </thead>
@@ -355,13 +355,12 @@ export default function AIPredictionClient() {
             </div>
 
             <div className="mt-10 p-6 bg-gray-50 rounded-xl border border-gray-100 text-sm text-gray-700 leading-relaxed text-justify shadow-sm">
-                <h2 className="text-lg font-bold text-gray-900 mb-3">Giới thiệu về Dự Đoán Thống Kê</h2>
+                <h2 className="text-lg font-bold text-gray-900 mb-3">Giới thiệu về Dự Đoán Bạc Nhớ</h2>
                 <p>
-                    Hệ thống <strong>Bỏ Phiếu Thống Kê (Statistical Voting Engine)</strong> sử dụng 6 phương pháp phân tích dữ liệu độc lập —
-                    lô rơi GĐB, tần suất 30 ngày, Bạc Nhớ nhiều khung, lô gan chín, bias theo thứ trong tuần, và mô hình follow-up GĐB —
-                    để bỏ phiếu cho từng số từ 00–99. 7 số có tổng điểm bỏ phiếu cao nhất được chọn mỗi ngày.
-                    Với 7 số, xác suất cơ sở để đạt KPI 2+ nháy tăng từ ~18% (3 số) lên ~60%, phản ánh đúng thực tế thống kê xổ số.
-                    AI chỉ đóng vai trò viết phần giải thích ngắn gọn — không tham gia chọn số.
+                    Hệ thống dự đoán này sử dụng <strong>duy nhất dữ liệu Bạc Nhớ</strong> từ trang Soi Cầu Bạc Nhớ, gồm 3 phương pháp —
+                    <strong>Bạc Nhớ Cặp 3, Bạc Nhớ 2 Ngày và Bạc Nhớ 3 Ngày</strong> — mỗi phương pháp bỏ phiếu cho từng số dựa trên
+                    tỷ lệ tương quan lịch sử. Những số được nhiều phương pháp cùng dự đoán (đồng thuận) và có tương quan cao nhất
+                    sẽ được chọn vào danh sách 5 số mỗi kỳ. Hệ thống KHÔNG sử dụng model AI để diễn giải — toàn bộ kết quả dựa hoàn toàn trên thống kê bạc nhớ.
                 </p>
             </div>
         </div>

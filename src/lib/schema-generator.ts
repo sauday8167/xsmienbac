@@ -1,4 +1,3 @@
-import { Post } from '@/types';
 import siteConfig from '@/data/seo-config.json';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://xosomienbac24h.com';
@@ -31,57 +30,13 @@ export function generateOrganizationSchema() {
 }
 
 export function generateWebSiteSchema() {
+    // KHÔNG khai báo SearchAction vì website không có ô tìm kiếm (sitelinks searchbox)
+    // → tránh structured data sai sự thật theo chính sách Google.
     return {
         '@context': 'https://schema.org',
         '@type': 'WebSite',
         name: SITE_NAME,
         url: SITE_URL,
-        potentialAction: {
-            '@type': 'SearchAction',
-            target: {
-                '@type': 'EntryPoint',
-                urlTemplate: `${SITE_URL}/tin-tuc?q={search_term_string}`,
-            },
-            'query-input': 'required name=search_term_string',
-        },
-    };
-}
-
-export function generateArticleSchema(post: Post) {
-    const postUrl = `${SITE_URL}/tin-tuc/${post.slug}`;
-    const thumbSrc = (post as any).thumbnail_url || post.thumbnail;
-    const imageUrl = thumbSrc
-        ? (thumbSrc.startsWith('http') ? thumbSrc : `${SITE_URL}${thumbSrc}`)
-        : `${SITE_URL}/api/og?title=${encodeURIComponent(post.title)}`;
-
-
-    return {
-        '@context': 'https://schema.org',
-        '@type': 'NewsArticle',
-        mainEntityOfPage: {
-            '@type': 'WebPage',
-            '@id': postUrl,
-        },
-        headline: post.title,
-        image: [imageUrl],
-        datePublished: post.published_at || post.created_at,
-        dateModified: post.updated_at || post.published_at || post.created_at,
-        author: {
-            '@type': 'Organization',
-            name: SITE_NAME,
-            url: SITE_URL,
-        },
-        publisher: {
-            '@type': 'Organization',
-            name: SITE_NAME,
-            logo: {
-                '@type': 'ImageObject',
-                url: LOGO_URL,
-            },
-        },
-        description: post.excerpt || post.meta_description || '',
-        url: postUrl,
-        ...(post.category && { keywords: post.category }),
     };
 }
 

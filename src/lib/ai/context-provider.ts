@@ -68,14 +68,6 @@ export class ContextProvider {
             bacNhoCap3 = await getAggregatedBacNho('cap-3');
             bacNho2Ngay = await getAggregatedBacNho('2-ngay');
 
-            // 4. BAC NHO KHUNG 3 NGÀY - Aggregated from Multi-Range DB Cache
-            console.log('  - Running Bạc Nhớ Khung 3 Ngày (Multi-Range DB)...');
-            let bacNhoK3Cap2 = [], bacNhoK3Cap3 = [], bacNhoK3_2Ngay = [];
-            
-            bacNhoK3Cap2 = await getAggregatedBacNho('khung-3-ngay-cap-2');
-            bacNhoK3Cap3 = await getAggregatedBacNho('khung-3-ngay-cap-3');
-            bacNhoK3_2Ngay = await getAggregatedBacNho('khung-3-ngay-2-ngay');
-
             // 5. LOTO ROI ALGORITHM
             console.log('  - Running Loto Rơi algorithm...');
             const lotoRoi = await analyzeLotoRoi(yesterdayStr);
@@ -135,13 +127,6 @@ export class ContextProvider {
                     hai_ngay: bacNho2Ngay
                 },
 
-                // Bạc Nhớ Khung 3 Ngày
-                bac_nho_khung_3: {
-                    cap_2: bacNhoK3Cap2,
-                    cap_3: bacNhoK3Cap3,
-                    hai_ngay: bacNhoK3_2Ngay
-                },
-
                 // Loto Rơi
                 loto_roi: lotoRoi,
 
@@ -187,7 +172,6 @@ export class ContextProvider {
             formatRecentResults,
             formatFrequencyStats,
             formatBacNhoData,
-            format3DayBacNho,
             formatLotoRoiData,
             formatDBStats,
             formatPrizeStats,
@@ -221,11 +205,6 @@ export class ContextProvider {
         // 3. Bạc Nhớ
         text += `## 3. BẠC NHỚ (SILVER MEMORY)\n\n`;
         text += formatBacNhoData(context.bac_nho);
-        text += `\n---\n\n`;
-
-        // 4. Bạc Nhớ Khung 3 Ngày
-        text += `## 4. BẠC NHỚ KHUNG 3 NGÀY\n\n`;
-        text += format3DayBacNho(context.bac_nho_khung_3);
         text += `\n---\n\n`;
 
         // 5. Loto Rơi

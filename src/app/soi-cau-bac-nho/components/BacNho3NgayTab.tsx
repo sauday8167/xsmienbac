@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import type { BacNho3NgayData, BacNho3NgayPattern } from '@/types/bac-nho-types';
 
-export default function BacNho3NgayTab() {
+export default function BacNho3NgayTab({ toDate }: { toDate: string }) {
     const [data, setData] = useState<BacNho3NgayData | null>(null);
     const [loading, setLoading] = useState(true);
     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
@@ -11,15 +11,14 @@ export default function BacNho3NgayTab() {
     const [minAppearances, setMinAppearances] = useState<number>(3);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 20;
-    const [selectedDays, setSelectedDays] = useState<number>(1000);
     const [viewMode, setViewMode] = useState<'percentage' | 'hitCount'>('percentage');
 
-    useEffect(() => { fetchData(); }, [selectedDays]);
+    useEffect(() => { fetchData(); }, [toDate]);
 
     const fetchData = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`/api/soi-cau-bac-nho/3-ngay?days=${selectedDays}`);
+            const response = await fetch(`/api/soi-cau-bac-nho/3-ngay?days=100${toDate ? `&toDate=${toDate}` : ''}`);
             const result = await response.json();
             if (result.success && result.data) setData(result.data);
         } catch (error) {
@@ -102,16 +101,6 @@ export default function BacNho3NgayTab() {
                 <div className="bg-gradient-to-br from-green-50 to-green-100 border-l-4 border-green-600 p-4 rounded-lg">
                     <div className="text-sm text-lottery-gray-600 mb-1">Ngày mới nhất</div>
                     <div className="text-xl font-bold text-green-600">{new Date(data.overview.latestDate).toLocaleDateString('vi-VN')}</div>
-                </div>
-                <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 border-l-4 border-indigo-600 p-4 rounded-lg">
-                    <label className="text-sm text-lottery-gray-600 mb-2 block">Phân tích dữ liệu</label>
-                    <select value={selectedDays} onChange={(e) => setSelectedDays(Number(e.target.value))} className="input w-full font-bold text-indigo-600">
-                        <option value={100}>100 Ngày</option>
-                        <option value={180}>180 Ngày</option>
-                        <option value={365}>365 Ngày</option>
-                        <option value={730}>730 Ngày</option>
-                        <option value={1000}>1000 Ngày</option>
-                    </select>
                 </div>
                 <div className="bg-gradient-to-br from-blue-50 to-blue-100 border-l-4 border-blue-600 p-4 rounded-lg">
                     <div className="text-sm text-lottery-gray-600 mb-1">Số ngày phân tích</div>

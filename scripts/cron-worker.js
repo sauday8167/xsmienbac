@@ -140,29 +140,7 @@ console.log(' - 18:52: 180 Days Analysis');
 console.log(' - 19:04: 365 Days Analysis');
 console.log(' - 19:16: 730 Days Analysis');
 console.log(' - 19:28: 1000 Days Analysis');
-console.log(' - 19:05: Post-draw Analysis (phân tích kết quả sau khi có KQ)');
 console.log(' - 19:40: AI Prediction (/du-doan-ai) - phân tích sau kết quả');
-console.log(' - Thứ 2 08:30: Thống kê theo thứ trong tuần');
-
-// 6. 19:05 - Post-draw Analysis (phân tích kết quả XSMB ngay sau khi có KQ)
-cron.schedule('5 19 * * *', () => {
-    console.log(`[${new Date().toISOString()}] Triggering Post-draw Analysis (19:05)...`);
-    const { exec } = require('child_process');
-    exec('npx tsx scripts/auto-write-ket-qua.ts', (err, stdout) => {
-        if (err) console.error(`Post-draw Analysis Error: ${err.message}`);
-        else console.log(`Post-draw Analysis Stdout: ${stdout}`);
-    });
-});
-
-// 7. Thứ 2 08:30 - Thống kê theo thứ trong tuần (chỉ chạy thứ 2)
-cron.schedule('30 8 * * 1', () => {
-    console.log(`[${new Date().toISOString()}] Triggering Thống kê theo thứ (Thứ 2 08:30)...`);
-    const { exec } = require('child_process');
-    exec('npx tsx scripts/auto-write-thu-trong-tuan.ts', (err, stdout) => {
-        if (err) console.error(`Thu Trong Tuan Error: ${err.message}`);
-        else console.log(`Thu Trong Tuan Stdout: ${stdout}`);
-    });
-});
 
 // 1. Live Crawl: Every 2 minutes from 18:10 to 18:45
 cron.schedule('*/2 18 * * *', () => {
@@ -270,61 +248,3 @@ cron.schedule('10 19 * * *', () => {
     });
 });
 
-// 14. 21:00 - Tự động viết tin tức AI cho ngày mai
-cron.schedule('0 21 * * *', () => {
-    console.log(`[${new Date().toISOString()}] Triggering Auto News Generation (21:00)...`);
-    const { exec } = require('child_process');
-    exec('npx tsx scripts/auto-write-news.ts', (error, stdout, stderr) => {
-        if (error) {
-            console.error(`Auto News Error: ${error.message}`);
-            return;
-        }
-        console.log(`Auto News Stdout: ${stdout}`);
-    });
-});
-
-// 15. 22:00 - Kiểm tra và viết tin tức AI (nếu chưa có)
-cron.schedule('0 22 * * *', () => {
-    console.log(`[${new Date().toISOString()}] Triggering Auto News Check (22:00)...`);
-    const { exec } = require('child_process');
-    exec('npx tsx scripts/auto-write-news.ts --check', (error, stdout, stderr) => {
-        if (error) {
-            console.error(`Auto News Check Error: ${error.message}`);
-            return;
-        }
-        console.log(`Auto News Check Stdout: ${stdout}`);
-    });
-});
-
-// 16. 19:30 - Tự động viết tin tức Đầu/Đuôi Câm
-cron.schedule('30 19 * * *', () => {
-    console.log(`[${new Date().toISOString()}] Triggering Auto Write Ngach Cam (19:30)...`);
-    const { exec } = require('child_process');
-    exec('npx tsx scripts/auto-write-ngach-cam.ts', (error, stdout, stderr) => {
-        if (error) {
-            console.error(`Auto Ngach Cam Error: ${error.message}`);
-            return;
-        }
-        console.log(`Auto Ngach Cam Stdout: ${stdout}`);
-    });
-});
-
-// 18. 19:45 - Tự động viết bài Bạc Nhớ Lô Kẹp
-cron.schedule('45 19 * * *', () => {
-    console.log(`[${new Date().toISOString()}] Triggering Auto Write Bac Nho (19:45)...`);
-    const { exec } = require('child_process');
-    exec('npx tsx scripts/auto-write-bac-nho.ts', (err, stdout) => {
-        if (err) console.error(`Bac Nho Error: ${err.message}`);
-        else console.log(`Bac Nho Stdout: ${stdout}`);
-    });
-});
-
-// 19. 08:00 - Tự động giải mã Sổ Mơ
-cron.schedule('0 8 * * *', () => {
-    console.log(`[${new Date().toISOString()}] Triggering Auto Write So Mo (08:00)...`);
-    const { exec } = require('child_process');
-    exec('npx tsx scripts/auto-write-so-mo.ts', (err, stdout) => {
-        if (err) console.error(`So Mo Error: ${err.message}`);
-        else console.log(`So Mo Stdout: ${stdout}`);
-    });
-});

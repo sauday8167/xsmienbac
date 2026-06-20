@@ -6,12 +6,14 @@ import { Loto34CangData, LotoStat } from '@/types/loto-3-4-cang';
 export default function Loto34CangClient() {
     const [data, setData] = useState<Loto34CangData | null>(null);
     const [loading, setLoading] = useState(true);
-    const [selectedDays, setSelectedDays] = useState(1000);
+    // Ngày kết thúc cửa sổ phân tích (rỗng = ngày mới nhất). Luôn dùng 100 kỳ tính tới ngày này.
+    const [toDate, setToDate] = useState('');
+    const [maxDate, setMaxDate] = useState('');
 
     const fetchData = async () => {
         try {
             setLoading(true);
-            const res = await fetch(`/api/thong-ke/loto-3-4-cang?days=${selectedDays}`);
+            const res = await fetch(`/api/thong-ke/loto-3-4-cang?days=100${toDate ? `&toDate=${toDate}` : ''}`);
             const result = await res.json();
             if (result.success) {
                 setData(result.data);
@@ -24,8 +26,18 @@ export default function Loto34CangClient() {
     };
 
     useEffect(() => {
+        fetch('/api/results?limit=1')
+            .then(res => res.json())
+            .then(d => {
+                const latest = d?.data?.[0]?.draw_date;
+                if (latest) setMaxDate(latest);
+            })
+            .catch(() => { });
+    }, []);
+
+    useEffect(() => {
         fetchData();
-    }, [selectedDays]);
+    }, [toDate]);
 
     if (loading) {
         return (
@@ -85,16 +97,24 @@ export default function Loto34CangClient() {
                     <div className="bg-white/10 backdrop-blur-md px-4 py-2 rounded-lg border border-white/20">
                         Đến ngày: <span className="font-bold">{new Date(data.overview.toDate).toLocaleDateString('vi-VN')}</span>
                     </div>
-                    <select
-                        value={selectedDays}
-                        onChange={(e) => setSelectedDays(Number(e.target.value))}
-                        className="bg-white text-lottery-gray-800 px-4 py-2 rounded-lg outline-none font-semibold border-none ring-2 ring-transparent focus:ring-white/50 transition-all"
-                    >
-                        <option value={100}>100 ngày gần nhất</option>
-                        <option value={500}>500 ngày gần nhất</option>
-                        <option value={1000}>1000 ngày gần nhất</option>
-                        <option value={2000}>2000 ngày gần nhất</option>
-                    </select>
+                    <div className="bg-white/10 backdrop-blur-md px-4 py-2 rounded-lg border border-white/20 flex items-center gap-2">
+                        <label className="text-sm text-white/80 whitespace-nowrap">📅 Tính đến ngày:</label>
+                        <input
+                            type="date"
+                            value={toDate || maxDate}
+                            max={maxDate || undefined}
+                            onChange={(e) => setToDate(e.target.value)}
+                            className="bg-white text-lottery-gray-800 px-3 py-1 rounded-lg outline-none font-semibold"
+                        />
+                        {toDate && toDate !== maxDate && (
+                            <button
+                                onClick={() => setToDate('')}
+                                className="text-xs text-white/80 hover:text-white underline whitespace-nowrap"
+                            >
+                                Mới nhất
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
 

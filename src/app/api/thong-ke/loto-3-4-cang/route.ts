@@ -6,7 +6,8 @@ import { Loto34CangData } from '@/types/loto-3-4-cang';
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
-    const days = parseInt(searchParams.get('days') || '1000');
+    const days = 100; // Cố định cửa sổ phân tích 100 ngày
+    const toDate = searchParams.get('toDate') || undefined;
 
     try {
         // Cache key based on latest result date to ensure data is fresh
@@ -15,14 +16,20 @@ export async function GET(request: Request) {
         );
 
         const latestDate = latestResult?.draw_date || 'no-date';
-        const cacheKey = `loto-3-4-cang-${days}-${latestDate}`;
 
+        // Historical view: when a past date is selected, compute on-the-fly without caching.
+        if (toDate && toDate < latestDate) {
+            const data = await analyzeLoto34Cang(days, toDate);
+            return NextResponse.json({ success: true, data });
+        }
+
+        const cacheKey = `loto-3-4-cang-${days}-${latestDate}`;
         const cachedData = await getCache<Loto34CangData>(cacheKey, latestDate);
         if (cachedData) {
             return NextResponse.json({ success: true, data: cachedData });
         }
 
-        const data = await analyzeLoto34Cang(days);
+        const data = await analyzeLoto34Cang(days, toDate);
         await setCache(cacheKey, latestDate, data);
 
         return NextResponse.json({ success: true, data });

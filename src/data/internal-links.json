@@ -50,31 +50,6 @@
         "priority": 9
     },
     {
-        "keyword": "lô rơi",
-        "url": "/soi-cau-loto-roi",
-        "priority": 9
-    },
-    {
-        "keyword": "soi cầu lô rơi",
-        "url": "/soi-cau-loto-roi",
-        "priority": 9
-    },
-    {
-        "keyword": "giải đặc biệt",
-        "url": "/soi-cau-giai-dac-biet",
-        "priority": 8
-    },
-    {
-        "keyword": "soi cầu giải đặc biệt",
-        "url": "/soi-cau-giai-dac-biet",
-        "priority": 8
-    },
-    {
-        "keyword": "bạc nhớ khung 3 ngày",
-        "url": "/bac-nho-khung-3-ngay",
-        "priority": 8
-    },
-    {
         "keyword": "thống kê loto",
         "url": "/thong-ke",
         "priority": 8
@@ -128,11 +103,6 @@
         "keyword": "số mơ",
         "url": "/so-mo",
         "priority": 7
-    },
-    {
-        "keyword": "tin tức xổ số",
-        "url": "/tin-tuc",
-        "priority": 6
     },
     {
         "keyword": "lô đề",

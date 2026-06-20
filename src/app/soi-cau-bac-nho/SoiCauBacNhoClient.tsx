@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import Cap2Tab from './components/Cap2Tab';
 import Cap3Tab from './components/Cap3Tab';
@@ -14,6 +14,19 @@ type TabType = 'cap-2' | 'cap-3' | '2-ngay' | '3-ngay';
 
 export default function SoiCauBacNhoClient() {
     const [activeTab, setActiveTab] = useState<TabType>('cap-2');
+    // Ngày kết thúc cửa sổ phân tích (rỗng = ngày mới nhất). Phân tích luôn dùng 100 kỳ tính tới ngày này.
+    const [toDate, setToDate] = useState('');
+    const [maxDate, setMaxDate] = useState('');
+
+    useEffect(() => {
+        fetch('/api/results?limit=1')
+            .then(res => res.json())
+            .then(data => {
+                const latest = data?.data?.[0]?.draw_date;
+                if (latest) setMaxDate(latest);
+            })
+            .catch(() => { });
+    }, []);
 
     const breadcrumbs = [
         { name: 'Trang chủ', item: '/' },
@@ -39,7 +52,27 @@ export default function SoiCauBacNhoClient() {
                     <h1 className="text-4xl font-bold text-lottery-gray-800 mb-2">
                         Soi Cầu Bạc Nhớ
                     </h1>
-                    <p className="text-lottery-gray-600">Phân tích tương quan số dựa trên lịch sử tối đa 1000 ngày</p>
+                    <p className="text-lottery-gray-600">Phân tích tương quan số dựa trên 100 kỳ xổ số gần nhất</p>
+                </div>
+                <div className="bg-white border border-lottery-gray-200 rounded-lg px-4 py-3 shadow-sm">
+                    <label className="block text-xs font-semibold text-lottery-gray-500 mb-1">📅 Xem phân tích tính đến ngày</label>
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="date"
+                            value={toDate || maxDate}
+                            max={maxDate || undefined}
+                            onChange={(e) => setToDate(e.target.value)}
+                            className="input font-bold text-lottery-red-600"
+                        />
+                        {toDate && toDate !== maxDate && (
+                            <button
+                                onClick={() => setToDate('')}
+                                className="text-xs text-lottery-gray-500 hover:text-lottery-red-600 underline whitespace-nowrap"
+                            >
+                                Mới nhất
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -70,10 +103,10 @@ export default function SoiCauBacNhoClient() {
                 </div>
 
                 <div className="p-6">
-                    {activeTab === 'cap-2' && <Cap2Tab />}
-                    {activeTab === 'cap-3' && <Cap3Tab />}
-                    {activeTab === '2-ngay' && <BacNho2NgayTab />}
-                    {activeTab === '3-ngay' && <BacNho3NgayTab />}
+                    {activeTab === 'cap-2' && <Cap2Tab toDate={toDate} />}
+                    {activeTab === 'cap-3' && <Cap3Tab toDate={toDate} />}
+                    {activeTab === '2-ngay' && <BacNho2NgayTab toDate={toDate} />}
+                    {activeTab === '3-ngay' && <BacNho3NgayTab toDate={toDate} />}
                 </div>
             </div>
 

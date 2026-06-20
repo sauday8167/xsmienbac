@@ -29,8 +29,7 @@ async function getFooterConfig() {
             links: [
                 { label: "Trang chủ", href: "/" },
                 { label: "Kết quả theo ngày", href: "/ket-qua-theo-ngay" },
-                { label: "Thống kê", href: "/thong-ke" },
-                { label: "Tin tức / Soi cầu", href: "/tin-tuc" }
+                { label: "Thống kê", href: "/thong-ke" }
             ]
         },
         disclaimer: {
@@ -147,12 +146,8 @@ export default async function Footer() {
                                 { label: 'Thống kê theo thứ', href: '/thong-ke-theo-thu' },
                                 { label: 'Thống kê theo ngày', href: '/thong-ke-theo-ngay' },
                                 { label: 'Soi Cầu Bạc Nhớ', href: '/soi-cau-bac-nho' },
-                                { label: 'Bạc Nhớ Khung 3 Ngày', href: '/bac-nho-khung-3-ngay' },
                                 { label: 'Phân Tích Bạch Thủ', href: '/soi-cau-bach-thu' },
-                                { label: 'Loto Rơi XSMB', href: '/soi-cau-loto-roi' },
-                                { label: 'Giải Đặc Biệt', href: '/soi-cau-giai-dac-biet' },
                                 { label: 'Dự đoán AI', href: '/du-doan-ai' },
-                                { label: 'Tin tức / Soi cầu', href: '/tin-tuc' },
                             ].map((link, index) => (
                                 <li key={index}>
                                     <Link href={link.href} className="text-lottery-gray-300 hover:text-white transition-colors">
@@ -163,11 +158,10 @@ export default async function Footer() {
                             {/* Dynamic links from config (if any extra) */}
                             {config.quickLinks.links
                                 .filter((link: any) => ![
-                                    '/', '/ket-qua-theo-ngay', '/thong-ke', '/tin-tuc',
+                                    '/', '/ket-qua-theo-ngay', '/thong-ke',
                                     '/thong-ke-theo-thu', '/thong-ke-theo-ngay',
-                                    '/soi-cau-bac-nho', '/bac-nho-khung-3-ngay',
-                                    '/soi-cau-bach-thu', '/soi-cau-loto-roi',
-                                    '/soi-cau-giai-dac-biet', '/du-doan-ai',
+                                    '/soi-cau-bac-nho',
+                                    '/soi-cau-bach-thu', '/du-doan-ai',
                                 ].includes(link.href))
                                 .map((link: any, index: number) => (
                                     <li key={`extra-${index}`}>

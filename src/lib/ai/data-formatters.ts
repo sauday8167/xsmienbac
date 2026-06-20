@@ -183,18 +183,6 @@ export function formatPrizeStats(stats: any, title: string): string {
     return text;
 }
 
-export function format3DayBacNho(bacNho3Day: any): string {
-    if (!bacNho3Day) return 'No 3-day Bạc Nhớ data';
-
-    let text = '### Bạc Nhớ Khung 3 Ngày (3-Day Frame):\n\n';
-
-    if (bacNho3Day.cap_2 && bacNho3Day.cap_2.length > 0) {
-        text += `**Pair-2**: ${bacNho3Day.cap_2.slice(0, 5).map((i: any) => i.pattern).join(', ')}\n`;
-    }
-
-    return text;
-}
-
 export function formatPredictionHistory(history: any[]): string {
     if (!history || history.length === 0) return 'No previous prediction history available.';
 

@@ -17,13 +17,13 @@ export const revalidate = 0;
 
 export const metadata: Metadata = {
     title: 'Xổ Số Miền Bắc (XSMB) - Trực Tiếp Kết Quả SXMB Hôm Nay Nhanh Số 1',
-    description: 'Xem trực tiếp kết quả Xổ Số Miền Bắc (KQXSMB) hôm nay chính xác nhất từ trường quay. Cập nhật bảng kết quả, soi cầu loto, thống kê lô gan bạch thủ lô VIP liên tục 24h.',
+    description: 'Xem trực tiếp kết quả Xổ Số Miền Bắc (KQXSMB) hôm nay chính xác từ trường quay. Cập nhật bảng kết quả, soi cầu loto, thống kê lô gan, bạch thủ lô liên tục 24h.',
     alternates: {
         canonical: siteUrl,
     },
     openGraph: {
         title: 'Xổ Số Miền Bắc (XSMB) - Trực Tiếp Kết Quả SXMB Hôm Nay Nhanh Số 1',
-        description: 'Xem trực tiếp kết quả Xổ Số Miền Bắc (KQXSMB) hôm nay chính xác nhất từ trường quay. Cập nhật bảng kết quả, soi cầu loto, thống kê lô gan bạch thủ lô VIP liên tục 24h.',
+        description: 'Xem trực tiếp kết quả Xổ Số Miền Bắc (KQXSMB) hôm nay chính xác từ trường quay. Cập nhật bảng kết quả, soi cầu loto, thống kê lô gan, bạch thủ lô liên tục 24h.',
         url: siteUrl,
         type: 'website',
         siteName: 'XSMB 24h',
@@ -81,7 +81,7 @@ export default async function HomePage({ searchParams }: { searchParams: any }) 
                 <div className="flex items-center justify-center gap-4 mt-2">
                     <div className="h-px bg-slate-200 flex-1"></div>
                     <p className="text-slate-500 font-medium text-sm md:text-base italic px-4">
-                        Cập nhật trực tiếp nhanh số 1 Việt Nam
+                        Cập nhật kết quả trực tiếp, nhanh chóng &amp; ổn định
                     </p>
                     <div className="h-px bg-slate-200 flex-1"></div>
                 </div>
@@ -91,6 +91,9 @@ export default async function HomePage({ searchParams }: { searchParams: any }) 
             {latestResult ? (
                 <section className="bg-white rounded-2xl shadow-lg border border-slate-200 p-4 md:p-8 overflow-hidden">
                     <ResultTable result={latestResult} />
+                    <p className="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-500 text-center">
+                        Nguồn: Công ty Xổ Số Kiến Thiết Thủ Đô · Quay thưởng trực tiếp lúc 18:15 hằng ngày · Cập nhật ngày {new Date(latestResult.draw_date).toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })}
+                    </p>
                 </section>
             ) : (
                 <section className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8 text-center">
@@ -111,8 +114,8 @@ export default async function HomePage({ searchParams }: { searchParams: any }) 
             <div className="mt-10 p-6 bg-gray-50 rounded-xl border border-gray-100 text-sm text-gray-700 leading-relaxed text-justify shadow-sm">
                 <h2 className="text-lg font-bold text-gray-900 mb-3">Giới thiệu về Trang Chủ Xổ Số Miền Bắc 24h</h2>
                 <p className="mb-2">
-                    <strong>Xổ Số Miền Bắc 24h (XSMB24h)</strong> là trang web tra cứu kết quả xổ số miền Bắc nhanh nhất,
-                    chính xác tuyệt đối. Dữ liệu được cập nhật trực tiếp từ trường quay mỗi ngày lúc 18h15.
+                    <strong>Xổ Số Miền Bắc 24h (XSMB24h)</strong> là trang web tra cứu kết quả xổ số miền Bắc nhanh chóng,
+                    chính xác. Dữ liệu được cập nhật trực tiếp từ trường quay mỗi ngày lúc 18h15, đối chiếu với kết quả chính thức của Công ty Xổ Số Kiến Thiết Thủ Đô.
                 </p>
                 <p className="mb-2">
                     Ngoài bảng <strong>KQXSMB</strong> mỗi ngày, chúng tôi cung cấp hệ thống phân tích chuyên sâu:

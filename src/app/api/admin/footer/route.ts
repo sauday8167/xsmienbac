@@ -18,8 +18,7 @@ const DEFAULT_CONFIG = {
         links: [
             { label: "Trang chủ", href: "/" },
             { label: "Kết quả theo ngày", href: "/ket-qua-theo-ngay" },
-            { label: "Thống kê", href: "/thong-ke" },
-            { label: "Tin tức / Soi cầu", href: "/tin-tuc" }
+            { label: "Thống kê", href: "/thong-ke" }
         ]
     },
     disclaimer: {

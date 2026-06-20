@@ -32,7 +32,6 @@ export default function MobileDrawer() {
                         { href: '/', label: 'Trang chủ' },
                         { href: '/ket-qua-theo-ngay', label: 'Kết quả theo ngày' },
                         { href: '/thong-ke', label: 'Thống kê' },
-                        { href: '/tin-tuc', label: 'Tin tức' },
                     ]);
                 }
             } catch (error) {

@@ -7,13 +7,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
     try {
-        // 1. Get Posts Stats
-        const postsStats = await queryOne<{ total: number; total_views: number }>(
-            'SELECT COUNT(*) as total, SUM(views) as total_views FROM posts WHERE status != ?',
-            ['deleted']
-        );
-
-        // 2. Get Users Stats if table exists, otherwise mock or count admins
+        // 1. Get Users Stats if table exists, otherwise mock or count admins
         let usersCount = 0;
         try {
             const userStats = await queryOne<{ total: number }>('SELECT COUNT(*) as total FROM users');
@@ -38,8 +32,7 @@ export async function GET() {
         return NextResponse.json({
             success: true,
             data: {
-                posts: postsStats?.total || 0,
-                views: postsStats?.total_views || 0,
+                views: 0,
                 users: usersCount,
                 ads: adsCount
             }

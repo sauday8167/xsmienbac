@@ -28,10 +28,10 @@ export default function NotFound() {
                     Về Trang Chủ
                 </Link>
                 <Link
-                    href="/tin-tuc"
+                    href="/du-doan-ai"
                     className="px-6 py-3 bg-white text-gray-700 font-bold border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                    Xem Tin Tức Mới
+                    Xem Dự Đoán AI
                 </Link>
             </div>
 

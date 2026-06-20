@@ -47,15 +47,23 @@ async function cleanupOldRecords(type: string) {
 export async function getOrUpdateBacNhoData<T>(
     key: string,
     calculateFn: (days: number) => Promise<T>,
-    days: number = 100
+    days: number = 100,
+    toDate?: string
 ): Promise<T> {
     const statType = `bac-nho-${key}`;
-    
+
     // 1. Get latest date from results DB to check freshness
     const latestResult = await queryOne<{ draw_date: string }>(
         'SELECT draw_date FROM xsmb_results ORDER BY draw_date DESC LIMIT 1'
     );
     const dbLatestDate = latestResult?.draw_date || new Date().toISOString().split('T')[0];
+
+    // Historical view: when the user selects a past date, compute on-the-fly without caching.
+    // (calculateFn already has toDate baked in by the caller.)
+    if (toDate && toDate < dbLatestDate) {
+        console.log(`[BacNhoCache] 🕓 Historical view ${key} as of ${toDate} (no cache)...`);
+        return await calculateFn(days);
+    }
 
     // 2. Check DB Cache
     try {

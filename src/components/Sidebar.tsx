@@ -5,13 +5,6 @@ import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import GoogleAd from './GoogleAd';
 
-interface Post {
-    id: number;
-    title: string;
-    slug: string;
-    excerpt: string;
-}
-
 interface Banner {
     id: string;
     title: string;
@@ -30,7 +23,6 @@ interface Ad {
 }
 
 export default function Sidebar() {
-    const [latestPosts, setLatestPosts] = useState<Post[]>([]);
     const [hotNumbers, setHotNumbers] = useState<string[]>([]);
     const [sidebarItems, setSidebarItems] = useState<{ id: string; label: string; href: string; icon: string }[]>([]);
     const [banners, setBanners] = useState<Banner[]>([]);
@@ -38,16 +30,6 @@ export default function Sidebar() {
     const [aiPredictions, setAiPredictions] = useState<{ number: string; confidence: number; sources: string[] }[]>([]);
 
     useEffect(() => {
-        // Fetch latest posts
-        fetch('/api/posts?limit=3')
-            .then(res => res.json())
-            .then(data => {
-                if (data.success && data.data.posts) {
-                    setLatestPosts(data.data.posts);
-                }
-            })
-            .catch(err => console.error('Error fetching posts:', err));
-
         // Fetch sidebar items
         fetch('/api/admin/sidebar')
             .then(res => res.json())
@@ -164,7 +146,6 @@ export default function Sidebar() {
                         { href: '/do-ve-so', label: 'Dò vé số', icon: 'check' },
                         { href: '/quay-thu', label: 'Quay thử số', icon: 'refresh' },
                         { href: '/du-doan', label: 'Tần Suất Lô Tô', icon: 'bulb' },
-                        { href: '/soi-cau-loto-roi', label: 'Soi Cầu Lô Rơi', icon: 'bulb' },
                         { href: '/du-doan-ai', label: 'Dự đoán AI', icon: 'bulb' }
                     ].map((item, idx) => (
                         <Link key={idx} href={item.href} className="flex items-center p-3 rounded-lg hover:bg-lottery-red-50 transition-colors group">
@@ -248,33 +229,6 @@ export default function Sidebar() {
                             Phân tích từ {aiPredictions[0]?.sources?.length || 0}+ phương pháp dự đoán
                         </p>
                     </div>
-                </div>
-            )}
-
-            {/* Latest News Widget */}
-            {latestPosts.length > 0 && (
-                <div className="bg-white rounded-lg shadow-md p-6 border-t-4 border-blue-600">
-                    <h3 className="text-lg font-bold text-lottery-gray-800 mb-4 flex items-center">
-                        <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-                        </svg>
-                        Tin Tức Mới
-                    </h3>
-                    <div className="space-y-3">
-                        {latestPosts.map((post) => (
-                            <Link key={post.id} href={`/tin-tuc/${post.slug}`} className="block p-3 rounded-lg hover:bg-gray-50 transition-colors group">
-                                <h4 className="text-sm font-semibold text-lottery-gray-800 group-hover:text-blue-600 line-clamp-2 mb-1">
-                                    {post.title}
-                                </h4>
-                                <p className="text-xs text-lottery-gray-600 line-clamp-2">
-                                    {post.excerpt}
-                                </p>
-                            </Link>
-                        ))}
-                    </div>
-                    <Link href="/tin-tuc" className="block mt-4 text-center text-sm font-medium text-blue-600 hover:text-blue-700">
-                        Xem tất cả →
-                    </Link>
                 </div>
             )}
 

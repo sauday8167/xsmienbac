@@ -1,6 +1,4 @@
 import { MetadataRoute } from 'next';
-import { query } from '@/lib/db';
-import { Post } from '@/types';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://xosomienbac24h.com';
@@ -10,9 +8,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         '',
         '/soi-cau-bac-nho',
         '/soi-cau-bach-thu',
-        '/soi-cau-loto-roi',
-        '/soi-cau-giai-dac-biet',
-        '/bac-nho-khung-3-ngay',
         '/thong-ke',
         '/thong-ke-theo-ngay',
         '/thong-ke-theo-thu',
@@ -25,7 +20,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         '/tao-dan-xo-so',
         '/so-mo',
         '/thong-ke-theo-ngay-trong-nam',
-        '/soi-cau-dan-de',
     ].map((route) => ({
         url: `${siteUrl}${route}`,
         lastModified: new Date(),
@@ -36,7 +30,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     // 2. Static Info/Policy Routes — Lower priority
     const infoRoutes = [
-        '/tin-tuc',
         '/chinh-sach-bao-mat',
         '/dieu-khoan-su-dung',
         '/mien-tru-trach-nhiem',
@@ -50,24 +43,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
 
     const routes = [...toolRoutes, ...infoRoutes];
-
-    // 2. Blog Posts
-    let posts: Post[] = [];
-    try {
-        posts = await query<Post[]>(
-            'SELECT slug, updated_at, published_at FROM posts WHERE status = ? ORDER BY published_at DESC LIMIT 1000',
-            ['published']
-        );
-    } catch (error) {
-        console.error('Error fetching posts for sitemap:', error);
-    }
-
-    const postRoutes = posts.map((post) => ({
-        url: `${siteUrl}/tin-tuc/${post.slug}`,
-        lastModified: new Date(post.updated_at || post.published_at || new Date()),
-        changeFrequency: 'weekly' as const,
-        priority: 0.7,
-    }));
 
     // 3. Daily Results (Last 30 days)
     const resultRoutes = [];
@@ -88,5 +63,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         });
     }
 
-    return [...routes, ...postRoutes, ...resultRoutes];
+    return [...routes, ...resultRoutes];
 }

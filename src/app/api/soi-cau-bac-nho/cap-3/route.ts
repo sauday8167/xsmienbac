@@ -7,12 +7,13 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
-        const days = parseInt(searchParams.get('days') || '100');
+        const toDate = searchParams.get('toDate') || undefined;
 
         const data = await getOrUpdateBacNhoData(
-            days === 100 ? 'cap-3' : `cap-3-${days}`,
-            (d: number) => analyzeBacNhoCap3(d),
-            days
+            'cap-3',
+            (d: number) => analyzeBacNhoCap3(d, toDate),
+            100,
+            toDate
         );
 
         return NextResponse.json({ success: true, data });

@@ -99,11 +99,18 @@ function calculateStats(numberMap: Map<string, string[]>, totalDays: number, lat
     return stats;
 }
 
-export async function analyzeLoto34Cang(days: number = 1000): Promise<Loto34CangData> {
-    const results = await query<LotteryResultRaw[]>(
-        'SELECT * FROM xsmb_results ORDER BY draw_date DESC LIMIT ?',
-        [days]
-    );
+export async function analyzeLoto34Cang(days: number = 100, toDate?: string): Promise<Loto34CangData> {
+    let queryStr = 'SELECT * FROM xsmb_results ';
+    let params: any[] = [days];
+
+    if (toDate) {
+        queryStr += 'WHERE draw_date <= ? ';
+        params = [toDate, days];
+    }
+
+    queryStr += 'ORDER BY draw_date DESC LIMIT ?';
+
+    const results = await query<LotteryResultRaw[]>(queryStr, params);
 
     if (results.length === 0) {
         throw new Error('Không có dữ liệu xổ số');

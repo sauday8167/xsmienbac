@@ -10,7 +10,6 @@ export default function AdminHeader() {
     const getPageTitle = () => {
         const routes: { [key: string]: string } = {
             '/admin/dashboard': 'Dashboard',
-            '/admin/posts': 'Quản lý bài viết',
             '/admin/media': 'Thư viện Media',
             '/admin/results': 'Quản lý kết quả',
             '/admin/seo': 'Cài đặt SEO',

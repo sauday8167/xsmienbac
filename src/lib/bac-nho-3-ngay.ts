@@ -139,13 +139,27 @@ export async function analyzeBacNho3Ngay(days: number = 100, toDate?: string): P
 
     // --- PHASE 2: Discovery for All Patterns (EXTREMELY Limited to prevent OOM) ---
     const allPatterns: BacNho3NgayPattern[] = [];
-    const DISCOVERY_LIMIT = 40; // Only look at last 40 days for the general discovery table
+    const DISCOVERY_LIMIT = 100; // Phân tích toàn bộ cửa sổ 100 ngày
     const discoveryResults = results.slice(-DISCOVERY_LIMIT);
     
     if (discoveryResults.length >= 4) {
+        const MIN_APPEAR = 2; // Loại bộ ba chỉ xuất hiện 1 lần (nhiễu) để giảm RAM & cho bảng có ý nghĩa
         const patternsMap = new Map<string, BacNho3NgayPattern>();
         const followMap = new Map<string, Map<string, number>>();
 
+        // Lượt 1: chỉ đếm số lần mỗi bộ ba xuất hiện (Map số nhẹ, không dựng object/Map nặng)
+        const triadCount = new Map<string, number>();
+        for (let i = 0; i < discoveryResults.length - 3; i++) {
+            const d0 = extractUniqueLotoNumbers(discoveryResults[i]);
+            const d1 = extractUniqueLotoNumbers(discoveryResults[i + 1]);
+            const d2 = extractUniqueLotoNumbers(discoveryResults[i + 2]);
+            for (const a of d0) for (const b of d1) for (const c of d2) {
+                const key = `${a}-${b}-${c}`;
+                triadCount.set(key, (triadCount.get(key) || 0) + 1);
+            }
+        }
+
+        // Lượt 2: chỉ dựng pattern + followMap cho bộ ba lặp lại >= MIN_APPEAR
         for (let i = 0; i < discoveryResults.length - 3; i++) {
             const d0 = extractUniqueLotoNumbers(discoveryResults[i]);
             const d1 = extractUniqueLotoNumbers(discoveryResults[i + 1]);
@@ -156,6 +170,7 @@ export async function analyzeBacNho3Ngay(days: number = 100, toDate?: string): P
                 for (const b of d1) {
                     for (const c of d2) {
                         const key = `${a}-${b}-${c}`;
+                        if ((triadCount.get(key) || 0) < MIN_APPEAR) continue;
                         if (!patternsMap.has(key)) {
                             patternsMap.set(key, {
                                 triggerTriple: [a, b, c],
@@ -181,10 +196,10 @@ export async function analyzeBacNho3Ngay(days: number = 100, toDate?: string): P
             }
         }
 
-        // Post-process discovery Map
+        // Post-process discovery Map (đã chỉ chứa bộ ba >= MIN_APPEAR)
         patternsMap.forEach((pattern, key) => {
-            if (pattern.totalAppearances < 1) return; // Keep only if it appeared
-            
+            if (pattern.totalAppearances < MIN_APPEAR) return;
+
             const followTracker = followMap.get(key)!;
             pattern.followNumbers = Array.from(followTracker.entries())
                 .map(([number, hitCount]) => ({

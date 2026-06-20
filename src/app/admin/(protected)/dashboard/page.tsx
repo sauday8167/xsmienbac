@@ -5,7 +5,6 @@ import Link from 'next/link';
 
 export default function AdminDashboardPage() {
     const [stats, setStats] = useState({
-        posts: 0,
         ads: 0,
         users: 0, // Placeholder
         views: 0 // Placeholder
@@ -22,7 +21,6 @@ export default function AdminDashboardPage() {
 
                 if (json.success) {
                     setStats({
-                        posts: json.data.posts,
                         views: json.data.views,
                         users: json.data.users,
                         ads: json.data.ads
@@ -39,7 +37,6 @@ export default function AdminDashboardPage() {
     }, []);
 
     const cards = [
-        { title: 'Bài viết', value: stats.posts, icon: '📝', color: 'bg-blue-500', href: '/admin/posts' },
         { title: 'Quảng cáo', value: stats.ads, icon: '📢', color: 'bg-green-500', href: '/admin/ads' },
         { title: 'Thành viên', value: stats.users, icon: '👥', color: 'bg-purple-500', href: '/admin/users' },
         { title: 'Lượt xem (Tuần)', value: stats.views.toLocaleString(), icon: '👁️', color: 'bg-orange-500', href: '#' },
@@ -100,10 +97,6 @@ export default function AdminDashboardPage() {
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                     <h2 className="text-lg font-bold text-gray-800 mb-4">Phím Tắt</h2>
                     <div className="grid grid-cols-2 gap-4">
-                        <Link href="/admin/posts/create" className="p-4 bg-gray-50 rounded-lg text-center hover:bg-lottery-red-50 hover:text-lottery-red-600 transition-colors">
-                            <span className="block text-xl mb-2">✍️</span>
-                            <span className="font-medium">Viết Bài Mới</span>
-                        </Link>
                         <Link href="/admin/ads" className="p-4 bg-gray-50 rounded-lg text-center hover:bg-lottery-red-50 hover:text-lottery-red-600 transition-colors">
                             <span className="block text-xl mb-2">💰</span>
                             <span className="font-medium">Cấu hình Ads</span>

@@ -10,7 +10,6 @@ const DEFAULT_MENU_ITEMS = [
     { id: '1', href: '/', label: 'Trang chủ', description: 'Trang chủ' },
     { id: '2', href: '/ket-qua-theo-ngay', label: 'Kết quả theo ngày', description: 'Xem KQXS theo ngày' },
     { id: '3', href: '/thong-ke', label: 'Thống kê', description: 'Thống kê lô tô' },
-    { id: '4', href: '/tin-tuc', label: 'Tin tức / Soi cầu', description: 'Tin tức xổ số' },
     { id: '5', href: '/quay-thu', label: 'Quay thử', description: 'Quay thử kết quả' },
     { id: '6', href: '/do-ve-so', label: 'Dò vé số', description: 'Dò vé số online' }
 ];
