@@ -35,7 +35,6 @@ interface AIStatistics {
     recentPredictions: Prediction[];
     lastRun: {
         prediction: string | null;
-        article: string | null;
     };
 }
 
@@ -43,7 +42,6 @@ export default function AIManagementPage() {
     const [statistics, setStatistics] = useState<AIStatistics | null>(null);
     const [loading, setLoading] = useState(true);
     const [isRunningPrediction, setIsRunningPrediction] = useState(false);
-    const [isGeneratingArticle, setIsGeneratingArticle] = useState(false);
 
     // Fetch statistics on mount
     useEffect(() => {
@@ -108,48 +106,6 @@ export default function AIManagementPage() {
             toast.error('Lỗi kết nối hoặc network', { id: toastId });
         } finally {
             setIsRunningPrediction(false);
-        }
-    };
-
-    const handleGenerateArticle = async () => {
-        if (isGeneratingArticle) return;
-
-        setIsGeneratingArticle(true);
-        const toastId = toast.loading('Đang viết bài tin tức AI...');
-
-        try {
-            const response = await fetch('/api/admin/ai/generate-article', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({})
-            });
-
-            if (!response.ok) {
-                // Handle HTTP errors
-                let errorMsg = `Lỗi server (${response.status})`;
-                try {
-                    const data = await response.json();
-                    errorMsg = data.error || errorMsg;
-                } catch (e) {
-                    // JSON parsing failed, use default message
-                }
-                toast.error(errorMsg, { id: toastId });
-                return;
-            }
-
-            const data = await response.json();
-
-            if (data.success) {
-                toast.success('Bài viết AI đã được tạo và xuất bản!', { id: toastId });
-                await fetchStatistics();
-            } else {
-                toast.error(data.error || 'Viết bài thất bại', { id: toastId });
-            }
-        } catch (error) {
-            console.error('Error generating article:', error);
-            toast.error('Lỗi kết nối hoặc network', { id: toastId });
-        } finally {
-            setIsGeneratingArticle(false);
         }
     };
 
@@ -227,7 +183,7 @@ export default function AIManagementPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <h1 className="text-3xl font-bold text-gray-800">
-                    🤖 Quản Trị AI
+                    📊 Quản Trị Dự Đoán
                 </h1>
                 <button
                     onClick={fetchStatistics}
@@ -240,16 +196,16 @@ export default function AIManagementPage() {
             {/* Model Information */}
             <div className="bg-white rounded-lg shadow-md p-6">
                 <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-                    <span className="text-2xl mr-2">📊</span>
-                    Thông Tin AI Model
+                    <span className="text-2xl mr-2">🧮</span>
+                    Phương Pháp Dự Đoán
                 </h2>
                 <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                        <p className="text-sm text-gray-600">Tên Model</p>
+                        <p className="text-sm text-gray-600">Phương pháp</p>
                         <p className="text-lg font-semibold text-gray-900">{statistics.modelInfo.name}</p>
                     </div>
                     <div>
-                        <p className="text-sm text-gray-600">Nhà Cung Cấp</p>
+                        <p className="text-sm text-gray-600">Nguồn dữ liệu</p>
                         <p className="text-lg font-semibold text-gray-900">{statistics.modelInfo.provider}</p>
                     </div>
                     <div className="md:col-span-2">
@@ -294,15 +250,15 @@ export default function AIManagementPage() {
                     <span className="text-2xl mr-2">⚡</span>
                     Thao Tác Thủ Công
                 </h2>
-                <div className="grid md:grid-cols-2 gap-4">
+                <div>
                     <button
                         onClick={handleRunPrediction}
                         disabled={isRunningPrediction}
                         className={`
-                            p-6 rounded-lg font-semibold text-lg transition-all transform hover:scale-105
+                            w-full p-6 rounded-lg font-semibold text-lg transition-all transform hover:scale-[1.02]
                             ${isRunningPrediction
                                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                : 'bg-gradient-to-r from-purple-600 to-purple-700 text-white hover:from-purple-700 hover:to-purple-800 shadow-lg'
+                                : 'bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 shadow-lg'
                             }
                         `}
                     >
@@ -312,47 +268,17 @@ export default function AIManagementPage() {
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
-                                Đang phân tích...
+                                Đang tính...
                             </span>
                         ) : (
-                            <>🔮 Chạy Dự Đoán AI</>
-                        )}
-                    </button>
-
-                    <button
-                        onClick={handleGenerateArticle}
-                        disabled={isGeneratingArticle}
-                        className={`
-                            p-6 rounded-lg font-semibold text-lg transition-all transform hover:scale-105
-                            ${isGeneratingArticle
-                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 shadow-lg'
-                            }
-                        `}
-                    >
-                        {isGeneratingArticle ? (
-                            <span className="flex items-center justify-center">
-                                <svg className="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                Đang viết bài...
-                            </span>
-                        ) : (
-                            <>📝 Viết Tin Tức AI</>
+                            <>🔮 Chạy Dự Đoán Bạc Nhớ Ngay</>
                         )}
                     </button>
                 </div>
-                <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <h3 className="font-semibold text-blue-900 mb-2">ℹ️ Lần Chạy Gần Nhất:</h3>
-                    <div className="grid md:grid-cols-2 gap-2 text-sm">
-                        <p className="text-blue-800">
-                            <span className="font-medium">Dự đoán:</span> {formatDate(statistics.lastRun.prediction)}
-                        </p>
-                        <p className="text-blue-800">
-                            <span className="font-medium">Bài viết:</span> {formatDate(statistics.lastRun.article)}
-                        </p>
-                    </div>
+                <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
+                    <p className="text-blue-800">
+                        <span className="font-medium">Lần dự đoán gần nhất:</span> {formatDate(statistics.lastRun.prediction)}
+                    </p>
                 </div>
             </div>
 
@@ -369,7 +295,7 @@ export default function AIManagementPage() {
                                 <th className="px-4 py-3 text-left font-semibold text-gray-700">Ngày</th>
                                 <th className="px-4 py-3 text-left font-semibold text-gray-700">Dự Đoán</th>
                                 <th className="px-4 py-3 text-left font-semibold text-gray-700">Kết Quả Thực</th>
-                                <th className="px-4 py-3 text-left font-semibold text-gray-700">Model</th>
+                                <th className="px-4 py-3 text-left font-semibold text-gray-700">Phương pháp</th>
                                 <th className="px-4 py-3 text-center font-semibold text-gray-700">Độ Tin Cậy</th>
                                 <th className="px-4 py-3 text-center font-semibold text-gray-700">Trạng Thái</th>
                             </tr>
@@ -403,11 +329,7 @@ export default function AIManagementPage() {
                                         )}
                                     </td>
                                     <td className="px-4 py-3">
-                                        {pred.model === 'claude-3-haiku-hoi-dong' ? (
-                                            <span className="px-2 py-1 bg-red-100 text-red-700 rounded text-[10px] font-bold">HỘI ĐỒNG</span>
-                                        ) : (
-                                            <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-[10px] font-bold">AI 3-SỐ</span>
-                                        )}
+                                        <span className="px-2 py-1 bg-red-100 text-red-700 rounded text-[10px] font-bold">BẠC NHỚ</span>
                                     </td>
                                     <td className="px-4 py-3 text-center">
                                         <span className="font-semibold text-gray-700">{pred.confidence}%</span>

@@ -15,10 +15,10 @@ export async function GET(request: NextRequest) {
         }
 
         const modelInfo = {
-            name: "Claude Sonnet 4.6 (Primary)",
-            provider: "Anthropic → OpenRouter (Gemini 2.5 Flash / Grok-4 fallback)",
-            version: "claude-sonnet-4-6",
-            description: "Viết bài dự đoán bằng Claude Sonnet 4.6 (Anthropic). Nếu Claude lỗi, tự động fallback sang OpenRouter với Gemini 2.5 Flash, rồi Grok-4. Dự đoán số chạy vào 21:00 hàng ngày."
+            name: "Bạc Nhớ Consensus",
+            provider: "Thống kê nội bộ — KHÔNG dùng model AI bên ngoài",
+            version: "bac-nho-consensus-v1",
+            description: "Dự đoán 5 số dựa hoàn toàn trên 3 phương pháp Bạc Nhớ (Cặp 3, 2 Ngày, 3 Ngày) của trang Soi Cầu Bạc Nhớ. Mỗi số được cộng điểm theo tỷ lệ tương quan; số được nhiều phương pháp đồng thuận nhất được chọn. Chạy tự động hằng ngày, không gọi API AI."
         };
 
         const totalStats = await queryOne("SELECT COUNT(*) as total FROM ai_predictions");
@@ -55,7 +55,6 @@ export async function GET(request: NextRequest) {
         });
 
         const lastPrediction = await queryOne("SELECT created_at FROM ai_predictions ORDER BY created_at DESC LIMIT 1");
-        const lastArticle = await queryOne("SELECT created_at FROM posts WHERE category = 'soi-cau' ORDER BY created_at DESC LIMIT 1");
 
         return NextResponse.json({
             success: true,
@@ -70,8 +69,7 @@ export async function GET(request: NextRequest) {
                 },
                 recentPredictions: formattedPredictions,
                 lastRun: {
-                    prediction: lastPrediction?.created_at || null,
-                    article: lastArticle?.created_at || null
+                    prediction: lastPrediction?.created_at || null
                 }
             }
         });
