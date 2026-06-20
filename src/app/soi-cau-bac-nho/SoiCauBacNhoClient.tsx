@@ -28,6 +28,11 @@ export default function SoiCauBacNhoClient() {
             .catch(() => { });
     }, []);
 
+    // Chỉ cho xem lại tối đa 30 ngày gần nhất
+    const minDate = maxDate
+        ? new Date(new Date(maxDate).getTime() - 30 * 86400000).toISOString().split('T')[0]
+        : '';
+
     const breadcrumbs = [
         { name: 'Trang chủ', item: '/' },
         { name: 'Soi Cầu Bạc Nhớ', item: '/soi-cau-bac-nho' }
@@ -55,12 +60,13 @@ export default function SoiCauBacNhoClient() {
                     <p className="text-lottery-gray-600">Phân tích tương quan số dựa trên 100 kỳ xổ số gần nhất</p>
                 </div>
                 <div className="bg-white border border-lottery-gray-200 rounded-lg px-4 py-3 shadow-sm">
-                    <label className="block text-xs font-semibold text-lottery-gray-500 mb-1">📅 Xem phân tích tính đến ngày</label>
+                    <label className="block text-xs font-semibold text-lottery-gray-500 mb-1">📅 Xem lại phân tích (tối đa 30 ngày)</label>
                     <div className="flex items-center gap-2">
                         <input
                             type="date"
                             value={toDate || maxDate}
                             max={maxDate || undefined}
+                            min={minDate || undefined}
                             onChange={(e) => setToDate(e.target.value)}
                             className="input font-bold text-lottery-red-600"
                         />

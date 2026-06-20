@@ -17,20 +17,18 @@ export async function GET(request: Request) {
 
         const latestDate = latestResult?.draw_date || 'no-date';
 
-        // Historical view: when a past date is selected, compute on-the-fly without caching.
-        if (toDate && toDate < latestDate) {
-            const data = await analyzeLoto34Cang(days, toDate);
-            return NextResponse.json({ success: true, data });
-        }
+        // Khóa cache theo NGÀY HIỆU LỰC (ngày chọn nếu là quá khứ, ngược lại ngày mới nhất)
+        // -> mỗi ngày lưu 1 bản, chọn lại ngày cũ sẽ hiện ngay không tính lại.
+        const effectiveDate = (toDate && toDate < latestDate) ? toDate : latestDate;
+        const cacheKey = `loto-3-4-cang-${days}-${effectiveDate}`;
 
-        const cacheKey = `loto-3-4-cang-${days}-${latestDate}`;
-        const cachedData = await getCache<Loto34CangData>(cacheKey, latestDate);
+        const cachedData = await getCache<Loto34CangData>(cacheKey, effectiveDate);
         if (cachedData) {
             return NextResponse.json({ success: true, data: cachedData });
         }
 
         const data = await analyzeLoto34Cang(days, toDate);
-        await setCache(cacheKey, latestDate, data);
+        await setCache(cacheKey, effectiveDate, data);
 
         return NextResponse.json({ success: true, data });
     } catch (error: any) {

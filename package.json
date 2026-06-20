@@ -11,6 +11,7 @@
     "worker": "node scripts/cron-worker.js",
     "live-worker": "npx tsx scripts/live-crawler-worker.ts",
     "calculate-bac-nho": "tsx scripts/calculate-bac-nho.ts",
+    "backfill-bac-nho": "tsx scripts/backfill-bac-nho-history.ts",
     "run-ai": "tsx scripts/run-ai.ts"
   },
   "dependencies": {

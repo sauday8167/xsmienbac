@@ -39,6 +39,11 @@ export default function Loto34CangClient() {
         fetchData();
     }, [toDate]);
 
+    // Chỉ cho xem lại tối đa 30 ngày gần nhất
+    const minDate = maxDate
+        ? new Date(new Date(maxDate).getTime() - 30 * 86400000).toISOString().split('T')[0]
+        : '';
+
     if (loading) {
         return (
             <div className="flex justify-center items-center min-h-[400px]">
@@ -98,11 +103,12 @@ export default function Loto34CangClient() {
                         Đến ngày: <span className="font-bold">{new Date(data.overview.toDate).toLocaleDateString('vi-VN')}</span>
                     </div>
                     <div className="bg-white/10 backdrop-blur-md px-4 py-2 rounded-lg border border-white/20 flex items-center gap-2">
-                        <label className="text-sm text-white/80 whitespace-nowrap">📅 Tính đến ngày:</label>
+                        <label className="text-sm text-white/80 whitespace-nowrap">📅 Xem lại (tối đa 30 ngày):</label>
                         <input
                             type="date"
                             value={toDate || maxDate}
                             max={maxDate || undefined}
+                            min={minDate || undefined}
                             onChange={(e) => setToDate(e.target.value)}
                             className="bg-white text-lottery-gray-800 px-3 py-1 rounded-lg outline-none font-semibold"
                         />

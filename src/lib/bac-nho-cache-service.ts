@@ -16,13 +16,14 @@ interface CachedData<T> {
 }
 
 /**
- * Cleanup old records in statistics_cache, keeping only the most recent 30 days per type
+ * Cleanup old records in statistics_cache, keeping only the most recent ~40 ngày per type
+ * (đủ phủ cửa sổ xem lại 30 ngày + buffer)
  */
 async function cleanupOldRecords(type: string) {
     try {
-        // Find the date for the 30th record (ordered by stat_key DESC which is YYYY-MM-DD)
+        // Find the date for the 40th record (ordered by stat_key DESC which is YYYY-MM-DD)
         const thirtyDaysAgoRecord = await queryOne<{ stat_key: string }>(
-            'SELECT stat_key FROM statistics_cache WHERE stat_type = ? ORDER BY stat_key DESC LIMIT 1 OFFSET 30',
+            'SELECT stat_key FROM statistics_cache WHERE stat_type = ? ORDER BY stat_key DESC LIMIT 1 OFFSET 40',
             [type]
         );
 
@@ -58,24 +59,20 @@ export async function getOrUpdateBacNhoData<T>(
     );
     const dbLatestDate = latestResult?.draw_date || new Date().toISOString().split('T')[0];
 
-    // Historical view: when the user selects a past date, compute on-the-fly without caching.
-    // (calculateFn already has toDate baked in by the caller.)
-    if (toDate && toDate < dbLatestDate) {
-        console.log(`[BacNhoCache] 🕓 Historical view ${key} as of ${toDate} (no cache)...`);
-        return await calculateFn(days);
-    }
+    // Khóa cache theo NGÀY HIỆU LỰC: ngày được chọn nếu là quá khứ, ngược lại là ngày mới nhất.
+    // Nhờ vậy mỗi ngày có một bản lưu riêng -> chọn lại ngày cũ sẽ hiện ngay (không tính lại).
+    const cacheKey = (toDate && toDate < dbLatestDate) ? toDate : dbLatestDate;
 
-    // 2. Check DB Cache
+    // 2. Check DB Cache theo cacheKey
     try {
         const cachedRow = await queryOne<{ stat_value: string }>(
             'SELECT stat_value FROM statistics_cache WHERE stat_type = ? AND stat_key = ?',
-            [statType, dbLatestDate]
+            [statType, cacheKey]
         );
 
         if (cachedRow) {
             try {
                 const parsed = JSON.parse(cachedRow.stat_value);
-                // The stored value is the raw 'data' property if we want consistency with JSON format
                 return parsed;
             } catch (e) {
                 console.error(`[BacNhoCache] JSON Parse error for DB cache ${key}`, e);
@@ -85,18 +82,18 @@ export async function getOrUpdateBacNhoData<T>(
         console.error(`[BacNhoCache] DB query error for ${key}`, dbErr);
     }
 
-    // 3. Recalculate
-    console.log(`[BacNhoCache] 🔄 Recalculating ${key} for ${days} days...`);
+    // 3. Recalculate (lưu lại theo cacheKey để dùng cho lần sau)
+    console.log(`[BacNhoCache] 🔄 Recalculating ${key} as of ${cacheKey}...`);
     try {
         const newData = await calculateFn(days);
-        
+
         // Save to DB
         await query(
-            `INSERT INTO statistics_cache (stat_type, stat_key, stat_value, expires_at, updated_at) 
-             VALUES (?, ?, ?, datetime('now', '+30 days'), CURRENT_TIMESTAMP)
+            `INSERT INTO statistics_cache (stat_type, stat_key, stat_value, expires_at, updated_at)
+             VALUES (?, ?, ?, datetime('now', '+60 days'), CURRENT_TIMESTAMP)
              ON CONFLICT(stat_type, stat_key) DO UPDATE SET
              stat_value=excluded.stat_value, updated_at=CURRENT_TIMESTAMP`,
-            [statType, dbLatestDate, JSON.stringify(newData)]
+            [statType, cacheKey, JSON.stringify(newData)]
         );
 
         // Cleanup old DB records
